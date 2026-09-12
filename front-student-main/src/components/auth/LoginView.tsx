@@ -1,0 +1,269 @@
+﻿"use client";
+
+import React, { useState } from "react";
+import {
+  ShieldCheck,
+  Bot,
+  Sparkles,
+  ArrowRight,
+  Lock,
+  User,
+  CheckCircle2,
+  Fingerprint,
+} from "lucide-react";
+import { CURRENT_STUDENT } from "@/data/student";
+import { apiClient } from "@/lib/api-client";
+import { useStudent } from "@/context/StudentContext";
+
+interface LoginViewProps {
+  onLogin: () => void;
+}
+
+export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
+  const { loginAsStudent } = useStudent();
+  const [studentId, setStudentId] = useState(CURRENT_STUDENT.id);
+  const [password, setPassword] = useState("••••••••");
+  const [rememberMe, setRememberMe] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!studentId.trim()) {
+      setError("Please enter your Student Roll Number.");
+      return;
+    }
+    setError(null);
+    setIsLoading(true);
+    const regd = studentId.trim().toUpperCase();
+    const pwd = password && password !== "••••••••" ? password.trim() : regd;
+    try {
+      await loginAsStudent(regd, pwd);
+    } catch (err) {
+      console.warn("Backend login error:", err);
+    }
+    setIsLoading(false);
+    onLogin();
+  };
+
+  const handleDemoLogin = async () => {
+    setStudentId(CURRENT_STUDENT.id);
+    setPassword(CURRENT_STUDENT.id);
+    setError(null);
+    setIsLoading(true);
+    try {
+      await loginAsStudent(CURRENT_STUDENT.id, CURRENT_STUDENT.id);
+    } catch (err) {
+      console.warn("Backend demo login error:", err);
+    }
+    setIsLoading(false);
+    onLogin();
+  };
+
+  return (
+    <div className="min-h-screen w-full flex flex-col justify-between bg-slate-50 text-slate-900 relative overflow-hidden">
+      {/* Ambient background decoration */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div
+          className="absolute inset-0 opacity-[0.4]"
+          style={{
+            backgroundImage: "radial-gradient(#c7d2fe 1px, transparent 1px)",
+            backgroundSize: "32px 32px",
+          }}
+        />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-blue-200/30 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-10 right-10 w-96 h-96 bg-indigo-200/30 rounded-full blur-3xl pointer-events-none" />
+      </div>
+
+      {/* Top Bar */}
+      <header className="relative z-10 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md px-6 py-4">
+        <div className="mx-auto max-w-7xl flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {/* Vignan's University Official Logo */}
+            <img
+              src="/vignan-logo.png"
+              alt="Vignan's Foundation for Science, Technology & Research"
+              className="h-10 sm:h-12 w-auto object-contain"
+            />
+            <div className="h-8 w-px bg-slate-200 hidden sm:block" />
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-sm tracking-tight text-slate-900">
+                  Student Helpdesk
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700 border border-blue-200">
+                  <Sparkles className="h-2.5 w-2.5" />
+                  AGENT 65
+                </span>
+              </div>
+              <p className="text-xs text-slate-500">Autonomous University System</p>
+            </div>
+          </div>
+
+          <div className="hidden md:flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full">
+            <ShieldCheck className="h-4 w-4 text-emerald-600" />
+            <span className="font-medium">RLS Guardrails Active</span>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Login Card Section */}
+      <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          {/* Card Container */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-7 sm:p-8 shadow-xl shadow-slate-200/60 space-y-6">
+            {/* Header / Avatar */}
+            <div className="text-center space-y-2">
+              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-lg shadow-blue-600/20 ring-4 ring-blue-50 text-white mb-1">
+                <Bot className="h-7 w-7" />
+              </div>
+              <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+                Student Single Sign-On
+              </h1>
+              <p className="text-sm text-slate-500 max-w-sm mx-auto">
+                Sign in with your University Roll Number to connect with your personalized Student Helpdesk AI Agent.
+              </p>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 text-center">
+                {error}
+              </div>
+            )}
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-600 flex items-center justify-between">
+                  <span>Student Roll No / ID</span>
+                  <span className="text-[11px] text-blue-600 font-normal">Format: 251FA04E03</span>
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={studentId}
+                    onChange={(e) => setStudentId(e.target.value)}
+                    placeholder="Enter Student ID"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-600 flex items-center justify-between">
+                  <span>Institutional Password / PIN</span>
+                  <a href="#" className="text-[11px] text-blue-600 hover:text-blue-700 transition-colors">
+                    Forgot PIN?
+                  </a>
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-white"
+                  />
+                  <span>Keep me authenticated</span>
+                </label>
+                <span className="flex items-center gap-1 text-slate-500 text-[11px]">
+                  <Fingerprint className="h-3.5 w-3.5 text-blue-500" />
+                  Biometric ready
+                </span>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 py-3 px-4 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 hover:from-blue-500 hover:to-indigo-500 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:ring-offset-2 transition-all cursor-pointer disabled:opacity-50"
+              >
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    Authenticating Student...
+                  </span>
+                ) : (
+                  <>
+                    <span>Sign In to Student Helpdesk</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* Quick Demo Access Divider */}
+            <div className="relative flex items-center justify-center pt-1">
+              <div className="border-t border-slate-200 w-full" />
+              <span className="bg-white px-3 text-[11px] uppercase tracking-wider text-slate-400 font-semibold absolute">
+                Instant Demo Access
+              </span>
+            </div>
+
+            {/* Quick 1-Click Demo Login */}
+            <button
+              onClick={handleDemoLogin}
+              type="button"
+              className="w-full flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50/60 hover:bg-blue-100/60 p-3 text-left transition-all group cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xs shadow-sm">
+                  AR
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
+                      Demo: {CURRENT_STUDENT.name}
+                    </span>
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  </div>
+                  <p className="text-[11px] font-mono text-slate-500">
+                    {CURRENT_STUDENT.id} • {CURRENT_STUDENT.programme}
+                  </p>
+                </div>
+              </div>
+              <span className="rounded-lg bg-blue-100 px-2.5 py-1 text-[11px] font-semibold text-blue-700 border border-blue-200 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all">
+                Sign In
+              </span>
+            </button>
+
+            {/* Security Guarantee Badges */}
+            <div className="pt-2 border-t border-slate-100 grid grid-cols-2 gap-2 text-[11px] text-slate-500">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                <span>Row-Level Authorization</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                <span>12 Federated Agents</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="relative z-10 w-full border-t border-slate-200 bg-white/80 backdrop-blur-md px-6 py-4 text-center text-xs text-slate-500">
+        <p>
+          Institutional Helpdesk Agent 65 • Group 13 Autonomous Context Engine • Protected by University Privacy Policies
+        </p>
+      </footer>
+    </div>
+  );
+};

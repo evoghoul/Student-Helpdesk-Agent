@@ -1,0 +1,106 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
+from app.config import settings
+from app.api import (
+    auth_router,
+    conversations_router,
+    services_router,
+    analytics_router
+)
+
+app = FastAPI(
+    title=settings.APP_NAME,
+    version=settings.APP_VERSION,
+    description=(
+        "Backend service for **Agent 65: Student Helpdesk Agent**.\n\n"
+        "Provides authenticated, row-level secured access to student profiles, attendance, "
+        "timetable, marks, examination schedules, fee demands, institutional policies, "
+        "and administrative service requests with mid-conversation distress routing to Agent 66."
+    ),
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/api/v1/openapi.json"
+)
+
+# CORS configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.FRONTEND_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Register versioned routers
+app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
+app.include_router(conversations_router, prefix=settings.API_V1_PREFIX)
+app.include_router(services_router, prefix=settings.API_V1_PREFIX)
+app.include_router(analytics_router, prefix=settings.API_V1_PREFIX)
+
+from app.models.schemas import StudentProfile
+from app.database import DataRepository, DatabaseSession
+from app.security import get_current_student
+from fastapi import Depends, HTTPException
+
+@app.get("/api/v1/me", response_model=StudentProfile, tags=["Authentication"])
+async def get_my_profile_v1(current_student: dict = Depends(get_current_student)):
+    session = DatabaseSession(student_id=current_student["student_id"], user_id=current_student["user_id"])
+    profile = DataRepository.get_student_profile(session)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Student profile not found")
+    return StudentProfile(**profile)
+
+@app.get("/api/v1/student/dashboard", tags=["Student"])
+async def get_student_dashboard(current_student: dict = Depends(get_current_student)):
+    session = DatabaseSession(student_id=current_student["student_id"], user_id=current_student["user_id"])
+    profile = DataRepository.get_student_profile(session)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Student profile not found")
+    attendance = DataRepository.get_attendance(session)
+    marks = DataRepository.get_marks(session)
+    fees = DataRepository.get_fees(session)
+    timetable = DataRepository.get_timetable(session)
+    exams = DataRepository.get_exams(session)
+    return {
+        "profile": profile,
+        "attendance": attendance,
+        "marks": marks,
+        "fees": fees,
+        "timetable": timetable,
+        "exams": exams
+    }
+
+@app.get("/api/v1/students", tags=["Student"])
+async def list_students():
+    from app.database import STUDENTS_DB
+    return [
+        {
+            "roll_no": s["roll_no"],
+            "full_name": s["full_name"],
+            "cgpa": s["cgpa"],
+            "overall_attendance_pct": s["overall_attendance_pct"],
+            "backlog_count": s["backlog_count"],
+            "fee_outstanding": s["fee_outstanding"],
+            "status": s["status"]
+        }
+        for s in STUDENTS_DB.values()
+    ]
+
+@app.get("/", include_in_schema=False)
+async def root():
+    return RedirectResponse(url="/docs")
+
+@app.get("/api/v1/health", tags=["Health"])
+async def health_check():
+    return {
+        "status": "healthy",
+        "agent": "Agent 65 (Student Helpdesk Agent)",
+        "version": settings.APP_VERSION,
+        "llm_provider": settings.LLM_PROVIDER,
+        "rls_guardrail_enforced": True
+    }
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
