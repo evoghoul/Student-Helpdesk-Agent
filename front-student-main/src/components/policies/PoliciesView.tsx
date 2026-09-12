@@ -12,12 +12,14 @@ import {
   Sparkles,
 } from "lucide-react";
 import { POLICIES_DATA, PolicyItem } from "@/data/policies";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface PoliciesViewProps {
   onAskHelpdesk: (query: string) => void;
 }
 
 export const PoliciesView: React.FC<PoliciesViewProps> = ({ onAskHelpdesk }) => {
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPolicy, setSelectedPolicy] = useState<PolicyItem | null>(null);
 
@@ -34,13 +36,13 @@ export const PoliciesView: React.FC<PoliciesViewProps> = ({ onAskHelpdesk }) => 
       <div className="flex flex-col @lg:flex-row @lg:items-center justify-between gap-3 border-b border-slate-200/80 pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-slate-900">Academic Regulations & Policies</h2>
+            <h2 className="text-xl font-bold text-slate-900">{t.policiesTitle || "University Policies & Guidelines"}</h2>
             <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-700">
               Agent 53
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Authoritative institutional regulations approved by the Academic Senate.
+            {t.policiesSubtitle || "Authoritative institutional regulations approved by the Academic Senate."}
           </p>
         </div>
 
@@ -51,7 +53,7 @@ export const PoliciesView: React.FC<PoliciesViewProps> = ({ onAskHelpdesk }) => 
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search policies (e.g. 70% rule)..."
+            placeholder={t.searchPlaceholder || "Search policies..."}
             className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-xs text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-hidden"
           />
         </div>

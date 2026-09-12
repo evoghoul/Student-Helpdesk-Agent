@@ -16,6 +16,7 @@ import { FEES_DATA } from "@/data/fees";
 import { CURRENT_STUDENT } from "@/data/student";
 import { formatCurrency } from "@/lib/utils";
 import { useStudent } from "@/context/StudentContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface FeesViewProps {
   onAskHelpdesk: (query: string) => void;
@@ -23,6 +24,7 @@ interface FeesViewProps {
 
 export const FeesView: React.FC<FeesViewProps> = ({ onAskHelpdesk }) => {
   const { studentData } = useStudent();
+  const { t } = useLanguage();
   const student = studentData?.profile || CURRENT_STUDENT;
   const feesData = studentData?.fees || FEES_DATA;
 
@@ -42,13 +44,13 @@ export const FeesView: React.FC<FeesViewProps> = ({ onAskHelpdesk }) => {
       <div className="flex flex-col @lg:flex-row @lg:items-center justify-between gap-3 border-b border-slate-200/80 pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-slate-900">My Fee Ledger & Receipts</h2>
+            <h2 className="text-xl font-bold text-slate-900">{t.feesTitle || "Fees & Financial Ledger"}</h2>
             <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold text-amber-800">
               Agent 40
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Personal academic accounts for student {student.id}. Secure bursar telemetry.
+            {t.feesSubtitle || "Personal academic accounts and payment records."}
           </p>
         </div>
 
@@ -58,7 +60,7 @@ export const FeesView: React.FC<FeesViewProps> = ({ onAskHelpdesk }) => {
             className="flex items-center gap-1.5 rounded-xl bg-amber-600 px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-amber-700 transition-colors cursor-pointer"
           >
             <CreditCard className="h-4 w-4" />
-            <span>Pay Outstanding ({formatCurrency(outstandingAmt)})</span>
+            <span>{t.payOnline || "Pay Online"} ({formatCurrency(outstandingAmt)})</span>
           </button>
         </div>
       </div>
@@ -77,7 +79,7 @@ export const FeesView: React.FC<FeesViewProps> = ({ onAskHelpdesk }) => {
       <div className="grid grid-cols-1 @lg:grid-cols-3 gap-4">
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs">
           <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-            Total Demand
+            {t.totalFees || "Total Demand"}
           </div>
           <div className="text-2xl font-black text-slate-900 mt-1">
             {formatCurrency(FEES_DATA.totalDemand)}
@@ -87,7 +89,7 @@ export const FeesView: React.FC<FeesViewProps> = ({ onAskHelpdesk }) => {
 
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4 shadow-2xs">
           <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-800">
-            Paid to Date
+            {t.amountPaid || "Paid to Date"}
           </div>
           <div className="text-2xl font-black text-emerald-700 mt-1">
             {formatCurrency(FEES_DATA.totalPaid)}
@@ -97,7 +99,7 @@ export const FeesView: React.FC<FeesViewProps> = ({ onAskHelpdesk }) => {
 
         <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 shadow-2xs">
           <div className="text-[11px] font-bold uppercase tracking-wider text-amber-800">
-            Outstanding Balance
+            {t.pendingDue || "Outstanding Balance"}
           </div>
           <div className="text-2xl font-black text-amber-900 mt-1">
             {formatCurrency(outstandingAmt)}

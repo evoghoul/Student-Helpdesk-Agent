@@ -12,12 +12,14 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { CURRICULUM_DATA, CourseCategory } from "@/data/curriculum";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface CurriculumViewProps {
   onAskHelpdesk: (query: string) => void;
 }
 
 export const CurriculumView: React.FC<CurriculumViewProps> = ({ onAskHelpdesk }) => {
+  const { t } = useLanguage();
   const [expandedCat, setExpandedCat] = useState<string>("Core Engineering");
 
   const toggleExpand = (name: string) => {
@@ -34,13 +36,13 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({ onAskHelpdesk })
       <div className="flex flex-col @lg:flex-row @lg:items-center justify-between gap-3 border-b border-slate-200/80 pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-slate-900">Curriculum & Degree Audit</h2>
+            <h2 className="text-xl font-bold text-slate-900">{t.curriculumTitle || "Course Curriculum & Syllabus"}</h2>
             <span className="rounded-full bg-cyan-100 px-2.5 py-0.5 text-[11px] font-bold text-cyan-800">
               Agent 1
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Program: {CURRICULUM_DATA.programme} • 120 Total Credits Required
+            Program: {CURRICULUM_DATA.programme} • 120 {t.totalCredits || "Total Credits"}
           </p>
         </div>
 

@@ -16,6 +16,7 @@ import {
 import { ServiceRequest } from "@/data/services";
 import { CURRENT_STUDENT } from "@/data/student";
 import { useStudent } from "@/context/StudentContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface StudentServicesViewProps {
   services: ServiceRequest[];
@@ -29,25 +30,26 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
   onAskHelpdesk,
 }) => {
   const { studentData } = useStudent();
+  const { t } = useLanguage();
   const student = studentData?.profile || CURRENT_STUDENT;
   const serviceCards = [
     {
       category: "Certificate",
-      title: "Apply for a Certificate",
+      title: t.bonafideCert || "Apply for a Certificate",
       desc: "Instant verification for Bonafide, Custodian, Medium of Instruction, or Course Completion statement.",
       icon: FileCheck2,
       color: "text-blue-600 bg-blue-50 border-blue-200",
     },
     {
       category: "Mentor Meeting",
-      title: "Book Mentor Meeting",
+      title: t.chipBookMentor || "Book Mentor Meeting",
       desc: "Schedule a one-on-one advisory session with Dr. Radhika Sharma (Cabin C-402).",
       icon: Users,
       color: "text-indigo-600 bg-indigo-50 border-indigo-200",
     },
     {
       category: "Grievance",
-      title: "Raise an Academic Grievance",
+      title: t.grievanceRedressal || "Raise an Academic Grievance",
       desc: "Submit formal appeals on internal marks evaluations, attendance condonation, or hostel amenities.",
       icon: AlertTriangle,
       color: "text-amber-600 bg-amber-50 border-amber-200",
@@ -67,13 +69,13 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
       <div className="flex flex-col @lg:flex-row @lg:items-center justify-between gap-3 border-b border-slate-200/80 pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-slate-900">Student Services & Workflows</h2>
+            <h2 className="text-xl font-bold text-slate-900">{t.servicesTitle || "Student Services & Applications"}</h2>
             <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-bold text-blue-800">
               Agent 46
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Convert conversational requests into verified institutional tickets without paper forms.
+            {t.servicesSubtitle || "Convert conversational requests into verified institutional tickets."}
           </p>
         </div>
 
@@ -82,7 +84,7 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
           className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-blue-700 transition-colors cursor-pointer"
         >
           <Plus className="h-4 w-4" />
-          <span>New Service Request</span>
+          <span>{t.newServiceRequest || "New Service Request"}</span>
         </button>
       </div>
 

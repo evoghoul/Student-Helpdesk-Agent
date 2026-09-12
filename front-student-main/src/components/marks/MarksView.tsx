@@ -14,6 +14,7 @@ import { MARKS_DATA } from "@/data/marks";
 import { CURRENT_STUDENT } from "@/data/student";
 import { Badge } from "@/components/ui/badge";
 import { useStudent } from "@/context/StudentContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface MarksViewProps {
   onAskHelpdesk: (query: string) => void;
@@ -21,6 +22,7 @@ interface MarksViewProps {
 
 export const MarksView: React.FC<MarksViewProps> = ({ onAskHelpdesk }) => {
   const { studentData } = useStudent();
+  const { t } = useLanguage();
   const student = studentData?.profile || CURRENT_STUDENT;
 
   return (
@@ -29,11 +31,11 @@ export const MarksView: React.FC<MarksViewProps> = ({ onAskHelpdesk }) => {
       <div className="flex flex-col @lg:flex-row @lg:items-center justify-between gap-3 border-b border-slate-200/80 pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-slate-900">Marks & Continuous Assessments</h2>
+            <h2 className="text-xl font-bold text-slate-900">{t.marksTitle || "Academic Performance & Marks"}</h2>
             <Badge variant="success">Agents 33 & 34</Badge>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Certified Continuous Internal Evaluation (CIE) grades for student {student.id}.
+            {t.marksSubtitle || "Continuous internal evaluations and cumulative grade points."}
           </p>
         </div>
 
@@ -43,7 +45,7 @@ export const MarksView: React.FC<MarksViewProps> = ({ onAskHelpdesk }) => {
             <Award className="h-6 w-6 text-emerald-100" />
             <div>
               <div className="text-[11px] uppercase font-bold tracking-wider text-emerald-100">
-                Cumulative CGPA
+                {t.cgpaLabel || "Cumulative CGPA"}
               </div>
               <div className="text-xl font-black">{student.cgpa} / 10.0</div>
             </div>
@@ -58,7 +60,7 @@ export const MarksView: React.FC<MarksViewProps> = ({ onAskHelpdesk }) => {
           <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-2xs">
             <div className="bg-slate-50/80 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600">
-                Graded Assessments (Semester {student.semester})
+                {t.marksTitle || "Graded Assessments"} ({t.semesterLabel || "Semester"} {student.semester})
               </h3>
               <span className="text-xs text-slate-500 font-medium">4 Evaluations Published</span>
             </div>

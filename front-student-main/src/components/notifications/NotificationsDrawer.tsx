@@ -12,6 +12,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { NotificationItem } from "@/data/notifications";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface NotificationsDrawerProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
   onMarkAllRead,
   onSelectNotification,
 }) => {
+  const { t } = useLanguage();
   if (!isOpen) return null;
 
   return (
@@ -37,7 +39,7 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
         <div className="flex items-center justify-between border-b border-slate-200 bg-gradient-to-r from-blue-50 to-white p-5">
           <div className="flex items-center gap-2">
             <Bell className="h-5 w-5 text-blue-600" />
-            <h3 className="text-base font-bold text-slate-900">Institutional Notifications</h3>
+            <h3 className="text-base font-bold text-slate-900">{t.notificationsTitle || "Notifications"}</h3>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -45,7 +47,7 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
               className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 cursor-pointer"
             >
               <CheckCheck className="h-3.5 w-3.5" />
-              <span>Mark all read</span>
+              <span>{t.markAllRead || "Mark all read"}</span>
             </button>
             <button
               onClick={onClose}

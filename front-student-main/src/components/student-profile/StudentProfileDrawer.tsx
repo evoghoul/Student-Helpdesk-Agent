@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { CURRENT_STUDENT } from "@/data/student";
 import { useStudent } from "@/context/StudentContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface StudentProfileDrawerProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ export const StudentProfileDrawer: React.FC<StudentProfileDrawerProps> = ({
   onLogout,
 }) => {
   const { studentData } = useStudent();
+  const { t } = useLanguage();
   const student = studentData?.profile || CURRENT_STUDENT;
   const initials = studentData?.profile?.initials || (student.name ? student.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() : "AR");
 
@@ -158,7 +160,7 @@ export const StudentProfileDrawer: React.FC<StudentProfileDrawerProps> = ({
               }}
               className="mt-2 w-full rounded-xl bg-indigo-600 py-2 text-xs font-semibold text-white hover:bg-indigo-700 transition-colors cursor-pointer"
             >
-              Book Mentor Session
+              {t.chipBookMentor || "Book Mentor Session"}
             </button>
           </div>
 
@@ -173,7 +175,7 @@ export const StudentProfileDrawer: React.FC<StudentProfileDrawerProps> = ({
                 className="w-full flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50/70 py-2.5 px-4 text-xs font-semibold text-rose-700 hover:bg-rose-100/70 transition-colors cursor-pointer"
               >
                 <LogOut className="h-4 w-4" />
-                <span>Sign Out of Student Portal</span>
+                <span>{t.signOut || "Sign Out"}</span>
               </button>
             </div>
           )}

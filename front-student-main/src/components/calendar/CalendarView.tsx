@@ -11,6 +11,7 @@ import {
   Info,
 } from "lucide-react";
 import { ACADEMIC_CALENDAR_DATA, CalendarEvent } from "@/data/calendar";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface CalendarViewProps {
   onAskHelpdesk: (query: string) => void;
@@ -18,6 +19,7 @@ interface CalendarViewProps {
 }
 
 export const CalendarView: React.FC<CalendarViewProps> = ({ onAskHelpdesk, onNavigateTab }) => {
+  const { t } = useLanguage();
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
     ACADEMIC_CALENDAR_DATA.find((e) => e.status === "Current") || ACADEMIC_CALENDAR_DATA[6]
   );
@@ -28,7 +30,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onAskHelpdesk, onNav
       <div className="flex flex-col @lg:flex-row @lg:items-center justify-between gap-3 border-b border-slate-200/80 pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-slate-900">Academic Calendar 2026-27 (Semester-I)</h2>
+            <h2 className="text-xl font-bold text-slate-900">{t.calendarTitle || "Academic Calendar 2026-27 (Semester-I)"}</h2>
             <span className="rounded-full bg-teal-100 px-2.5 py-0.5 text-[11px] font-bold text-teal-800">
               VFSTR Official
             </span>
@@ -43,7 +45,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onAskHelpdesk, onNav
           className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-slate-800 transition-colors cursor-pointer"
         >
           <CalendarIcon className="h-4 w-4" />
-          <span>Ask AI about Milestones</span>
+          <span>{t.askButton || "Ask Agent"}: {t.calendarMilestones || "Milestones"}</span>
         </button>
       </div>
 

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { CURRENT_STUDENT } from "@/data/student";
 import { Language, TRANSLATIONS } from "@/data/translations";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface HeroSectionProps {
   currentLang: Language;
@@ -25,7 +26,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onOpenSecurityDrawer,
   onOpenProfile,
 }) => {
-  const t = TRANSLATIONS[currentLang];
+  const { t } = useLanguage();
 
   return (
     <section className="relative overflow-hidden border-b border-blue-100 bg-gradient-to-b from-blue-50/50 via-indigo-50/30 to-white pt-8 pb-10">
@@ -101,7 +102,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-500/25 hover:from-blue-700 hover:to-indigo-700 transition-all cursor-pointer group"
               >
                 <Sparkles className="h-4 w-4" />
-                <span>Ask Student Helpdesk</span>
+                <span>{t.askButton || "Ask Student Helpdesk"}</span>
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </button>
 

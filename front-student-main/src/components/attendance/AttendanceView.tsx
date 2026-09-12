@@ -15,6 +15,7 @@ import {
 import { ATTENDANCE_DATA, AttendanceSubject } from "@/data/attendance";
 import { Badge } from "@/components/ui/badge";
 import { useStudent } from "@/context/StudentContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface AttendanceViewProps {
   onAskHelpdesk: (query: string) => void;
@@ -22,6 +23,7 @@ interface AttendanceViewProps {
 
 export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk }) => {
   const { studentData } = useStudent();
+  const { t } = useLanguage();
   const student = studentData?.profile;
   const attendanceData = studentData?.attendance || ATTENDANCE_DATA;
 
@@ -45,11 +47,11 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
       <div className="flex flex-col @lg:flex-row @lg:items-center justify-between gap-3 border-b border-slate-200/80 pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-slate-900">Attendance Telemetry</h2>
+            <h2 className="text-xl font-bold text-slate-900">{t.attendanceTitle || "Attendance Telemetry"}</h2>
             <Badge variant="primary">Agent 11</Badge>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Biometric and lecture-by-lecture records for student {student?.id || "251FA04E03"}. Statutory minimum threshold: 70%.
+            {t.attendanceSubtitle || "Biometric and lecture-by-lecture records. Statutory minimum threshold: 75%."}
           </p>
         </div>
 
@@ -107,12 +109,12 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
                       {isAttention ? (
                         <>
                           <AlertTriangle className="h-2.5 w-2.5" />
-                          Attention
+                          {t.statusAttention || "Attention"}
                         </>
                       ) : (
                         <>
                           <CheckCircle2 className="h-2.5 w-2.5" />
-                          Healthy
+                          {t.statusHealthy || "Healthy"}
                         </>
                       )}
                     </Badge>
@@ -123,7 +125,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
                 <div className="mt-3">
                   <div className="flex justify-between text-[11px] text-slate-500 mb-1">
                     <span>
-                      Attended: <strong>{sub.attended}</strong> / {sub.total} classes
+                      {t.classesAttended || "Attended"}: <strong>{sub.attended}</strong> / {sub.total}
                     </span>
                     <span>Missed: {sub.total - sub.attended}</span>
                   </div>
@@ -149,7 +151,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
                 {isAttention && (
                   <div className="mt-2.5 rounded-lg bg-amber-50 p-2 text-[11px] text-amber-900 font-medium flex items-center justify-between">
                     <span>Attend next <strong>{sub.classesNeeded70} classes consecutively</strong> to reach 70%.</span>
-                    <span className="text-[11px] font-bold text-amber-700 underline">Simulate</span>
+                    <span className="text-[11px] font-bold text-amber-700 underline">{t.simulateAttendance || "Simulate"}</span>
                   </div>
                 )}
               </div>
@@ -179,7 +181,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
               {/* Attendance KPI Summary */}
               <div className="grid grid-cols-3 gap-2 text-center text-xs">
                 <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100">
-                  <div className="text-[11px] text-slate-500">Attended</div>
+                  <div className="text-[11px] text-slate-500">{t.classesAttended || "Attended"}</div>
                   <div className="text-base font-bold text-slate-900">{selectedSubject.attended}</div>
                 </div>
                 <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100">
@@ -205,7 +207,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-blue-900">
                     <Calculator className="h-4 w-4 text-blue-600" />
-                    <span>Consecutive Attendance Calculator</span>
+                    <span>{t.simulateAttendance || "Attendance Calculator"}</span>
                   </div>
                   <span className="text-xs font-mono font-bold text-blue-700">
                     Target: 70%

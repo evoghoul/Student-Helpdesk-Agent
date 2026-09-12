@@ -12,6 +12,7 @@ import {
   Fingerprint,
 } from "lucide-react";
 import { CURRENT_STUDENT } from "@/data/student";
+import { useLanguage } from "@/context/LanguageContext";
 import { apiClient } from "@/lib/api-client";
 import { useStudent } from "@/context/StudentContext";
 
@@ -20,6 +21,7 @@ interface LoginViewProps {
 }
 
 export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
+  const { t } = useLanguage();
   const { loginAsStudent } = useStudent();
   const [studentId, setStudentId] = useState(CURRENT_STUDENT.id);
   const [password, setPassword] = useState("••••••••");
@@ -118,7 +120,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
                 <Bot className="h-7 w-7" />
               </div>
               <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-                Student Single Sign-On
+                {t.loginTitle || "Student Single Sign-On"}
               </h1>
               <p className="text-sm text-slate-500 max-w-sm mx-auto">
                 Sign in with your University Roll Number to connect with your personalized Student Helpdesk AI Agent.

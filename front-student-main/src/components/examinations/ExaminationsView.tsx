@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { EXAMINATIONS_DATA } from "@/data/examinations";
 import { useStudent } from "@/context/StudentContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface ExaminationsViewProps {
   onAskHelpdesk: (query: string) => void;
@@ -17,6 +18,7 @@ interface ExaminationsViewProps {
 
 export const ExaminationsView: React.FC<ExaminationsViewProps> = ({ onAskHelpdesk }) => {
   const { studentData } = useStudent();
+  const { t } = useLanguage();
   const student = studentData?.profile;
 
   const [downloadSuccess, setDownloadSuccess] = useState(false);
@@ -33,13 +35,13 @@ export const ExaminationsView: React.FC<ExaminationsViewProps> = ({ onAskHelpdes
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-slate-900">Upcoming Examinations</h2>
+            <h2 className="text-xl font-bold text-slate-900">{t.examsTitle || "Upcoming Examinations"}</h2>
             <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-bold text-blue-800">
               Agent 30
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Official Controller of Examinations (CoE) schedule for student {student?.id || "251FA04E03"}.
+            {t.examsSubtitle || "Official Controller of Examinations (CoE) schedule for Semester-I."}
           </p>
         </div>
 
@@ -51,12 +53,12 @@ export const ExaminationsView: React.FC<ExaminationsViewProps> = ({ onAskHelpdes
           {downloadSuccess ? (
             <>
               <CheckCircle2 className="h-4 w-4 text-emerald-300" />
-              <span>Hall Ticket Downloaded!</span>
+              <span>{t.hallTicketDownloaded || "Hall Ticket Downloaded!"}</span>
             </>
           ) : (
             <>
               <Download className="h-4 w-4" />
-              <span>Download Digital Hall Ticket</span>
+              <span>{t.downloadHallTicket || "Download Digital Hall Ticket"}</span>
             </>
           )}
         </button>
@@ -68,7 +70,7 @@ export const ExaminationsView: React.FC<ExaminationsViewProps> = ({ onAskHelpdes
           <div className="space-y-2.5">
             <div className="flex items-center gap-2">
               <span className="rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white shadow-2xs">
-                NEAREST EXAMINATION
+                {t.upcomingAssessment || "NEAREST EXAMINATION"}
               </span>
               <span className="font-mono text-xs font-bold text-blue-700">{nearest.code}</span>
             </div>

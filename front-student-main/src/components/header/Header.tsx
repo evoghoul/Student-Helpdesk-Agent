@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { CURRENT_STUDENT } from "@/data/student";
 import { Language, TRANSLATIONS, OFFICIAL_LANGUAGES_OF_INDIA } from "@/data/translations";
+import { useLanguage } from "@/context/LanguageContext";
 import { useStudent } from "@/context/StudentContext";
 import { cn } from "@/lib/utils";
 
@@ -43,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleMobileMenu,
   onLogout,
 }) => {
-  const t = TRANSLATIONS[currentLang];
+  const { t } = useLanguage();
   const { studentData } = useStudent();
   const student = studentData?.profile || CURRENT_STUDENT;
   const initials = studentData?.profile?.initials || (student.name ? student.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() : "AR");
@@ -114,7 +115,7 @@ export const Header: React.FC<HeaderProps> = ({
             title="Row-Level Security Active: Only authorized records can be retrieved."
           >
             <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-            <span>RLS Active: {student.id}</span>
+            <span>{t.rlsActiveLabel || "RLS Active"}: {student.id}</span>
           </button>
         </div>
 
@@ -126,7 +127,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <div className="flex items-center gap-2.5 truncate">
               <Search className="h-4 w-4 text-slate-400 group-hover:text-blue-500 transition-colors shrink-0" />
-              <span className="truncate">Ask Helpdesk anything (attendance, exams, fees)...</span>
+              <span className="truncate">{t.searchPlaceholder || "Ask Helpdesk anything (attendance, exams, fees)..."}</span>
             </div>
             <kbd className="hidden sm:inline-block rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[11px] font-mono text-slate-400 shadow-xs shrink-0">
               Ctrl K
@@ -314,8 +315,8 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={onLogout}
             className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-colors cursor-pointer"
-            title="Sign Out / Back to Login"
-            aria-label="Sign Out"
+            title={`${t.signOut || "Sign Out"} / Back to Login`}
+            aria-label={t.signOut || "Sign Out"}
           >
             <LogOut className="h-4 w-4" />
           </button>

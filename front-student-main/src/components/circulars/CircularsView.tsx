@@ -11,12 +11,14 @@ import {
   Download,
 } from "lucide-react";
 import { CIRCULARS_DATA, CircularItem } from "@/data/circulars";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface CircularsViewProps {
   onAskHelpdesk: (query: string) => void;
 }
 
 export const CircularsView: React.FC<CircularsViewProps> = ({ onAskHelpdesk }) => {
+  const { t } = useLanguage();
   const [filterCategory, setFilterCategory] = useState<string>("All");
 
   const categories = ["All", "Examinations", "Academics", "Administration", "Holidays"];
@@ -32,13 +34,13 @@ export const CircularsView: React.FC<CircularsViewProps> = ({ onAskHelpdesk }) =
       <div className="flex flex-col @lg:flex-row @lg:items-center justify-between gap-3 border-b border-slate-200/80 pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-slate-900">University Updates & Circulars</h2>
+            <h2 className="text-xl font-bold text-slate-900">{t.circularsTitle || "Official University Circulars"}</h2>
             <span className="rounded-full bg-rose-100 px-2.5 py-0.5 text-[11px] font-bold text-rose-800">
               Agent 55
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Official announcements issued by the Registrar and Controller of Examinations.
+            {t.circularsSubtitle || "Official announcements issued by the Registrar and Controller of Examinations."}
           </p>
         </div>
 

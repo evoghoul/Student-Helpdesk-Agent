@@ -12,6 +12,7 @@ import {
 import { CONNECTED_AGENTS } from "@/data/connected-agents";
 import { INITIAL_SECURITY_LOGS, SecurityLogItem } from "@/data/security-logs";
 import { CURRENT_STUDENT } from "@/data/student";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface SecurityDrawerProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ interface SecurityDrawerProps {
 }
 
 export const SecurityDrawer: React.FC<SecurityDrawerProps> = ({ isOpen, onClose }) => {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<"architecture" | "logs" | "agents">("architecture");
 
   if (!isOpen) return null;
@@ -33,7 +35,7 @@ export const SecurityDrawer: React.FC<SecurityDrawerProps> = ({ isOpen, onClose 
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900">Security & Agent Orchestration</h3>
+              <h3 className="text-base font-bold text-slate-900">{t.securityTitle || "Security & Access Audit"}</h3>
               <p className="text-[11px] text-slate-500">
                 Row-Level Security (RLS) Isolation • Agent 65 Core
               </p>

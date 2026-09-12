@@ -25,6 +25,7 @@ import {
 import { CURRENT_STUDENT } from "@/data/student";
 import { ATTENDANCE_DATA } from "@/data/attendance";
 import { Language, TRANSLATIONS } from "@/data/translations";
+import { useLanguage } from "@/context/LanguageContext";
 import { useStudent } from "@/context/StudentContext";
 import { cn } from "@/lib/utils";
 
@@ -53,14 +54,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleCollapse,
   currentLang,
 }) => {
-  const t = TRANSLATIONS[currentLang];
+  const { t } = useLanguage();
   const { studentData } = useStudent();
   const student = studentData?.profile || CURRENT_STUDENT;
   const initials = studentData?.profile?.initials || (student.name ? student.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() : "AR");
 
   const navigationSections = [
     {
-      title: "Overview",
+      title: t.sectionOverview || "Overview",
       items: [
         {
           id: "home",
@@ -72,7 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ],
     },
     {
-      title: "Academics",
+      title: t.sectionAcademics || "Academics",
       items: [
         {
           id: "attendance",
@@ -97,7 +98,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           id: "exams",
           label: t.navExams || "Examinations",
           icon: Calendar,
-          badge: "18 Sep",
+          badge: "06 Oct",
           badgeColor: "bg-indigo-100 text-indigo-800",
         },
         {
@@ -108,7 +109,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ],
     },
     {
-      title: "Services & Fees",
+      title: t.sectionSupport || "Services & Fees",
       items: [
         {
           id: "fees",
@@ -130,7 +131,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ],
     },
     {
-      title: "University Info",
+      title: t.sectionSystem || "University Info",
       items: [
         {
           id: "policies",
@@ -213,7 +214,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             onClick={onToggleCollapse}
             className="hidden lg:flex rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer shrink-0"
-            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={isCollapsed ? (t.expandSidebar || "Expand sidebar") : (t.collapseSidebar || "Collapse sidebar")}
           >
             {isCollapsed ? (
               <ChevronsRight className="h-4 w-4" />
@@ -344,8 +345,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <button
               onClick={onLogout}
               className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer shrink-0"
-              title="Sign Out to Login Screen"
-              aria-label="Sign Out"
+              title={t.signOut || "Sign Out"}
+              aria-label={t.signOut || "Sign Out"}
             >
               <LogOut className="h-4 w-4" />
             </button>
