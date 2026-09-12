@@ -13,6 +13,7 @@ import {
   Clock,
 } from "lucide-react";
 import { CURRENT_STUDENT } from "@/data/student";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface DistressSupportOverlayProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ export const DistressSupportOverlay: React.FC<DistressSupportOverlayProps> = ({
   onClose,
   onConnectHuman,
 }) => {
+  const { t } = useLanguage();
   if (!isOpen) return null;
 
   return (
@@ -40,14 +42,14 @@ export const DistressSupportOverlay: React.FC<DistressSupportOverlayProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-xl font-bold text-slate-900">
-                  We&apos;re here to help.
+                  {t.distressSupportTitle}
                 </h3>
                 <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-bold text-rose-800">
                   Agent 66 Priority
                 </span>
               </div>
               <p className="text-xs text-slate-500 font-medium mt-0.5">
-                Immediate student wellbeing & compassionate support
+                {t.distressSupportSub}
               </p>
             </div>
           </div>
@@ -91,7 +93,7 @@ export const DistressSupportOverlay: React.FC<DistressSupportOverlayProps> = ({
               href="tel:18005990019"
               className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-rose-600 py-2 text-xs font-bold text-white hover:bg-rose-700 transition-colors shadow-2xs"
             >
-              <span>Call Hotline Now</span>
+              <span>{t.callHotline || "Call Hotline Now"}</span>
             </a>
           </div>
 
@@ -100,7 +102,7 @@ export const DistressSupportOverlay: React.FC<DistressSupportOverlayProps> = ({
             <div>
               <div className="flex items-center gap-1.5 text-xs font-bold text-blue-700">
                 <UserCheck className="h-4 w-4" />
-                <span>Campus Counseling Team</span>
+                <span>{t.campusCounselingTeam || "Campus Counseling Team"}</span>
               </div>
               <div className="text-sm font-bold text-slate-900 mt-1">
                 Dr. Ananya Roy
@@ -116,7 +118,7 @@ export const DistressSupportOverlay: React.FC<DistressSupportOverlayProps> = ({
               }}
               className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 py-2 text-xs font-bold text-white hover:bg-blue-700 transition-colors shadow-2xs cursor-pointer"
             >
-              <span>Connect with Counselor</span>
+              <span>{t.connectCounselor || "Connect with Counselor"}</span>
             </button>
           </div>
         </div>

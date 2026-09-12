@@ -29,7 +29,7 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
   onMarkAllRead,
   onSelectNotification,
 }) => {
-  const { t } = useLanguage();
+  const { t, tDynamic } = useLanguage();
   if (!isOpen) return null;
 
   return (
@@ -104,7 +104,7 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
                 <div className="flex items-center justify-between pt-1 border-t border-slate-100/80 text-[11px] text-slate-400">
                   <span>From: {item.sourceAgent}</span>
                   <span className="text-blue-600 font-semibold flex items-center gap-0.5">
-                    <span>View</span>
+                    <span>{t.viewDetails}</span>
                     <ChevronRight className="h-3 w-3" />
                   </span>
                 </div>

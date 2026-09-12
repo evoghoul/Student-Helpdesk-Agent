@@ -30,7 +30,7 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
   onAskHelpdesk,
 }) => {
   const { studentData } = useStudent();
-  const { t } = useLanguage();
+  const { t, tDynamic } = useLanguage();
   const student = studentData?.profile || CURRENT_STUDENT;
   const serviceCards = [
     {
@@ -107,7 +107,7 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
               </div>
 
               <div className="mt-4 pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-blue-600 group-hover:text-blue-800">
-                <span>Launch Workflow</span>
+                <span>{t.createServiceRequest}</span>
                 <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
               </div>
             </div>
@@ -151,10 +151,10 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
                 <div className="flex items-center @lg:flex-col @lg:items-end gap-2 shrink-0">
                   <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800 border border-emerald-200 flex items-center gap-1">
                     <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                    <span>{req.status}</span>
+                    <span>{tDynamic(req.status)}</span>
                   </span>
                   <span className="text-[11px] font-medium text-slate-400">
-                    Priority: {req.priority}
+                    {t.priority}: {tDynamic(req.priority)}
                   </span>
                 </div>
               </div>

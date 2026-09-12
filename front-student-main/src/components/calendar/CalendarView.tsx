@@ -19,7 +19,7 @@ interface CalendarViewProps {
 }
 
 export const CalendarView: React.FC<CalendarViewProps> = ({ onAskHelpdesk, onNavigateTab }) => {
-  const { t } = useLanguage();
+  const { t, tDynamic } = useLanguage();
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
     ACADEMIC_CALENDAR_DATA.find((e) => e.status === "Current") || ACADEMIC_CALENDAR_DATA[6]
   );
@@ -132,7 +132,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onAskHelpdesk, onNav
                 onClick={() => onAskHelpdesk(`Tell me more about ${selectedEvent.title}`)}
                 className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-teal-700 py-2.5 text-xs font-semibold text-white hover:bg-teal-800 transition-colors shadow-2xs cursor-pointer"
               >
-                <span>Ask Helpdesk about this milestone</span>
+                <span>{t.askButton}: {t.upcomingMilestone}</span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </button>
             </div>

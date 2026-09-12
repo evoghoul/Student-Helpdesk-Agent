@@ -89,14 +89,14 @@ const SnapshotCard: React.FC<SnapshotCardProps> = ({
   onClick,
   emphasize,
 }) => {
-  const t = toneClasses[tone];
+  const toneStyle = toneClasses[tone];
   return (
     <div
       onClick={onClick}
       className={cn(
         "group relative flex h-full min-h-[168px] cursor-pointer flex-col justify-between rounded-2xl border bg-white p-4 transition-all hover:shadow-md hover:-translate-y-0.5",
         emphasize ? "border-amber-200" : "border-slate-200",
-        t.border
+        toneStyle.border
       )}
     >
       <div className="flex flex-col flex-1">
@@ -108,15 +108,15 @@ const SnapshotCard: React.FC<SnapshotCardProps> = ({
           <div
             className={cn(
               "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors",
-              t.iconBg
+              toneStyle.iconBg
             )}
           >
-            <Icon className={cn("h-4 w-4", t.icon)} />
+            <Icon className={cn("h-4 w-4", toneStyle.icon)} />
           </div>
         </div>
 
         {/* Value Line - Uniform baseline height */}
-        <div className={cn("flex h-9 items-baseline gap-1.5 text-2xl font-black truncate", t.value)}>
+        <div className={cn("flex h-9 items-baseline gap-1.5 text-2xl font-black truncate", toneStyle.value)}>
           {value}
         </div>
 
@@ -135,7 +135,7 @@ const SnapshotCard: React.FC<SnapshotCardProps> = ({
       <div
         className={cn(
           "mt-3 flex items-center justify-between border-t border-slate-100 pt-2.5 text-xs font-medium shrink-0",
-          t.footer
+          toneStyle.footer
         )}
       >
         <span className="truncate">{footerLabel}</span>
@@ -147,7 +147,7 @@ const SnapshotCard: React.FC<SnapshotCardProps> = ({
 
 export const StudentSnapshot: React.FC<StudentSnapshotProps> = ({ onNavigateTab }) => {
   const { studentData } = useStudent();
-  const { t } = useLanguage();
+  const { t, tDynamic } = useLanguage();
   const student = studentData?.profile;
   const attendance = studentData?.attendance || ATTENDANCE_DATA;
   const marks = studentData?.marks || MARKS_DATA;
@@ -166,41 +166,41 @@ export const StudentSnapshot: React.FC<StudentSnapshotProps> = ({ onNavigateTab 
         <div>
           <h3 className="text-lg font-bold text-slate-900">{t.snapshotTitle} (Section 7, N-312)</h3>
           <p className="text-xs text-slate-500">
-            Real-time telemetry from connected university agents for student {student?.id || "251FA04E03"} • Class Teacher: Mr. T. Latesh Babu
+            {t.snapshotSubtitle} • {student?.id || "251FA04E03"} • Class Teacher: Mr. T. Latesh Babu
           </p>
         </div>
         <span className="self-start sm:self-auto inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700 border border-emerald-100">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          Section 7 Synchronized
+          {t.sectionSynchronized}
         </span>
       </div>
 
       {/* 6 Responsive Grid Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5">
         <SnapshotCard
-          label="Attendance"
+          label={t.navAttendance}
           icon={UserCheck}
           tone="amber"
           emphasize
           value={
             <>
               <span>{attendance.overallPercentage}%</span>
-              <span className="text-xs font-semibold text-amber-700">Overall</span>
+              <span className="text-xs font-semibold text-amber-700">{t.overall}</span>
             </>
           }
           meta={
             <span className="flex items-center gap-1 text-amber-700">
               <AlertTriangle className="h-3 w-3" />
-              {attendance.status || "Attention required"}
+              {attendance.status ? tDynamic(attendance.status) : t.statusAttention}
             </span>
           }
-          subtext={lowestSub ? `${lowestSub.name} at ${lowestSub.percentage}%` : "DLD-25CS205 at 68%"}
-          footerLabel="View attendance"
+          subtext={lowestSub ? `${lowestSub.name} (${lowestSub.percentage}%)` : "DLD-25CS205 (68%)"}
+          footerLabel={t.viewAttendance}
           onClick={() => onNavigateTab("attendance")}
         />
 
         <SnapshotCard
-          label="Marks"
+          label={t.navMarks}
           icon={GraduationCap}
           tone="emerald"
           value={
@@ -209,47 +209,47 @@ export const StudentSnapshot: React.FC<StudentSnapshotProps> = ({ onNavigateTab 
               <span className="text-xs font-semibold text-emerald-700">CGPA {student?.cgpa ?? 8.42}</span>
             </>
           }
-          meta="Current performance"
-          subtext="Top: Java & OOP [P] (100%)"
-          footerLabel="View marks"
+          meta={t.currentPerformance}
+          subtext={t.topPerformer}
+          footerLabel={t.viewMarks}
           onClick={() => onNavigateTab("marks")}
         />
 
         <SnapshotCard
-          label="Next Class"
+          label={t.nextClass}
           icon={Clock}
           tone="blue"
           value={<span className="text-xl sm:text-2xl">{nextClassSlot ? nextClassSlot.time.split("–")[0].trim() : "12:30 PM"}</span>}
           meta={<span className="truncate">{nextClassSlot ? nextClassSlot.subject : "Discrete Mathematics"}</span>}
           subtext={nextClassSlot ? `${nextClassSlot.room} • ${nextClassSlot.faculty.split("(")[0].trim()}` : "N-312 • Dr. N. Santhoshi"}
-          footerLabel="View schedule"
+          footerLabel={t.viewSchedule}
           onClick={() => onNavigateTab("timetable")}
         />
 
         <SnapshotCard
-          label="Next Exam"
+          label={t.nextExam}
           icon={Calendar}
           tone="indigo"
           value={<span className="text-xl sm:text-2xl whitespace-nowrap">06 Oct</span>}
           meta={<span className="truncate">{nextExam ? nextExam.subject : "Digital Logic design"}</span>}
           subtext={nextExam ? `${nextExam.time.split("–")[0].trim()} • ${nextExam.venue.split(",")[0].trim()} (${nextExam.daysRemaining}d left)` : "10:00 AM • Hall A2"}
-          footerLabel="View exams"
+          footerLabel={t.viewExams}
           onClick={() => onNavigateTab("exams")}
         />
 
         <SnapshotCard
-          label="Fee Status"
+          label={t.navFees}
           icon={CreditCard}
           tone="amber"
           value={<span className="text-xl sm:text-2xl">{formatCurrency(fees?.outstandingBalance ?? 0)}</span>}
-          meta="Outstanding dues"
-          subtext={`${formatCurrency(fees?.paidAmount ?? 100000)} Paid (Due 30 Sep 2026)`}
-          footerLabel="View details"
+          meta={t.outstandingDues}
+          subtext={`${formatCurrency(fees?.paidAmount ?? 100000)} ${t.statusPaid} (${t.statusDue} 30 Sep 2026)`}
+          footerLabel={t.viewDetails}
           onClick={() => onNavigateTab("fees")}
         />
 
         <SnapshotCard
-          label="Curriculum"
+          label={t.navCurriculum}
           icon={BookOpen}
           tone="cyan"
           value={
@@ -258,9 +258,9 @@ export const StudentSnapshot: React.FC<StudentSnapshotProps> = ({ onNavigateTab 
               <span className="text-sm font-normal text-slate-400">/ 160</span>
             </>
           }
-          meta="Credits completed"
-          subtext="23 current • 59 to graduate"
-          footerLabel="View progress"
+          meta={t.creditsCompleted}
+          subtext={t.curriculumProgressSub}
+          footerLabel={t.viewProgress}
           onClick={() => onNavigateTab("curriculum")}
         />
       </div>

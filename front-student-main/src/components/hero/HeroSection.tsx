@@ -111,7 +111,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 className="inline-flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 shadow-xs hover:bg-slate-50 hover:text-slate-900 transition-all cursor-pointer"
               >
                 <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                <span>How Security & RLS Works</span>
+                <span>{t.howSecurityWorks || "How Security & RLS Works"}</span>
               </button>
             </div>
           </div>
@@ -132,7 +132,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     </div>
                     <div>
                       <h4 className="text-xs font-bold text-slate-900">AGENT 65 CORE</h4>
-                      <p className="text-[10px] text-slate-500">Autonomous Context Engine</p>
+                      <p className="text-[10px] text-slate-500">{t.autonomousContextEngine || "Autonomous Context Engine"}</p>
                     </div>
                   </div>
                   <span className="flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
@@ -148,7 +148,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-700">
                         1
                       </span>
-                      <span className="font-medium text-slate-700">Verify Identity</span>
+                      <span className="font-medium text-slate-700">{t.verifyIdentity || "Verify Identity"}</span>
                     </div>
                     <span className="font-mono text-[11px] text-emerald-600 font-semibold">251FA04E03 âœ“</span>
                   </div>
@@ -158,9 +158,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-violet-100 text-[10px] font-bold text-violet-700">
                         2
                       </span>
-                      <span className="font-medium text-slate-700">Row-Level Authorization</span>
+                      <span className="font-medium text-slate-700">{t.footerRls}</span>
                     </div>
-                    <span className="font-mono text-[11px] text-violet-600 font-semibold">Pass Isolation</span>
+                    <span className="font-mono text-[11px] text-violet-600 font-semibold">{t.passIsolation || "Pass Isolation"}</span>
                   </div>
 
                   <div className="flex items-center justify-between rounded-lg bg-slate-50/80 p-2.5 border border-slate-100">
@@ -168,17 +168,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-[10px] font-bold text-amber-700">
                         3
                       </span>
-                      <span className="font-medium text-slate-700">Real-time Well-being</span>
+                      <span className="font-medium text-slate-700">{t.realTimeWellbeing || "Real-time Well-being"}</span>
                     </div>
-                    <span className="font-mono text-[11px] text-emerald-600 font-semibold">Agent 66 Monitored</span>
+                    <span className="font-mono text-[11px] text-emerald-600 font-semibold">{t.agent66Monitored || "Agent 66 Monitored"}</span>
                   </div>
                 </div>
 
                 {/* Floating Metric Callout */}
                 <div className="rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50/80 p-3 border border-blue-100 text-slate-800">
                   <div className="flex items-center justify-between text-[11px]">
-                    <span className="font-semibold text-blue-900">Current Exam Proximity</span>
-                    <span className="font-bold text-blue-700">7 Days</span>
+                    <span className="font-semibold text-blue-900">{t.currentExamProximity || "Current Exam Proximity"}</span>
+                    <span className="font-bold text-blue-700">7 {t.daysRemaining}</span>
                   </div>
                   <p className="text-[10px] text-slate-600 mt-1">
                     Digital Logic design (DLD-25CS205) â€¢ 18 Sep, 10:00 AM in Hall A2

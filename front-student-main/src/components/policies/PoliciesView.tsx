@@ -19,7 +19,7 @@ interface PoliciesViewProps {
 }
 
 export const PoliciesView: React.FC<PoliciesViewProps> = ({ onAskHelpdesk }) => {
-  const { t } = useLanguage();
+  const { t, tDynamic } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPolicy, setSelectedPolicy] = useState<PolicyItem | null>(null);
 
@@ -92,7 +92,7 @@ export const PoliciesView: React.FC<PoliciesViewProps> = ({ onAskHelpdesk }) => 
                 onClick={() => setSelectedPolicy(pol)}
                 className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1 cursor-pointer"
               >
-                <span>View Full Policy</span>
+                <span>{t.viewFullPolicy || "View Full Policy"}</span>
                 <ChevronRight className="h-3.5 w-3.5" />
               </button>
 
@@ -101,7 +101,7 @@ export const PoliciesView: React.FC<PoliciesViewProps> = ({ onAskHelpdesk }) => 
                 className="text-xs text-slate-500 hover:text-slate-900 flex items-center gap-1"
               >
                 <Sparkles className="h-3 w-3 text-violet-600" />
-                <span>Ask AI</span>
+                <span>{t.askAi || "Ask AI"}</span>
               </button>
             </div>
           </div>

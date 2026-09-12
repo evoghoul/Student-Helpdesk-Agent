@@ -85,7 +85,7 @@ export const StudentProfileDrawer: React.FC<StudentProfileDrawerProps> = ({
               <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5">
                 <span className="text-slate-500 flex items-center gap-1.5">
                   <GraduationCap className="h-3.5 w-3.5 text-slate-400" />
-                  <span>Programme:</span>
+                  <span>{t.programLabel}:</span>
                 </span>
                 <span className="font-bold text-slate-900">{student.programme}</span>
               </div>
@@ -109,7 +109,7 @@ export const StudentProfileDrawer: React.FC<StudentProfileDrawerProps> = ({
               <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5">
                 <span className="text-slate-500 flex items-center gap-1.5">
                   <BookOpen className="h-3.5 w-3.5 text-slate-400" />
-                  <span>Current Semester:</span>
+                  <span>{t.semesterLabel}:</span>
                 </span>
                 <span className="font-bold text-blue-700">Semester {student.semester}</span>
               </div>
@@ -117,7 +117,7 @@ export const StudentProfileDrawer: React.FC<StudentProfileDrawerProps> = ({
               <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5">
                 <span className="text-slate-500 flex items-center gap-1.5">
                   <Award className="h-3.5 w-3.5 text-slate-400" />
-                  <span>Cumulative CGPA:</span>
+                  <span>{t.cgpaLabel}:</span>
                 </span>
                 <span className="font-bold text-emerald-700">{student.cgpa} / 10.0</span>
               </div>

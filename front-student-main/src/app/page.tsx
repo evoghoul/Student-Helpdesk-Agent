@@ -55,7 +55,7 @@ function StudentHelpdeskContent() {
 
   // Navigation & Localization
   const [activeTab, setActiveTab] = useState<string>("home");
-  const { language: currentLang, setLanguage: setCurrentLang } = useLanguage();
+  const { language: currentLang, setLanguage: setCurrentLang, t, tDynamic } = useLanguage();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
 
@@ -209,7 +209,7 @@ function StudentHelpdeskContent() {
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-0.5 text-[11px] font-semibold text-white border border-white/20 whitespace-nowrap">
                         <Sparkles className="h-3 w-3" />
-                        AGENT 65 CORE ACTIVE
+                        {t.agent65CoreActive}
                       </span>
                       <button
                         onClick={() => setIsSecurityDrawerOpen(true)}
@@ -217,15 +217,15 @@ function StudentHelpdeskContent() {
                         title="Click to view Row-Level Security verification"
                       >
                         <ShieldCheck className="h-3.5 w-3.5" />
-                        <span>RLS Guardrail Verified: {student.id}</span>
+                        <span>{t.rlsGuardrailVerified}: {student.id}</span>
                       </button>
                     </div>
 
                     <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-                      Welcome back, {student.name}
+                      {t.welcomeBack}, {student.name}
                     </h1>
                     <p className="text-xs sm:text-sm text-blue-100 font-normal max-w-xl leading-relaxed">
-                      Your central AI Student Helpdesk is active below. Ask anything about your attendance, exam schedules, marks, pending fees, or university policies.
+                      {t.heroSubtitle}
                     </p>
                   </div>
 
@@ -237,7 +237,7 @@ function StudentHelpdeskContent() {
                     >
                       <span className="flex items-center gap-1.5 text-amber-200">
                         <AlertTriangle className="h-3.5 w-3.5" />
-                        <span>Attendance</span>
+                        <span>{t.navAttendance}</span>
                       </span>
                       <span className="font-bold">{attendance.overallPercentage}%</span>
                     </button>
@@ -248,7 +248,7 @@ function StudentHelpdeskContent() {
                     >
                       <span className="flex items-center gap-1.5 text-blue-100">
                         <Clock className="h-3.5 w-3.5" />
-                        <span>Next Class</span>
+                        <span>{t.nextClass}</span>
                       </span>
                       <span className="font-bold">09:00 AM</span>
                     </button>
@@ -259,7 +259,7 @@ function StudentHelpdeskContent() {
                     >
                       <span className="flex items-center gap-1.5 text-indigo-100">
                         <Calendar className="h-3.5 w-3.5" />
-                        <span>Next Exam</span>
+                        <span>{t.nextExam}</span>
                       </span>
                       <span className="font-bold">06 Oct</span>
                     </button>
@@ -449,10 +449,10 @@ function StudentHelpdeskContent() {
               </div>
               <div>
                 <div className="font-bold text-slate-800">
-                  Agent 65 • Student Helpdesk System
+                  {t.footerBrand}
                 </div>
                 <div className="text-[11px] text-slate-500">
-                  Autonomous Student Support Layer • Group 13
+                  {t.footerSub}
                 </div>
               </div>
             </div>
@@ -463,26 +463,26 @@ function StudentHelpdeskContent() {
                 className="flex items-center gap-1 text-slate-600 hover:text-blue-600 cursor-pointer"
               >
                 <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-                <span>Row-Level Security Active</span>
+                <span>{t.footerRls}</span>
               </button>
               <button
                 onClick={() => setIsDistressOpen(true)}
                 className="flex items-center gap-1 text-rose-600 hover:underline cursor-pointer"
               >
                 <HeartHandshake className="h-3.5 w-3.5" />
-                <span>Agent 66 Distress Support</span>
+                <span>{t.footerDistress}</span>
               </button>
               <button
                 onClick={() => setIsEscalationOpen(true)}
                 className="flex items-center gap-1 text-slate-600 hover:text-slate-900 cursor-pointer"
               >
                 <LifeBuoy className="h-3.5 w-3.5 text-violet-600" />
-                <span>Human Escalation</span>
+                <span>{t.footerEscalation}</span>
               </button>
             </div>
 
             <div className="text-right text-[11px] text-slate-400">
-              Authenticated: {student.name} ({student.id})
+              {t.authenticatedLabel}: {student.name} ({student.id})
             </div>
           </div>
         </footer>

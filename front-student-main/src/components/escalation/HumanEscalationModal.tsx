@@ -14,6 +14,7 @@ import {
   Mail,
 } from "lucide-react";
 import { CURRENT_STUDENT } from "@/data/student";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface HumanEscalationModalProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ export const HumanEscalationModal: React.FC<HumanEscalationModalProps> = ({
     "Attendance condonation review for Digital Electronics (68%) & Examination seating clarification"
   );
   const [isForwarded, setIsForwarded] = useState(false);
+  const { t } = useLanguage();
 
   if (!isOpen) return null;
 
@@ -47,10 +49,10 @@ export const HumanEscalationModal: React.FC<HumanEscalationModalProps> = ({
             </div>
             <div>
               <h3 className="text-base font-bold text-slate-900">
-                Connecting you with Student Support
+                {t.humanEscalationTitle}
               </h3>
               <p className="text-[11px] text-slate-500">
-                Zero-Repeat Context Transfer Protocol Active
+                {t.humanEscalationSub}
               </p>
             </div>
           </div>
@@ -83,11 +85,11 @@ export const HumanEscalationModal: React.FC<HumanEscalationModalProps> = ({
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Response Window:</span>
-                <span className="font-bold text-blue-700">Within 30 Minutes</span>
+                <span className="font-bold text-blue-700">{t.within30Min || "Within 30 Minutes"}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Contact Method:</span>
-                <span>Direct Callback & Institutional Email</span>
+                <span>{t.directCallback || "Direct Callback & Institutional Email"}</span>
               </div>
             </div>
 
@@ -103,7 +105,7 @@ export const HumanEscalationModal: React.FC<HumanEscalationModalProps> = ({
             <div className="rounded-2xl bg-blue-50/70 p-3.5 border border-blue-100 space-y-1 text-slate-800">
               <div className="font-bold text-blue-950 flex items-center gap-1.5">
                 <ShieldCheck className="h-4 w-4 text-blue-600" />
-                <span>Zero-Repeat Context Transfer Guarantee</span>
+                <span>{t.zeroRepeatGuarantee || "Zero-Repeat Context Transfer Guarantee"}</span>
               </div>
               <p className="text-[11px] text-slate-600 leading-relaxed">
                 Your conversation and relevant context have been forwarded to Student Support so you do not need to repeat your issue.
@@ -157,7 +159,7 @@ export const HumanEscalationModal: React.FC<HumanEscalationModalProps> = ({
                 className="flex items-center gap-1.5 rounded-xl bg-violet-600 px-5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-violet-700 cursor-pointer"
               >
                 <Send className="h-3.5 w-3.5" />
-                <span>Forward Context & Connect</span>
+                <span>{t.forwardContextConnect || "Forward Context & Connect"}</span>
               </button>
             </div>
           </div>

@@ -22,7 +22,7 @@ interface MarksViewProps {
 
 export const MarksView: React.FC<MarksViewProps> = ({ onAskHelpdesk }) => {
   const { studentData } = useStudent();
-  const { t } = useLanguage();
+  const { t, tDynamic } = useLanguage();
   const student = studentData?.profile || CURRENT_STUDENT;
 
   return (
@@ -62,7 +62,7 @@ export const MarksView: React.FC<MarksViewProps> = ({ onAskHelpdesk }) => {
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600">
                 {t.marksTitle || "Graded Assessments"} ({t.semesterLabel || "Semester"} {student.semester})
               </h3>
-              <span className="text-xs text-slate-500 font-medium">4 Evaluations Published</span>
+              <span className="text-xs text-slate-500 font-medium">4 {t.papersScheduled}</span>
             </div>
 
             <div className="divide-y divide-slate-100">
@@ -115,7 +115,7 @@ export const MarksView: React.FC<MarksViewProps> = ({ onAskHelpdesk }) => {
           <div className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50/50 to-white p-5 shadow-2xs space-y-3">
             <div className="flex items-center gap-2 text-indigo-900 font-bold text-xs">
               <Sparkles className="h-4 w-4 text-indigo-600" />
-              <span>Upcoming Internal Evaluations</span>
+              <span>{t.upcomingAssessment}</span>
             </div>
 
             <div className="space-y-3">
@@ -142,7 +142,7 @@ export const MarksView: React.FC<MarksViewProps> = ({ onAskHelpdesk }) => {
               onClick={() => onAskHelpdesk("When is the second formative assessment?")}
               className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 py-2.5 text-xs font-semibold text-white hover:bg-indigo-700 transition-colors shadow-2xs cursor-pointer"
             >
-              <span>Ask Helpdesk about Formative Assessment 2</span>
+              <span>{t.askButton}: {t.formativeAssessment} 2</span>
               <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </div>

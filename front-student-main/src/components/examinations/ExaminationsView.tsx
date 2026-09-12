@@ -18,7 +18,7 @@ interface ExaminationsViewProps {
 
 export const ExaminationsView: React.FC<ExaminationsViewProps> = ({ onAskHelpdesk }) => {
   const { studentData } = useStudent();
-  const { t } = useLanguage();
+  const { t, tDynamic } = useLanguage();
   const student = studentData?.profile;
 
   const [downloadSuccess, setDownloadSuccess] = useState(false);
@@ -75,7 +75,7 @@ export const ExaminationsView: React.FC<ExaminationsViewProps> = ({ onAskHelpdes
               <span className="font-mono text-xs font-bold text-blue-700">{nearest.code}</span>
             </div>
             <h3 className="text-2xl font-black text-slate-900">{nearest.subject}</h3>
-            <p className="text-xs text-slate-600 font-medium">{nearest.examType}</p>
+            <p className="text-xs text-slate-600 font-medium">{tDynamic(nearest.examType)}</p>
             <div className="flex flex-wrap items-center gap-4 text-xs text-slate-700 pt-1">
               <div className="flex items-center gap-1.5 font-semibold">
                 <Calendar className="h-4 w-4 text-blue-600" />
@@ -95,11 +95,11 @@ export const ExaminationsView: React.FC<ExaminationsViewProps> = ({ onAskHelpdes
           {/* Countdown Block */}
           <div className="flex flex-col items-start md:items-end justify-center rounded-2xl bg-white/95 p-5 border border-blue-100 shadow-sm shrink-0 min-w-[190px]">
             <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-              Exam Countdown
+              {t.examCountdown}
             </div>
-            <div className="text-3xl font-black text-blue-700 mt-1">7 Days</div>
+            <div className="text-3xl font-black text-blue-700 mt-1">7 {t.daysRemaining}</div>
             <div className="text-[11px] text-slate-500 mt-1">
-              Reporting: <strong className="text-slate-700">{nearest.reportingTime}</strong>
+              {t.reportingTime}: <strong className="text-slate-700">{nearest.reportingTime}</strong>
             </div>
           </div>
         </div>
@@ -109,9 +109,9 @@ export const ExaminationsView: React.FC<ExaminationsViewProps> = ({ onAskHelpdes
       <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-2xs">
         <div className="bg-slate-50/80 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-            End-Semester Schedule (Autumn 2026)
+            {t.endSemesterSchedule}
           </h4>
-          <span className="text-xs text-slate-500 font-medium">4 Theory Papers Scheduled</span>
+          <span className="text-xs text-slate-500 font-medium">{t.papersScheduled}</span>
         </div>
 
         <div className="divide-y divide-slate-100">

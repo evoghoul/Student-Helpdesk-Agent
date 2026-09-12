@@ -23,7 +23,7 @@ interface AttendanceViewProps {
 
 export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk }) => {
   const { studentData } = useStudent();
-  const { t } = useLanguage();
+  const { t, tDynamic } = useLanguage();
   const student = studentData?.profile;
   const attendanceData = studentData?.attendance || ATTENDANCE_DATA;
 
@@ -109,12 +109,12 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
                       {isAttention ? (
                         <>
                           <AlertTriangle className="h-2.5 w-2.5" />
-                          {t.statusAttention || "Attention"}
+                          {tDynamic(sub.status)}
                         </>
                       ) : (
                         <>
                           <CheckCircle2 className="h-2.5 w-2.5" />
-                          {t.statusHealthy || "Healthy"}
+                          {tDynamic(sub.status)}
                         </>
                       )}
                     </Badge>
@@ -127,14 +127,14 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
                     <span>
                       {t.classesAttended || "Attended"}: <strong>{sub.attended}</strong> / {sub.total}
                     </span>
-                    <span>Missed: {sub.total - sub.attended}</span>
+                    <span>{t.classesMissed}: {sub.total - sub.attended}</span>
                   </div>
                   <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
                     {/* Minimum 70% guideline line */}
                     <div
                       className="absolute top-0 bottom-0 w-0.5 bg-slate-400 z-10"
                       style={{ left: "70%" }}
-                      title="Mandatory 70% threshold"
+                      title={t.mandatoryThreshold || "Mandatory 70% threshold"}
                     />
                     <div
                       className={`h-full transition-all duration-500 ${
@@ -150,7 +150,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
                 {/* Subtext advice */}
                 {isAttention && (
                   <div className="mt-2.5 rounded-lg bg-amber-50 p-2 text-[11px] text-amber-900 font-medium flex items-center justify-between">
-                    <span>Attend next <strong>{sub.classesNeeded70} classes consecutively</strong> to reach 70%.</span>
+                    <span>{t.attendNext || "Attend next"} <strong>{sub.classesNeeded70} {t.consecutiveClasses || "classes"}</strong> {t.toReach70 || "to reach 70%"}.</span>
                     <span className="text-[11px] font-bold text-amber-700 underline">{t.simulateAttendance || "Simulate"}</span>
                   </div>
                 )}
@@ -174,7 +174,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
                 </div>
                 <div className="flex items-center gap-1 text-xs text-slate-500">
                   <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                  <span>Verified</span>
+                  <span>{t.verified || "Verified"}</span>
                 </div>
               </div>
 
@@ -185,13 +185,13 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
                   <div className="text-base font-bold text-slate-900">{selectedSubject.attended}</div>
                 </div>
                 <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100">
-                  <div className="text-[11px] text-slate-500">Missed</div>
+                  <div className="text-[11px] text-slate-500">{t.missed || "Missed"}</div>
                   <div className="text-base font-bold text-rose-600">
                     {selectedSubject.total - selectedSubject.attended}
                   </div>
                 </div>
                 <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100">
-                  <div className="text-[11px] text-slate-500">Current %</div>
+                  <div className="text-[11px] text-slate-500">{t.currentAttendance || "Current %"}</div>
                   <div
                     className={`text-base font-bold ${
                       selectedSubject.percentage < 70 ? "text-amber-800" : "text-emerald-700"
@@ -234,7 +234,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
                 {/* Interactive Slider */}
                 <div className="pt-2">
                   <div className="flex justify-between text-xs font-semibold text-slate-700 mb-1">
-                    <span>Simulate upcoming classes attended:</span>
+                    <span>{t.simulateAttendance}:</span>
                     <span className="text-blue-700 font-bold">+{simulatedClasses} classes</span>
                   </div>
                   <input
@@ -246,7 +246,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
                     className="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                   />
                   <div className="mt-2 flex items-center justify-between rounded-lg bg-white p-2.5 border border-blue-200 text-xs">
-                    <span className="text-slate-600">Simulated Project Attendance:</span>
+                    <span className="text-slate-600">{t.attendanceCalculator}:</span>
                     <span className="text-sm font-extrabold text-blue-900">
                       {calculateSimulatedPct(selectedSubject, simulatedClasses)}%
                     </span>

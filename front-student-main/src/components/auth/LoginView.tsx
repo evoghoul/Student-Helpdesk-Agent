@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import {
@@ -13,14 +13,16 @@ import {
 } from "lucide-react";
 import { CURRENT_STUDENT } from "@/data/student";
 import { useLanguage } from "@/context/LanguageContext";
+import { LanguageSelector } from "@/components/common/LanguageSelector";
 import { apiClient } from "@/lib/api-client";
 import { useStudent } from "@/context/StudentContext";
 
 interface LoginViewProps {
   onLogin: () => void;
+  onBack?: () => void;
 }
 
-export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
+export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
   const { t } = useLanguage();
   const { loginAsStudent } = useStudent();
   const [studentId, setStudentId] = useState(CURRENT_STUDENT.id);
@@ -32,7 +34,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!studentId.trim()) {
-      setError("Please enter your Student Roll Number.");
+      setError(t.enterStudentId || "Please enter your Student Roll Number.");
       return;
     }
     setError(null);
@@ -78,33 +80,40 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
       </div>
 
       {/* Top Bar */}
-      <header className="relative z-10 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md px-6 py-4">
+      <header className="relative z-10 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md px-4 sm:px-6 py-3.5">
         <div className="mx-auto max-w-7xl flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {/* Vignan's University Official Logo */}
+            {/* Vignan University Official Logo */}
             <img
               src="/vignan-logo.png"
-              alt="Vignan's Foundation for Science, Technology & Research"
+              alt="Vignan Foundation"
               className="h-10 sm:h-12 w-auto object-contain"
             />
             <div className="h-8 w-px bg-slate-200 hidden sm:block" />
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-sm tracking-tight text-slate-900">
-                  Student Helpdesk
+                  {t.appName || "Student Helpdesk"}
                 </span>
                 <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700 border border-blue-200">
                   <Sparkles className="h-2.5 w-2.5" />
                   AGENT 65
                 </span>
               </div>
-              <p className="text-xs text-slate-500">Autonomous University System</p>
+              <p className="text-xs text-slate-500">
+                {t.loginSubtitle || "Autonomous University System"}
+              </p>
             </div>
           </div>
 
-          <div className="hidden md:flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full">
-            <ShieldCheck className="h-4 w-4 text-emerald-600" />
-            <span className="font-medium">RLS Guardrails Active</span>
+          <div className="flex items-center gap-2.5">
+            <LanguageSelector />
+            <div className="hidden md:flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full">
+              <ShieldCheck className="h-4 w-4 text-emerald-600" />
+              <span className="font-medium">
+                {t.loginRlsActive || "RLS Guardrails Active"}
+              </span>
+            </div>
           </div>
         </div>
       </header>
@@ -123,7 +132,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
                 {t.loginTitle || "Student Single Sign-On"}
               </h1>
               <p className="text-sm text-slate-500 max-w-sm mx-auto">
-                Sign in with your University Roll Number to connect with your personalized Student Helpdesk AI Agent.
+                {t.loginBannerNote ||
+                  "Sign in with your University Roll Number to connect with your personalized Student Helpdesk AI Agent."}
               </p>
             </div>
 
@@ -138,8 +148,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-600 flex items-center justify-between">
-                  <span>Student Roll No / ID</span>
-                  <span className="text-[11px] text-blue-600 font-normal">Format: 251FA04E03</span>
+                  <span>{t.rollNoLabel || "Student Roll Number"}</span>
+                  <span className="text-[11px] text-blue-600 font-normal">
+                    {t.loginRollFormat || "Format: 251FA04E03"}
+                  </span>
                 </label>
                 <div className="relative">
                   <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -147,7 +159,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
                     type="text"
                     value={studentId}
                     onChange={(e) => setStudentId(e.target.value)}
-                    placeholder="Enter Student ID"
+                    placeholder={t.enterStudentId || "Enter Student ID"}
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
                     required
                   />
@@ -156,9 +168,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
 
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-600 flex items-center justify-between">
-                  <span>Institutional Password / PIN</span>
+                  <span>{t.loginPasswordPin || "Institutional Password / PIN"}</span>
                   <a href="#" className="text-[11px] text-blue-600 hover:text-blue-700 transition-colors">
-                    Forgot PIN?
+                    {t.loginForgotPin || "Forgot PIN?"}
                   </a>
                 </label>
                 <div className="relative">
@@ -182,11 +194,11 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
                     onChange={(e) => setRememberMe(e.target.checked)}
                     className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-white"
                   />
-                  <span>Keep me authenticated</span>
+                  <span>{t.loginKeepAuth || "Keep me authenticated"}</span>
                 </label>
                 <span className="flex items-center gap-1 text-slate-500 text-[11px]">
                   <Fingerprint className="h-3.5 w-3.5 text-blue-500" />
-                  Biometric ready
+                  {t.loginBiometricReady || "Biometric ready"}
                 </span>
               </div>
 
@@ -199,11 +211,11 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
                 {isLoading ? (
                   <span className="flex items-center gap-2">
                     <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                    Authenticating Student...
+                    {t.loginAuthenticating || "Authenticating Student..."}
                   </span>
                 ) : (
                   <>
-                    <span>Sign In to Student Helpdesk</span>
+                    <span>{t.signIn || t.loginTitle || "Sign In"}</span>
                     <ArrowRight className="h-4 w-4" />
                   </>
                 )}
@@ -214,7 +226,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
             <div className="relative flex items-center justify-center pt-1">
               <div className="border-t border-slate-200 w-full" />
               <span className="bg-white px-3 text-[11px] uppercase tracking-wider text-slate-400 font-semibold absolute">
-                Instant Demo Access
+                {t.loginInstantDemo || "Instant Demo Access"}
               </span>
             </div>
 
@@ -231,7 +243,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
                 <div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
-                      Demo: {CURRENT_STUDENT.name}
+                      {t.loginDemoLabel || "Demo"}: {CURRENT_STUDENT.name}
                     </span>
                     <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
                   </div>
@@ -241,7 +253,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
                 </div>
               </div>
               <span className="rounded-lg bg-blue-100 px-2.5 py-1 text-[11px] font-semibold text-blue-700 border border-blue-200 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all">
-                Sign In
+                {t.signIn || "Sign In"}
               </span>
             </button>
 
@@ -249,11 +261,11 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
             <div className="pt-2 border-t border-slate-100 grid grid-cols-2 gap-2 text-[11px] text-slate-500">
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-                <span>Row-Level Authorization</span>
+                <span>{t.loginRowLevelAuth || "Row-Level Authorization"}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-                <span>12 Federated Agents</span>
+                <span>{t.loginTwelveFederated || "12 Federated Agents"}</span>
               </div>
             </div>
           </div>
@@ -263,7 +275,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
       {/* Footer */}
       <footer className="relative z-10 w-full border-t border-slate-200 bg-white/80 backdrop-blur-md px-6 py-4 text-center text-xs text-slate-500">
         <p>
-          Institutional Helpdesk Agent 65 • Group 13 Autonomous Context Engine • Protected by University Privacy Policies
+          {t.loginFooterPolicy ||
+            "Institutional Helpdesk Agent 65 • Group 13 Autonomous Context Engine • Protected by University Privacy Policies"}
         </p>
       </footer>
     </div>

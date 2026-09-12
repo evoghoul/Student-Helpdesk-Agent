@@ -14,6 +14,7 @@ import {
   LifeBuoy,
 } from "lucide-react";
 import { useStudent } from "@/context/StudentContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface CommandBarModalProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export const CommandBarModal: React.FC<CommandBarModalProps> = ({
   onSelectQuery,
 }) => {
   const { studentData } = useStudent();
+  const { t, tDynamic } = useLanguage();
   const student = studentData?.profile;
 
   const [searchTerm, setSearchTerm] = useState("");

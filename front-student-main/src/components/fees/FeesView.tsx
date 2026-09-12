@@ -24,7 +24,7 @@ interface FeesViewProps {
 
 export const FeesView: React.FC<FeesViewProps> = ({ onAskHelpdesk }) => {
   const { studentData } = useStudent();
-  const { t } = useLanguage();
+  const { t, tDynamic } = useLanguage();
   const student = studentData?.profile || CURRENT_STUDENT;
   const feesData = studentData?.fees || FEES_DATA;
 
@@ -84,7 +84,7 @@ export const FeesView: React.FC<FeesViewProps> = ({ onAskHelpdesk }) => {
           <div className="text-2xl font-black text-slate-900 mt-1">
             {formatCurrency(FEES_DATA.totalDemand)}
           </div>
-          <p className="text-[11px] text-slate-500 mt-0.5">Academic Year 2026–27</p>
+          <p className="text-[11px] text-slate-500 mt-0.5">{t.academicYear || "Academic Year"} 2026–27</p>
         </div>
 
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4 shadow-2xs">
@@ -94,7 +94,7 @@ export const FeesView: React.FC<FeesViewProps> = ({ onAskHelpdesk }) => {
           <div className="text-2xl font-black text-emerald-700 mt-1">
             {formatCurrency(FEES_DATA.totalPaid)}
           </div>
-          <p className="text-[11px] text-emerald-800 mt-0.5">Verified & Cleared</p>
+          <p className="text-[11px] text-emerald-800 mt-0.5">{t.verifiedCleared || "Verified & Cleared"}</p>
         </div>
 
         <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 shadow-2xs">
@@ -127,9 +127,9 @@ export const FeesView: React.FC<FeesViewProps> = ({ onAskHelpdesk }) => {
                 <div>
                   <h4 className="font-bold text-slate-900 text-sm">{item.head}</h4>
                   <div className="flex items-center gap-3 text-xs text-slate-500 mt-0.5">
-                    <span>Demand: <strong>{formatCurrency(item.demand)}</strong></span>
+                    <span>{t.statusDue}: <strong>{formatCurrency(item.demand)}</strong></span>
                     <span>•</span>
-                    <span className="text-emerald-700">Paid: <strong>{formatCurrency(item.paid)}</strong></span>
+                    <span className="text-emerald-700">{t.statusPaid}: <strong>{formatCurrency(item.paid)}</strong></span>
                     <span>•</span>
                     <span>Due: {item.dueDate}</span>
                   </div>

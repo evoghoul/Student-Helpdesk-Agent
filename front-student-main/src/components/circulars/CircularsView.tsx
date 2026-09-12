@@ -18,7 +18,7 @@ interface CircularsViewProps {
 }
 
 export const CircularsView: React.FC<CircularsViewProps> = ({ onAskHelpdesk }) => {
-  const { t } = useLanguage();
+  const { t, tDynamic } = useLanguage();
   const [filterCategory, setFilterCategory] = useState<string>("All");
 
   const categories = ["All", "Examinations", "Academics", "Administration", "Holidays"];
@@ -121,7 +121,7 @@ export const CircularsView: React.FC<CircularsViewProps> = ({ onAskHelpdesk }) =
                     onClick={() => onAskHelpdesk(`Tell me more about circular: ${item.title}`)}
                     className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1"
                   >
-                    <span>Ask AI</span>
+                    <span>{t.askButton}</span>
                     <ChevronRight className="h-3.5 w-3.5" />
                   </button>
                 </div>

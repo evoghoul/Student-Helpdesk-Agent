@@ -15,6 +15,7 @@ import { CURRENT_STUDENT } from "@/data/student";
 import { ServiceRequest } from "@/data/services";
 import { apiClient } from "@/lib/api-client";
 import { useStudent } from "@/context/StudentContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface ServiceRequestModalProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ export const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
   onSubmitRequest,
 }) => {
   const { studentData } = useStudent();
+  const { t, tDynamic } = useLanguage();
   const student = studentData?.profile || CURRENT_STUDENT;
 
   const [category, setCategory] = useState<ServiceRequest["category"]>(
@@ -186,9 +188,9 @@ export const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
               >
                 <option value="Certificate">Certificate Application (Bonafide, Custodian, etc.)</option>
                 <option value="Mentor Meeting">Book Mentor Meeting (Dr. Radhika Sharma)</option>
-                <option value="Grievance">Raise an Academic / Campus Grievance</option>
-                <option value="Academic Support">Request Academic Support / Remedial Coaching</option>
-                <option value="Issue Report">Report Technical / Infrastructure Issue</option>
+                <option value="Grievance">{t.reqGrievance || "Raise an Academic / Campus Grievance"}</option>
+                <option value="Academic Support">{t.reqSupport || "Request Academic Support / Remedial Coaching"}</option>
+                <option value="Issue Report">{t.reqTechnical || "Report Technical / Infrastructure Issue"}</option>
               </select>
             </div>
 
@@ -224,7 +226,7 @@ export const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
 
             {/* Priority */}
             <div>
-              <label className="block font-bold text-slate-700 mb-1">Priority</label>
+              <label className="block font-bold text-slate-700 mb-1">{t.priority || "Priority"}</label>
               <div className="flex gap-2">
                 {(["Low", "Medium", "High", "Urgent"] as const).map((p) => (
                   <button
@@ -262,7 +264,7 @@ export const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
                 ) : (
                   <>
                     <Send className="h-3.5 w-3.5" />
-                    <span>Submit Service Request</span>
+                    <span>{t.submitServiceRequest || "Submit Service Request"}</span>
                   </>
                 )}
               </button>

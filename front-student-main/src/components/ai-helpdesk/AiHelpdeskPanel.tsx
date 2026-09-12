@@ -76,7 +76,8 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
     registerDistressCallback,
   } = useAgentChat();
 
-  const { t: tr, language } = useLanguage();
+  const { t, language } = useLanguage();
+  const tr = t;
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const isFirstRender = useRef(true);
@@ -163,7 +164,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
             </div>
             <div className="flex items-center gap-1.5">
               <MapPin className="h-3.5 w-3.5 shrink-0 text-rose-600" />
-              Location: <strong>Student Wellness Center, Health Block Room 104</strong>
+              Location: <strong>{t.wellnessCenter || "Student Wellness Center, Health Block Room 104"}</strong>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -172,13 +173,13 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
               className="flex items-center gap-1.5 rounded-xl bg-rose-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-rose-700 transition-colors cursor-pointer"
             >
               <PhoneCall className="h-3.5 w-3.5" />
-              <span>Connect with Counselor Now</span>
+              <span>{t.connectCounselor}</span>
             </button>
             <button
               onClick={() => onOpenEscalation("Student experiencing extreme stress and academic pressure")}
               className="flex items-center gap-1.5 rounded-xl bg-white border border-rose-300 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50 transition-colors cursor-pointer"
             >
-              <span>Talk to Human Support</span>
+              <span>{t.talkToHuman}</span>
             </button>
           </div>
         </div>
@@ -187,23 +188,23 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
 
     if (card.type === "attendance") {
       const data = card.data as Record<string, unknown>;
-      const t = cardTone.attendance;
+      const tone = cardTone.attendance;
       return (
-        <div className={cn("mt-3 rounded-2xl border p-4 shadow-xs", t.border, t.bg)}>
+        <div className={cn("mt-3 rounded-2xl border p-4 shadow-xs", tone.border, tone.bg)}>
           <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
             <div className="flex flex-wrap items-center gap-2 min-w-0">
-              <Badge variant={t.badge} className="whitespace-normal text-left">{card.badge}</Badge>
+              <Badge variant={tone.badge} className="whitespace-normal text-left">{card.badge}</Badge>
               <span className="text-xs font-bold text-slate-800">{card.title}</span>
             </div>
             <span className="text-xs font-bold text-amber-900 shrink-0">{String(data.currentAttendance || "68%")}</span>
           </div>
 
           <div className="grid grid-cols-2 gap-2 my-2 text-xs">
-            <div className={cn("rounded-lg bg-white p-2.5 border", t.tile)}>
-              <div className="text-[11px] text-slate-500">Classes Attended</div>
+            <div className={cn("rounded-lg bg-white p-2.5 border", tone.tile)}>
+              <div className="text-[11px] text-slate-500">{t.classesAttended}</div>
               <div className="font-bold text-slate-800">{String(data.attendedRatio || "34 / 50")}</div>
             </div>
-            <div className={cn("rounded-lg bg-white p-2.5 border", t.tile)}>
+            <div className={cn("rounded-lg bg-white p-2.5 border", tone.tile)}>
               <div className="text-[11px] text-slate-500">Target for 70%</div>
               <div className="font-bold text-amber-700">
                 {data.consecutiveNeeded70 ? `${String(data.consecutiveNeeded70)} classes consecutive` : "Requirement met"}
@@ -218,7 +219,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
 
           <button
             onClick={() => onNavigateTab("attendance")}
-            className={cn("flex items-center gap-1 rounded-lg text-white px-3 py-1.5 text-xs font-semibold transition-colors shadow-xs cursor-pointer", t.button)}
+            className={cn("flex items-center gap-1 rounded-lg text-white px-3 py-1.5 text-xs font-semibold transition-colors shadow-xs cursor-pointer", tone.button)}
           >
             <span>{tr.openAttendanceDrawer}</span>
             <ArrowUpRight className="h-3.5 w-3.5" />
@@ -235,15 +236,15 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
       const examTime = (data.time && data.time !== "undefined") ? String(data.time) : (firstExam.time || "10:00 AM");
       const examVenue = (data.venue && data.venue !== "undefined") ? String(data.venue) : (firstExam.venue || "Examination Hall (N-312 / N-Block)");
       const seating = (data.seating && data.seating !== "undefined") ? String(data.seating) : (firstExam.hall_ticket_status || "Hall Ticket Allocated");
-      const t = cardTone.exam;
+      const tone = cardTone.exam;
       return (
-        <div className={cn("mt-3 rounded-2xl border p-4 shadow-xs", t.border, t.bg)}>
+        <div className={cn("mt-3 rounded-2xl border p-4 shadow-xs", tone.border, tone.bg)}>
           <div className="flex flex-wrap items-center gap-2 mb-2">
-            <Badge variant={t.badge} className="whitespace-normal text-left">{card.badge}</Badge>
-            <span className="text-xs font-mono font-bold text-blue-700">7 Days Remaining</span>
+            <Badge variant={tone.badge} className="whitespace-normal text-left">{card.badge}</Badge>
+            <span className="text-xs font-mono font-bold text-blue-700">7 {t.daysRemaining}</span>
           </div>
           <h4 className="text-sm font-bold text-slate-900">{card.title}</h4>
-          <div className={cn("my-2 rounded-xl bg-white p-2.5 border text-xs space-y-1.5 text-slate-700", t.tile)}>
+          <div className={cn("my-2 rounded-xl bg-white p-2.5 border text-xs space-y-1.5 text-slate-700", tone.tile)}>
             <div className="flex items-center gap-1.5">
               <CalendarClock className="h-3.5 w-3.5 shrink-0 text-blue-600" />
               Date & Time: <strong>{String(examDate)} at {String(examTime)}</strong>
@@ -259,7 +260,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
           </div>
           <button
             onClick={() => onNavigateTab("exams")}
-            className={cn("flex items-center gap-1 rounded-lg text-white px-3 py-1.5 text-xs font-semibold transition-colors shadow-xs cursor-pointer", t.button)}
+            className={cn("flex items-center gap-1 rounded-lg text-white px-3 py-1.5 text-xs font-semibold transition-colors shadow-xs cursor-pointer", tone.button)}
           >
             <span>{tr.viewExamSchedule}</span>
             <ArrowUpRight className="h-3.5 w-3.5" />
@@ -270,28 +271,28 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
 
     if (card.type === "fee") {
       const data = card.data as Record<string, unknown>;
-      const t = cardTone.fee;
+      const tone = cardTone.fee;
       return (
-        <div className={cn("mt-3 rounded-2xl border p-4 shadow-xs", t.border, t.bg)}>
+        <div className={cn("mt-3 rounded-2xl border p-4 shadow-xs", tone.border, tone.bg)}>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2">
-            <Badge variant={t.badge} className="whitespace-normal text-left">{card.badge}</Badge>
+            <Badge variant={tone.badge} className="whitespace-normal text-left">{card.badge}</Badge>
             <span className="text-xs font-bold text-amber-900">Due: {String(data.dueDate)}</span>
           </div>
           <div className="grid grid-cols-2 gap-2 my-2 text-xs">
-            <div className={cn("rounded-lg bg-white p-2.5 border", t.tile)}>
-              <div className="text-[11px] text-slate-500">Total Demand</div>
+            <div className={cn("rounded-lg bg-white p-2.5 border", tone.tile)}>
+              <div className="text-[11px] text-slate-500">{t.totalFees}</div>
               <div className="font-bold text-slate-800">{String(data.demand)}</div>
             </div>
-            <div className={cn("rounded-lg bg-white p-2.5 border", t.tile)}>
-              <div className="text-[11px] text-slate-500">Total Settled</div>
+            <div className={cn("rounded-lg bg-white p-2.5 border", tone.tile)}>
+              <div className="text-[11px] text-slate-500">{t.amountPaid}</div>
               <div className="font-bold text-emerald-600">{String(data.paid)}</div>
             </div>
           </div>
           <button
             onClick={() => onNavigateTab("fees")}
-            className={cn("flex items-center gap-1 rounded-lg text-white px-3 py-1.5 text-xs font-semibold transition-colors shadow-xs cursor-pointer", t.button)}
+            className={cn("flex items-center gap-1 rounded-lg text-white px-3 py-1.5 text-xs font-semibold transition-colors shadow-xs cursor-pointer", tone.button)}
           >
-            <span>View Fee Details & Pay Dues</span>
+            <span>{t.navFees}</span>
             <ArrowUpRight className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -299,11 +300,11 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
     }
 
     if (card.type === "curriculum") {
-      const t = cardTone.curriculum;
+      const tone = cardTone.curriculum;
       return (
-        <div className={cn("mt-3 rounded-2xl border p-4 shadow-xs", t.border, t.bg)}>
+        <div className={cn("mt-3 rounded-2xl border p-4 shadow-xs", tone.border, tone.bg)}>
           <div className="flex flex-wrap items-center gap-2 mb-2">
-            <Badge variant={t.badge} className="whitespace-normal text-left">{card.badge}</Badge>
+            <Badge variant={tone.badge} className="whitespace-normal text-left">{card.badge}</Badge>
             <span className="text-xs font-bold text-cyan-900">Progress: 60%</span>
           </div>
           <p className="text-xs text-slate-700 mb-3 font-medium">
@@ -311,9 +312,9 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
           </p>
           <button
             onClick={() => onNavigateTab("curriculum")}
-            className={cn("flex items-center gap-1 rounded-lg text-white px-3 py-1.5 text-xs font-semibold transition-colors shadow-xs cursor-pointer", t.button)}
+            className={cn("flex items-center gap-1 rounded-lg text-white px-3 py-1.5 text-xs font-semibold transition-colors shadow-xs cursor-pointer", tone.button)}
           >
-            <span>View Curriculum Pathway</span>
+            <span>{t.navCurriculum}</span>
             <ArrowUpRight className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -321,19 +322,19 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
     }
 
     if (card.type === "service") {
-      const t = cardTone.service;
+      const tone = cardTone.service;
       return (
-        <div className={cn("mt-3 rounded-2xl border p-4 shadow-xs", t.border, t.bg)}>
+        <div className={cn("mt-3 rounded-2xl border p-4 shadow-xs", tone.border, tone.bg)}>
           <div className="flex flex-wrap items-center gap-2 mb-2">
-            <Badge variant={t.badge} className="whitespace-normal text-left">{card.badge}</Badge>
+            <Badge variant={tone.badge} className="whitespace-normal text-left">{card.badge}</Badge>
             <span className="text-xs font-bold text-indigo-950">{card.title}</span>
           </div>
           <p className="text-xs text-indigo-900/90 mb-3">{card.subtitle}</p>
           <button
             onClick={() => onOpenServiceModal()}
-            className={cn("flex items-center gap-1 rounded-lg text-white px-3 py-1.5 text-xs font-semibold transition-colors shadow-xs cursor-pointer", t.button)}
+            className={cn("flex items-center gap-1 rounded-lg text-white px-3 py-1.5 text-xs font-semibold transition-colors shadow-xs cursor-pointer", tone.button)}
           >
-            <span>Open Service Request Flow</span>
+            <span>{t.newServiceRequest}</span>
             <ArrowUpRight className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -368,7 +369,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                 <Bot className="h-4 w-4" />
               </div>
               <div className="min-w-0 flex items-center gap-1.5 truncate">
-                <h2 className="text-sm font-bold text-slate-900 truncate">Student Helpdesk</h2>
+                <h2 className="text-sm font-bold text-slate-900 truncate">{t.studentHelpdesk || "Student Helpdesk"}</h2>
                 <Badge variant="primary" className="text-[10px] px-1.5 py-0 bg-blue-600 text-white shrink-0">
                   Agent 65
                 </Badge>
@@ -489,7 +490,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                   aria-label="Maximize chat"
                 >
                   <Maximize2 className="h-3.5 w-3.5 text-slate-600" />
-                  <span>Maximize</span>
+                  <span>{t.maximize || "Maximize"}</span>
                 </button>
               )}
 
@@ -514,7 +515,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
               >
                 <LifeBuoy className="h-3.5 w-3.5 text-indigo-600" />
                 <span className="hidden md:inline">{tr.needHumanHelp}</span>
-                <span className="md:hidden">Help</span>
+                <span className="md:hidden">{t.help || "Help"}</span>
               </button>
 
               {/* Close button for Maximized */}

@@ -20,6 +20,7 @@ import { Language, TRANSLATIONS, OFFICIAL_LANGUAGES_OF_INDIA } from "@/data/tran
 import { useLanguage } from "@/context/LanguageContext";
 import { useStudent } from "@/context/StudentContext";
 import { cn } from "@/lib/utils";
+import { LanguageSelector } from "@/components/common/LanguageSelector";
 
 interface HeaderProps {
   currentLang: Language;

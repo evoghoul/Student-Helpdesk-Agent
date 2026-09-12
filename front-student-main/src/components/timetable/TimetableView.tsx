@@ -26,7 +26,7 @@ interface TimetableViewProps {
 
 export const TimetableView: React.FC<TimetableViewProps> = ({ onAskHelpdesk }) => {
   const { studentData } = useStudent();
-  const { t } = useLanguage();
+  const { t, tDynamic } = useLanguage();
   const student = studentData?.profile;
 
   // Selected Day State (Defaults to Friday)
@@ -81,7 +81,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({ onAskHelpdesk }) =
             <MapPin className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-            <span className="text-[10px] font-bold text-blue-800 uppercase tracking-wider">Classroom</span>
+            <span className="text-[10px] font-bold text-blue-800 uppercase tracking-wider">{t.tableRoom}</span>
             <p className="text-xs font-bold text-slate-900 truncate">{SECTION_METADATA.section} ({SECTION_METADATA.room})</p>
           </div>
         </div>
@@ -91,7 +91,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({ onAskHelpdesk }) =
             <User className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-            <span className="text-[10px] font-bold text-indigo-800 uppercase tracking-wider">Class Teacher</span>
+            <span className="text-[10px] font-bold text-indigo-800 uppercase tracking-wider">{t.classTeacher}</span>
             <p className="text-xs font-bold text-slate-900 truncate">{SECTION_METADATA.classTeacher}</p>
           </div>
         </div>
@@ -101,7 +101,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({ onAskHelpdesk }) =
             <Phone className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-            <span className="text-[10px] font-bold text-purple-800 uppercase tracking-wider">TT Coordinator</span>
+            <span className="text-[10px] font-bold text-purple-800 uppercase tracking-wider">{t.coordinator}</span>
             <p className="text-xs font-bold text-slate-900 truncate" title={SECTION_METADATA.timetableCoordinator}>
               {SECTION_METADATA.timetableCoordinator}
             </p>

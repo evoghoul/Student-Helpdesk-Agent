@@ -19,7 +19,7 @@ interface CurriculumViewProps {
 }
 
 export const CurriculumView: React.FC<CurriculumViewProps> = ({ onAskHelpdesk }) => {
-  const { t } = useLanguage();
+  const { t, tDynamic } = useLanguage();
   const [expandedCat, setExpandedCat] = useState<string>("Core Engineering");
 
   const toggleExpand = (name: string) => {
@@ -51,7 +51,7 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({ onAskHelpdesk })
           className="flex items-center gap-1.5 rounded-xl bg-cyan-700 px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-cyan-800 transition-colors cursor-pointer"
         >
           <Sparkles className="h-4 w-4" />
-          <span>Ask AI: What courses will I need to graduate?</span>
+          <span>{t.askButton}: {t.curriculumTitle}</span>
         </button>
       </div>
 
@@ -77,13 +77,13 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({ onAskHelpdesk })
 
           <div className="flex gap-4 text-xs font-medium">
             <div className="rounded-xl bg-white p-3 border border-cyan-100 shadow-2xs">
-              <div className="text-slate-500 text-[11px]">Current Sem 5</div>
+              <div className="text-slate-500 text-[11px]">{t.currentSem || "Current Sem"} 5</div>
               <div className="text-base font-bold text-cyan-900">
                 {CURRICULUM_DATA.currentSemesterCredits} Credits
               </div>
             </div>
             <div className="rounded-xl bg-white p-3 border border-cyan-100 shadow-2xs">
-              <div className="text-slate-500 text-[11px]">Remaining to Graduate</div>
+              <div className="text-slate-500 text-[11px]">{t.curriculumProgressSub}</div>
               <div className="text-base font-bold text-indigo-900">
                 {CURRICULUM_DATA.remainingCredits} Credits
               </div>
@@ -145,7 +145,7 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({ onAskHelpdesk })
                   <div>
                     <div className="flex items-center gap-1.5 font-bold text-emerald-800 mb-2">
                       <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                      <span>Completed Courses:</span>
+                      <span>{t.creditsCompleted}:</span>
                     </div>
                     {cat.coursesDone.length > 0 ? (
                       <ul className="space-y-1 pl-1">
