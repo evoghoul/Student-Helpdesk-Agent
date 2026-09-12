@@ -316,12 +316,22 @@ class NLUEngine:
             if language in INDIAN_LANG_MAP:
                 lang_name, native_name, script_name = INDIAN_LANG_MAP[language]
                 lang_directive = (
-                    f"2. LANGUAGE DIRECTIVE (MANDATORY): You MUST respond warmly, politely, and fluently in pure {lang_name} ({native_name}) using authentic {native_name} script. "
-                    f"Express all academic guidance, attendance explanations, calculations, exam info, and empathy directly in {native_name} script. "
+                    f"2. LANGUAGE DIRECTIVE (MANDATORY {lang_name.upper()}): The user has selected {lang_name} ({native_name}). "
+                    f"You MUST respond warmly, politely, and fluently in pure {lang_name} ({native_name}) using authentic {script_name} script. "
+                    f"Express all academic guidance, attendance explanations, calculations, exam info, and timetable info directly in {native_name} script. "
+                    f"Even if previous turns in the chat history were in English or another language, switch completely to {lang_name} ({native_name}) now. "
+                    f"Do NOT mix in Marathi, Hindi, or any other unselected Indian language. "
                     "Keep institutional identifiers like roll number '251FA04E03', room numbers, and course codes clearly readable.\n"
                 )
             else:
-                lang_directive = "2. Answer naturally, warmly, directly, and articulately in conversational English (or Hinglish if the student asks in Hinglish).\n"
+                lang_directive = (
+                    "2. LANGUAGE DIRECTIVE (STRICT ENGLISH): The user's active interface language is English. "
+                    "You MUST respond EXCLUSIVELY in natural, articulate, warm conversational English using the standard Latin alphabet. "
+                    "CRITICAL NEGATIVE CONSTRAINT: Even if previous messages in the conversation history were in Devanagari, Sanskrit, Marathi, Hindi, or another script, "
+                    "or if the student's query contains cultural or Indian phrases (such as 'Jay Bajrangbali', 'Jay Shri Ram', 'Allah Hu Akbar', 'Namaste'), "
+                    "you MUST greet or acknowledge the student warmly and provide all help, timetable details, and academic answers STRICTLY in standard English (Latin alphabet). "
+                    "You are STRICTLY FORBIDDEN from generating Devanagari, Marathi, Hindi, or any regional script when the language is English.\n"
+                )
 
             system_prompt = (
                 "You are Agent 65, an exceptionally intelligent, empathetic, and knowledgeable university student helpdesk AI "
@@ -349,6 +359,26 @@ class NLUEngine:
                 model=selected_model
             )
             if llm_reply:
+                # Script & Language Guardrail:
+                # If target language is English and student's query is in Latin script (no Indic script characters),
+                # ensure the LLM didn't leak Devanagari or other Indic scripts from earlier multi-turn history.
+                if language == "en" and not any(0x0900 <= ord(c) <= 0x0DFF for c in query):
+                    indic_count = sum(1 for c in llm_reply if 0x0900 <= ord(c) <= 0x0DFF)
+                    if indic_count > 10:
+                        import logging
+                        logging.getLogger(__name__).warning(f"Detected script drift in LLM output ({indic_count} Indic chars) while in English mode. Regenerating in pure English.")
+                        clean_history = [
+                            turn for turn in conversation_history
+                            if not any(0x0900 <= ord(c) <= 0x0DFF for c in turn.get("content", ""))
+                        ]
+                        retry_reply = LocalLLMClient.chat_with_history(
+                            system_prompt=system_prompt,
+                            history=clean_history,
+                            user_prompt=query,
+                            model=selected_model
+                        )
+                        if retry_reply and sum(1 for c in retry_reply if 0x0900 <= ord(c) <= 0x0DFF) <= 10:
+                            return retry_reply
                 return llm_reply
 
         # Deterministic fallback if LLM is offline or timed out
