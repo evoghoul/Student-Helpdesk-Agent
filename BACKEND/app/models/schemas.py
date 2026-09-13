@@ -52,7 +52,6 @@ class StructuredCard(BaseModel):
 class MessageCreate(BaseModel):
     content: str
     language: Optional[str] = "en"
-    model_mode: Optional[str] = "fast"
 
 class Citation(BaseModel):
     title: str

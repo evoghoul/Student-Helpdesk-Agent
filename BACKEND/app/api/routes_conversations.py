@@ -61,7 +61,6 @@ async def send_message(
         session=session,
         conversation_id=conversation_id,
         user_message=msg.content,
-        language=msg.language or "en",
-        model_mode=msg.model_mode or "fast"
+        language=msg.language or "en"
     )
     return MessageResponse(**agent_response)

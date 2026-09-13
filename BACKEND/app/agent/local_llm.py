@@ -10,6 +10,8 @@ OLLAMA_BASE_URL = "http://localhost:11434"
 DEFAULT_MODEL = "agent65"
 FALLBACK_MODELS = ["agent65", "agent65-8b", "llama3.1:8b", "llama3.2:3b", "phi3:mini", "llama3.2:1b", "qwen2.5:3b", "mistral:7b"]
 
+from app.config import settings
+
 class LocalLLMClient:
     """
     Client for local open-source LLM inference via Ollama.
@@ -22,7 +24,15 @@ class LocalLLMClient:
 
     @classmethod
     def is_available(cls, timeout: float = 1.5) -> bool:
-        """Check if local Ollama daemon is active and responsive."""
+        """Check if local Ollama daemon or Cloud API is active."""
+        provider = getattr(settings, "LLM_PROVIDER", "mock")
+        groq_key = getattr(settings, "GROQ_API_KEY", "") or getattr(settings, "CLOUD_API_KEY", "")
+        if (provider == "cloud" or groq_key) and groq_key:
+            return True
+        if provider != "local":
+            return False
+        if cls._available is not None:
+            return cls._available
         try:
             resp = requests.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=timeout)
             if resp.status_code == 200:
@@ -107,7 +117,17 @@ class LocalLLMClient:
         model: Optional[str] = None,
         timeout: float = 75.0
     ) -> Optional[str]:
-        target_model = model or cls._active_model or DEFAULT_MODEL
+        provider = getattr(settings, "LLM_PROVIDER", "mock")
+        groq_key = getattr(settings, "GROQ_API_KEY", "") or getattr(settings, "CLOUD_API_KEY", "")
+        if (provider == "cloud" or model == "8B+API" or groq_key) and groq_key:
+            return cls._send_groq_chat(messages, timeout=timeout)
+
+        model_mapping = {
+            "3B": "agent65:latest",
+            "8B": "agent65-8b:latest",
+            "8B+API": "llama3.1:8b" # Fallback if API key is missing
+        }
+        target_model = model_mapping.get(model, model) or cls._active_model or DEFAULT_MODEL
         url = f"{OLLAMA_BASE_URL}/api/chat"
         payload = {
             "model": target_model,
@@ -130,6 +150,56 @@ class LocalLLMClient:
             logger.warning(f"Local LLM chat failed: {e}")
         return None
 
+    @classmethod
+    def _send_groq_chat(
+        cls,
+        messages: List[Dict[str, str]],
+        timeout: float = 75.0
+    ) -> Optional[str]:
+        api_key = getattr(settings, "GROQ_API_KEY", "") or getattr(settings, "CLOUD_API_KEY", "")
+        if not api_key:
+            return None
+        url = "https://api.groq.com/openai/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        candidate_models = ["openai/gpt-oss-20b", "qwen/qwen3.8-27b", "openai/gpt-oss-120b"]
+        import time
+        for candidate_model in candidate_models:
+            payload = {
+                "model": candidate_model,
+                "messages": messages,
+                "temperature": 0.5,
+                "max_tokens": 600
+            }
+            for attempt in range(3):
+                try:
+                    resp = requests.post(url, headers=headers, json=payload, timeout=timeout)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        msg = data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+                        if msg:
+                            return cls.clean_latex_formatting(msg)
+                    elif resp.status_code == 429:
+                        retry_sec = 3.5
+                        try:
+                            hdr = resp.headers.get("Retry-After")
+                            if hdr:
+                                retry_sec = max(float(hdr), 3.0)
+                        except Exception:
+                            retry_sec = 3.5
+                        logger.warning(f"Groq API model {candidate_model} rate limited (429), waiting {retry_sec:.1f}s for attempt {attempt+1}/3...")
+                        time.sleep(retry_sec)
+                        continue
+                    else:
+                        logger.warning(f"Groq API model {candidate_model} returned {resp.status_code}: {resp.text}")
+                        break
+                except Exception as e:
+                    logger.warning(f"Groq API model {candidate_model} request failed: {e}")
+                    break
+        return None
+
     @staticmethod
     def clean_latex_formatting(text: str) -> str:
         """
@@ -138,6 +208,35 @@ class LocalLLMClient:
         """
         if not text:
             return text
+
+        # Clean unicode characters that cause cp1252 encode failures on Windows
+        text = text.replace('\u2011', '-').replace('\u2013', '-').replace('\u2014', '--')
+        text = text.replace('\u202f', ' ').replace('\xa0', ' ')
+        text = text.replace('\u2018', "'").replace('\u2019', "'")
+        text = text.replace('\u201c', '"').replace('\u201d', '"')
+
+        # 0. Strip reasoning / thinking tags like <think> ... </think>
+        text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL)
+
+        # 0b. Clean HTML tags: handle lines inside tables vs outside tables
+        lines = text.split('\n')
+        cleaned_lines = []
+        for line in lines:
+            if line.strip().startswith('|') and line.strip().endswith('|'):
+                # Inside markdown table: convert <li> to <br>• to preserve table row integrity
+                line = re.sub(r'</?(?:ul|ol)[^>]*>', '', line, flags=re.IGNORECASE)
+                line = re.sub(r'<li>\s*', '<br>• ', line, flags=re.IGNORECASE)
+                line = re.sub(r'</li>', '', line, flags=re.IGNORECASE)
+                line = re.sub(r'\|\s*<br>•\s*', '| • ', line)
+            else:
+                # Outside tables: convert <br> to newline and <li> to newline bullets
+                line = re.sub(r'<br\s*/?>', '\n', line, flags=re.IGNORECASE)
+                line = re.sub(r'</?(?:ul|ol)[^>]*>', '', line, flags=re.IGNORECASE)
+                line = re.sub(r'<li>\s*', '\n• ', line, flags=re.IGNORECASE)
+                line = re.sub(r'</li>', '', line, flags=re.IGNORECASE)
+                line = re.sub(r'</?p[^>]*>', '\n', line, flags=re.IGNORECASE)
+            cleaned_lines.append(line)
+        text = '\n'.join(cleaned_lines)
 
         # 1. Strip LaTeX environments like \begin{align} ... \end{align} or \begin{matrix} ...
         text = re.sub(r'\\begin\{[a-zA-Z*]+\}', '', text)

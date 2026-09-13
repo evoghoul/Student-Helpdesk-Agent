@@ -5,8 +5,10 @@ DISTRESS_KEYWORDS = [
     "can't handle this", "cant handle this", "cannot handle this",
     "handle this anymore", "don't think i can handle", "dont think i can handle",
     "want to give up", "giving up", "feel hopeless", "feeling hopeless",
-    "break down", "breakdown", "suicide", "suicidal", "end my life",
+    "break down", "breakdown", "suicide", "suicidal", "end my life", "ending my life",
+    "i want to end my life", "feel like ending my life",
     "can't take it anymore", "cant take it anymore", "cannot take it anymore",
+    "can't take this anymore", "cant take this anymore", "cannot take this anymore",
     "kill myself", "hate my life", "overwhelmed and crying", "too much stress to survive",
     "panic attack", "no reason to live", "ending it all", "end it all", "better off dead"
 ]

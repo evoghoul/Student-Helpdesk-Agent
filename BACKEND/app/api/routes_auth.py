@@ -11,7 +11,7 @@ async def login(req: LoginRequest):
     if not student or not verify_password(req.password, student["password_hash"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid registration number or password. (Note: Student Regd. No, e.g. '251FA04E03', is their login password)",
+            detail="Invalid registration number or password. (Note: Student Regd. No, e.g. '251FA04E13', is their login password)",
             headers={"WWW-Authenticate": "Bearer"},
         )
     

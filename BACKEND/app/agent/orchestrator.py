@@ -26,8 +26,7 @@ class Agent65Orchestrator:
         session: DatabaseSession,
         conversation_id: str,
         user_message: str,
-        language: str = "en",
-        model_mode: str = "fast"
+        language: str = "en"
     ) -> Dict[str, Any]:
         query = user_message.strip()
 
@@ -94,8 +93,7 @@ class Agent65Orchestrator:
             query=query,
             conversation_history=history,
             context_data=context_data,
-            language=language,
-            model_mode=model_mode
+            language=language
         )
 
         # Update conversational memory context

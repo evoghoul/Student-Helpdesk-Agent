@@ -1,4 +1,4 @@
-﻿import sqlite3
+import sqlite3
 import os
 import json
 
@@ -208,7 +208,7 @@ export function getStudentData(rollNo: string): StudentFullData {{
     return ALL_STUDENTS_MAP[clean];
   }}
   // Default to Akshat Raj
-  return ALL_STUDENTS_MAP["251FA04E03"] || ALL_STUDENTS_LIST[0];
+  return ALL_STUDENTS_MAP["251FA04E13"] || ALL_STUDENTS_LIST[0];
 }}
 '''
     with open(out_path, 'w', encoding='utf-8') as f:
