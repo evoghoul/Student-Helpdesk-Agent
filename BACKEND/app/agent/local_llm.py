@@ -7,8 +7,8 @@ from typing import Dict, Any, List, Optional
 logger = logging.getLogger(__name__)
 
 OLLAMA_BASE_URL = "http://localhost:11434"
-DEFAULT_MODEL = "agent65"
-FALLBACK_MODELS = ["agent65", "agent65-8b", "llama3.1:8b", "llama3.2:3b", "phi3:mini", "llama3.2:1b", "qwen2.5:3b", "mistral:7b"]
+DEFAULT_MODEL = "agent65-8b:latest"
+FALLBACK_MODELS = ["agent65-8b:latest", "agent65-8b", "agent65:latest", "agent65", "llama3.2:3b", "llama3.1:8b"]
 
 from app.config import settings
 
@@ -20,30 +20,22 @@ class LocalLLMClient:
     """
 
     _available: Optional[bool] = None
-    _active_model: Optional[str] = None
+    _active_model: Optional[str] = "agent65-8b:latest"
 
     @classmethod
-    def is_available(cls, timeout: float = 1.5) -> bool:
-        """Check if local Ollama daemon or Cloud API is active."""
-        provider = getattr(settings, "LLM_PROVIDER", "mock")
-        groq_key = getattr(settings, "GROQ_API_KEY", "") or getattr(settings, "CLOUD_API_KEY", "")
-        if (provider == "cloud" or groq_key) and groq_key:
-            return True
-        if provider != "local":
-            return False
-        if cls._available is not None:
-            return cls._available
+    def is_available(cls, timeout: float = 2.0) -> bool:
+        """Check if local Ollama daemon is active and running agent65-8b."""
+        provider = getattr(settings, "LLM_PROVIDER", "local")
+        # 1. First priority: Check local Ollama daemon
         try:
             resp = requests.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=timeout)
             if resp.status_code == 200:
                 models = resp.json().get("models", [])
                 if models:
                     model_names = [m.get("name", "") for m in models]
-                    # Pick best available model
                     for candidate in FALLBACK_MODELS:
                         for m in model_names:
-                            base_name = m.split(":")[0]
-                            if candidate == base_name or candidate == m:
+                            if candidate == m or candidate.split(":")[0] == m.split(":")[0]:
                                 cls._active_model = m
                                 break
                         if cls._active_model:
@@ -54,7 +46,15 @@ class LocalLLMClient:
                 return True
         except Exception:
             pass
-        cls._available = False
+
+        if provider == "local":
+            return cls._available is True
+
+        # Fallback to cloud only if explicitly configured as cloud and local is down
+        gemini_key = getattr(settings, "GEMINI_API_KEY", "")
+        groq_key = getattr(settings, "GROQ_API_KEY", "") or getattr(settings, "CLOUD_API_KEY", "")
+        if provider == "cloud" and (gemini_key or groq_key):
+            return True
         return False
 
     @classmethod
@@ -115,28 +115,24 @@ class LocalLLMClient:
         cls,
         messages: List[Dict[str, str]],
         model: Optional[str] = None,
-        timeout: float = 75.0
+        timeout: float = 90.0
     ) -> Optional[str]:
-        provider = getattr(settings, "LLM_PROVIDER", "mock")
-        groq_key = getattr(settings, "GROQ_API_KEY", "") or getattr(settings, "CLOUD_API_KEY", "")
-        if (provider == "cloud" or model == "8B+API" or groq_key) and groq_key:
-            return cls._send_groq_chat(messages, timeout=timeout)
+        provider = getattr(settings, "LLM_PROVIDER", "local")
 
-        model_mapping = {
-            "3B": "agent65:latest",
-            "8B": "agent65-8b:latest",
-            "8B+API": "llama3.1:8b" # Fallback if API key is missing
-        }
-        target_model = model_mapping.get(model, model) or cls._active_model or DEFAULT_MODEL
+        # 1. When provider is local, ALWAYS use the local Ollama 8B foundation model
+        target_model = "agent65-8b:latest"
+        if cls._active_model:
+            target_model = cls._active_model
+
         url = f"{OLLAMA_BASE_URL}/api/chat"
         payload = {
             "model": target_model,
             "messages": messages,
             "stream": False,
             "options": {
-                "temperature": 0.5,
+                "temperature": 0.3,
                 "top_p": 0.9,
-                "num_predict": 650
+                "num_predict": 300
             }
         }
         try:
@@ -145,9 +141,87 @@ class LocalLLMClient:
                 data = resp.json()
                 msg = data.get("message", {}).get("content", "").strip()
                 if msg:
+                    logger.info(f"Successfully generated response from local 8B model ({target_model})")
                     return cls.clean_latex_formatting(msg)
         except Exception as e:
-            logger.warning(f"Local LLM chat failed: {e}")
+            logger.warning(f"Local Ollama 8B chat failed ({target_model}): {e}")
+
+        # 2. Only if provider is explicitly set to 'cloud' does it fallback to external APIs
+        if provider == "cloud":
+            gemini_key = getattr(settings, "GEMINI_API_KEY", "")
+            groq_key = getattr(settings, "GROQ_API_KEY", "") or getattr(settings, "CLOUD_API_KEY", "")
+            if gemini_key:
+                res = cls._send_gemini_chat(messages, timeout=timeout)
+                if res:
+                    return res
+            if groq_key:
+                res = cls._send_groq_chat(messages, timeout=timeout)
+                if res:
+                    return res
+
+        return None
+
+    @classmethod
+    def _send_gemini_chat(
+        cls,
+        messages: List[Dict[str, str]],
+        timeout: float = 75.0
+    ) -> Optional[str]:
+        api_key = getattr(settings, "GEMINI_API_KEY", "")
+        if not api_key:
+            return None
+        
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={api_key}"
+        headers = {
+            "Content-Type": "application/json"
+        }
+        
+        contents = []
+        system_instruction = None
+        for msg in messages:
+            role = msg.get("role")
+            content = msg.get("content", "")
+            if role == "system":
+                system_instruction = {"parts": [{"text": content}]}
+            else:
+                g_role = "user" if role == "user" else "model"
+                contents.append({
+                    "role": g_role,
+                    "parts": [{"text": content}]
+                })
+                
+        payload = {
+            "contents": contents,
+            "generationConfig": {
+                "temperature": 0.5,
+                "maxOutputTokens": 4096
+            }
+        }
+        if system_instruction:
+            payload["systemInstruction"] = system_instruction
+            
+        import time
+        for attempt in range(5):
+            try:
+                resp = requests.post(url, headers=headers, json=payload, timeout=timeout)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    candidates = data.get("candidates", [])
+                    if candidates:
+                        msg = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
+                        if msg:
+                            cleaned_msg = cls.clean_latex_formatting(msg)
+                            return cleaned_msg
+                elif resp.status_code == 429:
+                    logger.warning(f"Gemini API returned 429, sleeping {5 * (attempt+1)}s")
+                    time.sleep(5 * (attempt + 1))
+                    continue
+                else:
+                    logger.warning(f"Gemini API returned {resp.status_code}: {resp.text}")
+                    break
+            except Exception as e:
+                logger.warning(f"Gemini API request failed: {e}")
+                
         return None
 
     @classmethod
@@ -171,7 +245,7 @@ class LocalLLMClient:
                 "model": candidate_model,
                 "messages": messages,
                 "temperature": 0.5,
-                "max_tokens": 600
+                "max_tokens": 4096
             }
             for attempt in range(3):
                 try:
@@ -180,7 +254,8 @@ class LocalLLMClient:
                         data = resp.json()
                         msg = data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
                         if msg:
-                            return cls.clean_latex_formatting(msg)
+                            cleaned_msg = cls.clean_latex_formatting(msg)
+                            return cleaned_msg
                     elif resp.status_code == 429:
                         retry_sec = 3.5
                         try:
@@ -189,6 +264,9 @@ class LocalLLMClient:
                                 retry_sec = max(float(hdr), 3.0)
                         except Exception:
                             retry_sec = 3.5
+                        if retry_sec > 15.0:
+                            logger.warning(f"Groq API model {candidate_model} rate limited for {retry_sec:.1f}s. Skipping to next model to avoid freezing.")
+                            break
                         logger.warning(f"Groq API model {candidate_model} rate limited (429), waiting {retry_sec:.1f}s for attempt {attempt+1}/3...")
                         time.sleep(retry_sec)
                         continue

@@ -35,7 +35,7 @@ export const CircularsView: React.FC<CircularsViewProps> = ({ onAskHelpdesk }) =
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-foreground">{t.circularsTitle || "Official University Circulars"}</h2>
-            <span className="rounded-full bg-rose-100 px-2.5 py-0.5 text-[11px] font-bold text-rose-800">
+            <span className="rounded-full bg-rose-100 px-2.5 py-0.5 text-sm font-bold text-rose-800">
               Agent 55
             </span>
           </div>
@@ -71,7 +71,7 @@ export const CircularsView: React.FC<CircularsViewProps> = ({ onAskHelpdesk }) =
           return (
             <div
               key={item.id}
-              className={`rounded-2xl border p-5 transition-all bg-card hover:shadow-2xs ${
+              className={`rounded-lg border p-5 transition-all bg-card hover:shadow-2xs ${
                 isUrgent
                   ? "border-rose-300 bg-rose-50/20"
                   : isHigh
@@ -83,7 +83,7 @@ export const CircularsView: React.FC<CircularsViewProps> = ({ onAskHelpdesk }) =
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider ${
+                      className={`rounded-full px-2 py-0.5 text-sm font-bold uppercase tracking-wider ${
                         isUrgent
                           ? "bg-rose-100 text-rose-800"
                           : isHigh
@@ -93,10 +93,10 @@ export const CircularsView: React.FC<CircularsViewProps> = ({ onAskHelpdesk }) =
                     >
                       {item.priority}
                     </span>
-                    <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700">
+                    <span className="rounded-md bg-blue-50 px-2 py-0.5 text-sm font-semibold text-blue-700">
                       {item.category}
                     </span>
-                    <span className="font-mono text-[11px] text-slate-400">Ref: {item.refNo}</span>
+                    <span className="font-mono text-sm text-slate-400">Ref: {item.refNo}</span>
                   </div>
 
                   <h3 className="text-sm sm:text-base font-bold text-foreground pt-1">

@@ -70,7 +70,7 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-foreground">{t.servicesTitle || "Student Services & Applications"}</h2>
-            <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-bold text-blue-800">
+            <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-sm font-bold text-blue-800">
               Agent 46
             </span>
           </div>
@@ -96,7 +96,7 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
             <div
               key={card.category}
               onClick={() => onOpenNewServiceModal(card.category)}
-              className="rounded-2xl border border-slate-200 bg-card p-5 shadow-2xs hover:shadow-sm hover:border-blue-300 transition-all cursor-pointer flex flex-col justify-between group"
+              className="rounded-lg border border-slate-200 bg-card p-5 shadow-2xs hover:shadow-sm hover:border-blue-300 transition-all cursor-pointer flex flex-col justify-between group"
             >
               <div>
                 <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${card.color} mb-3`}>
@@ -116,7 +116,7 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
       </div>
 
       {/* Active Service Requests List */}
-      <div className="rounded-2xl border border-slate-200 bg-card overflow-hidden shadow-2xs">
+      <div className="rounded-lg border border-slate-200 bg-card overflow-hidden shadow-2xs">
         <div className="bg-muted/50/80 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
           <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
             Active Requests & Tickets for {student.id}
@@ -133,13 +133,13 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xs font-bold text-blue-600">{req.id}</span>
-                    <span className="rounded-md bg-muted px-2 py-0.5 text-[11px] font-bold text-foreground">
+                    <span className="rounded-md bg-muted px-2 py-0.5 text-sm font-bold text-foreground">
                       {req.category}
                     </span>
                     <span className="text-xs font-bold text-foreground">{req.title}</span>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">{req.description}</p>
-                  <div className="flex items-center gap-3 text-[11px] text-muted-foreground pt-0.5">
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground pt-0.5">
                     <span>Submitted: {req.submittedAt}</span>
                     <span>•</span>
                     <span>Department: <strong>{req.assignedDept}</strong></span>
@@ -149,11 +149,11 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
                 </div>
 
                 <div className="flex items-center @lg:flex-col @lg:items-end gap-2 shrink-0">
-                  <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                  <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-sm font-bold text-emerald-800 border border-emerald-200 flex items-center gap-1">
                     <CheckCircle2 className="h-3 w-3 text-emerald-600" />
                     <span>{tDynamic(req.status)}</span>
                   </span>
-                  <span className="text-[11px] font-medium text-slate-400">
+                  <span className="text-sm font-medium text-slate-400">
                     {t.priority}: {tDynamic(req.priority)}
                   </span>
                 </div>

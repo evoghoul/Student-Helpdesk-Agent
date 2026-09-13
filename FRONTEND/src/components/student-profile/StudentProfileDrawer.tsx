@@ -39,12 +39,12 @@ export const StudentProfileDrawer: React.FC<StudentProfileDrawerProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-xs">
+    <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-xs">
       <div className="relative w-full max-w-md h-full bg-card shadow-2xl border-l border-slate-200 flex flex-col animate-in slide-in-from-right duration-300">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 p-5 bg-gradient-to-r from-blue-50 to-white">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 font-extrabold text-base text-white shadow-md shadow-blue-500/20">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 font-extrabold text-base text-white shadow-md shadow-blue-500/20">
               {initials}
             </div>
             <div>
@@ -63,22 +63,22 @@ export const StudentProfileDrawer: React.FC<StudentProfileDrawerProps> = ({
         {/* Body Content */}
         <div className="flex-1 overflow-y-auto overscroll-contain p-6 space-y-6 text-xs text-foreground">
           {/* Security Guarantee Box */}
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 space-y-1.5 text-emerald-950">
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 p-4 space-y-1.5 text-emerald-950">
             <div className="flex items-center gap-1.5 font-bold">
               <ShieldCheck className="h-4 w-4 text-emerald-600" />
               <span>{student.authStatus} Student</span>
             </div>
-            <p className="text-[11px] text-emerald-900 leading-relaxed">
+            <p className="text-sm text-emerald-900 leading-relaxed">
               {student.securityLabel}. Your personal academic information is protected by Row-Level Security guardrails. Sourced from {student.sourceAgent}.
             </p>
-            <div className="font-mono text-[11px] text-emerald-800 pt-1">
-              Auth Token: {student.securityToken}
+            <div className="font-mono text-sm text-emerald-800 pt-1">
+              Auth Token: <span className="font-mono text-emerald-600 font-semibold px-1 py-0.5 rounded bg-emerald-50 border border-emerald-200">Verified</span>
             </div>
           </div>
 
           {/* Academic Details List */}
-          <div className="rounded-2xl border border-slate-200 bg-muted/50/60 p-4 space-y-3">
-            <h4 className="font-bold text-foreground uppercase tracking-wider text-[11px]">
+          <div className="rounded-lg border border-slate-200 bg-muted/50/60 p-4 space-y-3">
+            <h4 className="font-bold text-foreground uppercase tracking-wider text-sm">
               Institutional Enrollment
             </h4>
             <div className="space-y-2">
@@ -130,8 +130,8 @@ export const StudentProfileDrawer: React.FC<StudentProfileDrawerProps> = ({
           </div>
 
           {/* Contact Details */}
-          <div className="rounded-2xl border border-slate-200 bg-card p-4 space-y-2.5">
-            <h4 className="font-bold text-foreground uppercase tracking-wider text-[11px]">
+          <div className="rounded-lg border border-slate-200 bg-card p-4 space-y-2.5">
+            <h4 className="font-bold text-foreground uppercase tracking-wider text-sm">
               Verified Contacts
             </h4>
             <div className="flex items-center gap-2 text-foreground">
@@ -145,13 +145,13 @@ export const StudentProfileDrawer: React.FC<StudentProfileDrawerProps> = ({
           </div>
 
           {/* Faculty Mentor Card */}
-          <div className="rounded-2xl border border-indigo-200 bg-indigo-50/50 p-4 space-y-2">
-            <h4 className="font-bold text-indigo-950 uppercase tracking-wider text-[11px]">
+          <div className="rounded-lg border border-indigo-200 bg-indigo-50/50 p-4 space-y-2">
+            <h4 className="font-bold text-indigo-950 uppercase tracking-wider text-sm">
               Assigned Faculty Mentor
             </h4>
             <div className="text-sm font-bold text-foreground">{student.mentor.name}</div>
             <p className="text-xs text-muted-foreground">{student.mentor.cabin}</p>
-            <div className="text-[11px] text-muted-foreground">{student.mentor.email}</div>
+            <div className="text-sm text-muted-foreground">{student.mentor.email}</div>
 
             <button
               onClick={() => {

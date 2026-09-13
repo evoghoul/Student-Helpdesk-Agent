@@ -44,6 +44,9 @@ export interface ConversationTurn {
   role: "user" | "assistant";
   content: string;
   responseMeta?: AiResponse;
+  messageId?: string;
+  conversationId?: string;
+  feedbackRating?: "up" | "down";
 }
 
 // Check for distress phrases
@@ -96,15 +99,15 @@ export function processQuery(
   }
 
   const curStudent = studentData ? studentData.profile : CURRENT_STUDENT;
-  const curAttendance = studentData ? studentData.attendance : ATTENDANCE_DATA;
   const curMarks = studentData ? studentData.marks : MARKS_DATA;
   const curFees = studentData ? studentData.fees : FEES_DATA;
   const studentId = curStudent.id;
 
   // 1. MANDATORY DISTRESS DETECTION FIRST (Agent 66)
   if (detectDistress(query)) {
+    const studentFirstName = curStudent.name.split(" ")[0] || "there";
     return {
-      text: `We are here for you, Akshat. Your message suggests you may be experiencing severe emotional stress or feeling overwhelmed. You do not have to carry this alone. Please connect immediately with our 24/7 Student Wellbeing Counselors or university support staff below.`,
+      text: `We are here for you, ${studentFirstName}. Your message suggests you may be experiencing severe emotional stress or feeling overwhelmed. You do not have to carry this alone. Please connect immediately with our 24/7 Student Wellbeing Counselors or university support staff below.`,
       category: "DISTRESS_SUPPORT",
       sourceAgent: "Agent 66 (Distress Escalation & Counseling)",
       authorizedFor: studentId,
@@ -135,6 +138,95 @@ export function processQuery(
 
   // Determine contextual subject from current query or prior turns
   let contextSubject = activeSubjectContext;
+
+  // 1b. CAPABILITIES & WHAT CAN YOU DO (Agent 65 Core)
+  if (
+    query.includes("what can you do") ||
+    query.includes("what do you do") ||
+    query.includes("capabilities") ||
+    query.includes("features") ||
+    query.includes("how can you help") ||
+    query.includes("who are you") ||
+    query === "help"
+  ) {
+    return {
+      text: `I am **Agent 65**, your university's autonomous AI helpdesk. Powered by an offline, locally hosted **8B neural model**, I connect directly to campus institutional records with strict **Row-Level Security (RLS)**.\n\nHere is what I can do for you:\n\n• **Academic & Attendance Telemetry**: Real-time subject tracking, bunk thresholds, and detention alerts.\n• **Examination Schedules**: Exam dates, room seating, hall tickets, and reporting times.\n• **Financial Ledger**: Instant check on tuition/hostel fee dues, breakdown, and payment receipts.\n• **University Policies**: R22 regulations, academic rules, credits progress, and 24/7 distress support.\n\nExplore the key sections below to learn more:`,
+      category: "PROCEDURAL_GUIDANCE",
+      sourceAgent: "Agent 65 (Core Architecture)",
+      authorizedFor: studentId,
+      isDistress: false,
+      suggestedFollowUps: [
+        "Tell me about the offline 8B AI model",
+        "How does Row-Level Security protect my data?",
+        "What are the 12 specialized agents?",
+      ],
+    };
+  }
+
+  // 1c. ARCHITECTURE: OFFLINE 8B AI MODEL
+  if (
+    query.includes("offline 8b") ||
+    query.includes("local model") ||
+    query.includes("8b model") ||
+    query.includes("8b ai") ||
+    query.includes("cloud leakage")
+  ) {
+    return {
+      text: `Agent 65 runs an **offline 8B quantized neural model** entirely within the institutional perimeter:\n\n• **100% On-Premise Inference**: No student queries, marks, or personal data are ever transmitted to external cloud APIs.\n• **Sub-100ms Telemetry**: Responses and institutional lookups resolve in milliseconds directly on campus hardware.\n• **Private Training Pipeline**: Curated thumbs-up ratings are logged to local dataset files for ongoing fine-tuning.\n• **Zero External Dependency**: Operates reliably even during internet outages.`,
+      category: "INSTITUTIONAL_INFO",
+      sourceAgent: "Agent 65 (Neural Architecture)",
+      authorizedFor: studentId,
+      isDistress: false,
+      suggestedFollowUps: [
+        "How does Row-Level Security protect my data?",
+        "What are the 12 specialized agents?",
+        "What can you do?",
+      ],
+    };
+  }
+
+  // 1d. ARCHITECTURE: DETERMINISTIC ROW-LEVEL SECURITY
+  if (
+    query.includes("row-level security") ||
+    query.includes("rls") ||
+    query.includes("data leakage") ||
+    query.includes("security guardrail")
+  ) {
+    return {
+      text: `Agent 65 enforces **Deterministic Row-Level Security (RLS)** at the database kernel:\n\n• **0% Cross-Student Leakage**: Every query is mathematically locked to your authenticated session token (\`${curStudent.id}\`).\n• **Strict Scope Isolation**: Even if another student's roll number is entered, unauthorized rows are filtered out before reaching the LLM.\n• **Institutional Audit Trail**: Every database hit and transaction is securely logged with cryptographic integrity.`,
+      category: "INSTITUTIONAL_INFO",
+      sourceAgent: "Agent 65 (RLS Guardrail)",
+      authorizedFor: studentId,
+      isDistress: false,
+      suggestedFollowUps: [
+        "Tell me about the offline 8B AI model",
+        "What are the 12 specialized agents?",
+        "What can you do?",
+      ],
+    };
+  }
+
+  // 1e. ARCHITECTURE: 12 FEDERATED CAMPUS AGENTS
+  if (
+    query.includes("specialized agent") ||
+    query.includes("federated agent") ||
+    query.includes("12 agent") ||
+    query.includes("campus agent")
+  ) {
+    return {
+      text: `Agent 65 orchestrates **12 Federated Institutional Agents**, each dedicated to a specialized university subsystem:\n\n1. **Agent 11**: Attendance Engine & Bunk Calculator\n2. **Agent 22**: Examinations & Hall Ticket Dispatch\n3. **Agent 33**: Fee Ledger & Financial Accounts\n4. **Agent 44**: Student Profile & Identity Verification\n5. **Agent 51**: Continuous Assessment & CIE Marks\n6. **Agent 52**: Academic Timetable & Classrooms\n7. **Agent 53**: Institutional Policies & R22 Regulations\n8. **Agent 54**: Curriculum & Graduation Credits Audit\n9. **Agent 55**: University Circulars & Notifications\n10. **Agent 56**: Service Requests & Formal Grievances\n11. **Agent 65**: Conversational Dispatcher & Core LLM\n12. **Agent 66**: Distress Escalation & Counselor Dispatch`,
+      category: "INSTITUTIONAL_INFO",
+      sourceAgent: "Agent 65 (Federated Dispatcher)",
+      authorizedFor: studentId,
+      isDistress: false,
+      suggestedFollowUps: [
+        "What can you do?",
+        "Tell me about the offline 8B AI model",
+        "How does Row-Level Security protect my data?",
+      ],
+    };
+  }
+
   if (query.includes("digital logic") || query.includes("dld") || query.includes("digital electronics") || query.includes("25cs205")) {
     contextSubject = "Digital Logic design";
   } else if (query.includes("data structures") || query.includes("ds") || query.includes("25cs201")) {

@@ -23,6 +23,8 @@ interface QuickActionChipsProps {
 
 export const QuickActionChips: React.FC<QuickActionChipsProps> = ({ onSelectAction }) => {
   const { t, language } = useLanguage();
+  const [showAll, setShowAll] = React.useState(false);
+
 
   const primaryActions = [
     {
@@ -125,17 +127,17 @@ export const QuickActionChips: React.FC<QuickActionChipsProps> = ({ onSelectActi
     <div className="space-y-2 pt-1 border-t border-slate-100">
       {/* Primary Category Row */}
       <div className="space-y-1">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
           {t.quickActionsTitle}
         </span>
         <div className="flex flex-wrap items-center gap-1.5 pb-1">
-          {primaryActions.map((action, i) => {
+          {primaryActions.slice(0, showAll ? primaryActions.length : 5).map((action, i) => {
             const Icon = action.icon;
             return (
               <button
                 key={i}
                 onClick={() => onSelectAction(action.query)}
-                className={`flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all hover:scale-102 hover:shadow-xs cursor-pointer ${action.color}`}
+                className={`flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-sm font-medium transition-all hover:scale-102 hover:shadow-xs cursor-pointer ${action.color}`}
               >
                 <Icon className="h-3 w-3" />
                 <span>{action.label}</span>
@@ -147,17 +149,17 @@ export const QuickActionChips: React.FC<QuickActionChipsProps> = ({ onSelectActi
 
       {/* Contextual / Workflow Actions */}
       <div className="space-y-1">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
           {t.contextualActionsTitle}
         </span>
         <div className="flex flex-wrap items-center gap-1.5 pb-1">
-          {contextualActions.map((action, i) => {
+          {contextualActions.slice(0, showAll ? contextualActions.length : 3).map((action, i) => {
             const Icon = action.icon;
             return (
               <button
                 key={i}
                 onClick={() => onSelectAction(action.query)}
-                className="group flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-card px-2.5 py-1 text-[11px] font-medium text-foreground hover:border-blue-300 hover:bg-blue-50/50 hover:text-blue-700 transition-all cursor-pointer shadow-2xs"
+                className="group flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-card px-2.5 py-1 text-sm font-medium text-foreground hover:border-blue-300 hover:bg-blue-50/50 hover:text-blue-700 transition-all cursor-pointer shadow-2xs"
               >
                 <Icon className="h-3 w-3 text-slate-400 group-hover:text-blue-600" />
                 <span>{action.label}</span>
@@ -169,6 +171,13 @@ export const QuickActionChips: React.FC<QuickActionChipsProps> = ({ onSelectActi
               </button>
             );
           })}
+          
+          <button
+            onClick={() => setShowAll(!showAll)}
+            className="flex shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-muted/30 px-2.5 py-1 text-sm font-medium text-slate-600 hover:bg-muted/60 transition-all cursor-pointer shadow-2xs"
+          >
+            <span>{showAll ? "Show less" : "More actions..."}</span>
+          </button>
         </div>
       </div>
     </div>

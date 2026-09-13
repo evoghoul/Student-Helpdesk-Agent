@@ -36,15 +36,17 @@ def get_db_connection():
             distress_count INTEGER DEFAULT 0
         )
     """)
-    # Seed default analytics if empty
-    cur = conn.execute("SELECT COUNT(*) FROM analytics_daily")
-    if cur.fetchone()[0] == 0:
-        conn.execute("""
-            INSERT INTO analytics_daily (stat_date, intent_category, topic, language_code, query_count, successful_answers, escalated_count, distress_count)
-            VALUES ('2026-09-12', 'ATTENDANCE', 'Digital Electronics Attendance Inquiry', 'en', 18, 18, 1, 0),
-                   ('2026-09-12', 'FEES', 'Installment Schedule & Dues', 'en', 12, 12, 0, 0),
-                   ('2026-09-12', 'EXAMINATIONS', 'CIE Formative Assessment Schedule', 'en', 25, 25, 2, 0)
-        """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS message_feedback (
+            feedback_id TEXT PRIMARY KEY,
+            message_id TEXT,
+            conversation_id TEXT,
+            student_id TEXT,
+            rating TEXT,
+            comment TEXT,
+            created_at TEXT
+        )
+    """)
     conn.commit()
     return conn
 
@@ -269,6 +271,48 @@ class DataRepository:
     @staticmethod
     def get_analytics_summary() -> List[Dict[str, Any]]:
         return DataRepository._execute_query("SELECT * FROM analytics_daily")
+
+    @staticmethod
+    def record_message_feedback(
+        session: DatabaseSession,
+        conversation_id: str,
+        message_id: str,
+        rating: str,
+        comment: Optional[str] = None
+    ) -> Dict[str, Any]:
+        conv = DataRepository.get_conversation(session, conversation_id)
+        if not conv:
+            raise PermissionError("Access denied: conversation does not belong to the authenticated student.")
+        
+        fb_id = f"fb-{uuid.uuid4().hex[:8]}"
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        query = "INSERT INTO message_feedback (feedback_id, message_id, conversation_id, student_id, rating, comment, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        DataRepository._execute_insert(query, (fb_id, message_id, conversation_id, session.student_id, rating, comment or "", now))
+        return {
+            "feedback_id": fb_id,
+            "message_id": message_id,
+            "conversation_id": conversation_id,
+            "rating": rating,
+            "comment": comment,
+            "created_at": now
+        }
+
+    @staticmethod
+    def get_message_by_id(session: DatabaseSession, message_id: str) -> Optional[Dict[str, Any]]:
+        msgs = DataRepository._execute_query("SELECT * FROM messages WHERE message_id = ?", (message_id,))
+        if not msgs:
+            return None
+        m = msgs[0]
+        conv = DataRepository.get_conversation(session, m["conversation_id"])
+        if not conv:
+            return None
+        if isinstance(m.get("citations"), str):
+            try: m["citations"] = json.loads(m["citations"])
+            except: pass
+        if isinstance(m.get("structured_card"), str):
+            try: m["structured_card"] = json.loads(m["structured_card"])
+            except: pass
+        return m
 
 
 class _CrisisEscalationsProxy:

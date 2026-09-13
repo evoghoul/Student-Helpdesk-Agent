@@ -37,7 +37,7 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({ onAskHelpdesk })
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-foreground">{t.curriculumTitle || "Course Curriculum & Syllabus"}</h2>
-            <span className="rounded-full bg-cyan-100 px-2.5 py-0.5 text-[11px] font-bold text-cyan-800">
+            <span className="rounded-full bg-cyan-100 px-2.5 py-0.5 text-sm font-bold text-cyan-800">
               Agent 1
             </span>
           </div>
@@ -56,7 +56,7 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({ onAskHelpdesk })
       </div>
 
       {/* Progress Overview Card */}
-      <div className="rounded-3xl border border-cyan-200 bg-gradient-to-r from-cyan-50/70 via-blue-50/40 to-white p-6 shadow-2xs space-y-4">
+      <div className="rounded-xl border border-cyan-200 bg-gradient-to-r from-cyan-50/70 via-blue-50/40 to-white p-6 shadow-2xs space-y-4">
         <div className="flex flex-col @lg:flex-row @lg:items-center justify-between gap-4">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-cyan-900">
@@ -77,13 +77,13 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({ onAskHelpdesk })
 
           <div className="flex gap-4 text-xs font-medium">
             <div className="rounded-xl bg-card p-3 border border-cyan-100 shadow-2xs">
-              <div className="text-muted-foreground text-[11px]">{t.currentSem || "Current Sem"} 5</div>
+              <div className="text-muted-foreground text-sm">{t.currentSem || "Current Sem"} 5</div>
               <div className="text-base font-bold text-cyan-900">
                 {CURRICULUM_DATA.currentSemesterCredits} Credits
               </div>
             </div>
             <div className="rounded-xl bg-card p-3 border border-cyan-100 shadow-2xs">
-              <div className="text-muted-foreground text-[11px]">{t.curriculumProgressSub}</div>
+              <div className="text-muted-foreground text-sm">{t.curriculumProgressSub}</div>
               <div className="text-base font-bold text-indigo-900">
                 {CURRICULUM_DATA.remainingCredits} Credits
               </div>
@@ -109,7 +109,7 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({ onAskHelpdesk })
           return (
             <div
               key={cat.name}
-              className="rounded-2xl border border-slate-200 bg-card overflow-hidden shadow-2xs transition-all"
+              className="rounded-lg border border-slate-200 bg-card overflow-hidden shadow-2xs transition-all"
             >
               <div
                 onClick={() => toggleExpand(cat.name)}
@@ -118,7 +118,7 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({ onAskHelpdesk })
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <h4 className="font-bold text-foreground text-sm">{cat.name}</h4>
-                    <span className="rounded-md bg-muted px-2 py-0.5 text-[11px] font-bold text-muted-foreground">
+                    <span className="rounded-md bg-muted px-2 py-0.5 text-sm font-bold text-muted-foreground">
                       {cat.completedCredits} / {cat.totalRequiredCredits} Credits ({catPct}%)
                     </span>
                   </div>

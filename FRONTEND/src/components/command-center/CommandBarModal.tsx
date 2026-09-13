@@ -74,8 +74,8 @@ export const CommandBarModal: React.FC<CommandBarModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/50 backdrop-blur-xs pt-20 p-4">
-      <div className="relative w-full max-w-xl rounded-3xl bg-card shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/50 backdrop-blur-xs pt-20 p-4">
+      <div className="relative w-full max-w-xl rounded-xl bg-card shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         {/* Search Bar Input */}
         <form
           onSubmit={(e) => {
@@ -104,7 +104,7 @@ export const CommandBarModal: React.FC<CommandBarModalProps> = ({
               <X className="h-4 w-4" />
             </button>
           )}
-          <kbd className="hidden sm:inline-block rounded border border-slate-200 bg-card px-2 py-0.5 font-mono text-[11px] text-slate-400">
+          <kbd className="hidden sm:inline-block rounded border border-slate-200 bg-card px-2 py-0.5 font-mono text-sm text-slate-400">
             ESC
           </kbd>
         </form>
@@ -123,8 +123,8 @@ export const CommandBarModal: React.FC<CommandBarModalProps> = ({
               <ArrowRight className="h-4 w-4 text-blue-600" />
             </div>
           ) : (
-            <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              Popular Queries for {student?.name || "Akshat Raj"} ({student?.id || "251FA04E13"})
+            <div className="px-3 py-1.5 text-sm font-bold uppercase tracking-wider text-slate-400">
+              Popular Queries for {student?.name || "Akshat Raj"} ({student?.id || "251FA04E03"})
             </div>
           )}
 
@@ -140,7 +140,7 @@ export const CommandBarModal: React.FC<CommandBarModalProps> = ({
                   <Icon className="h-4 w-4 text-slate-400" />
                   <span className="font-medium">{item.label}</span>
                 </div>
-                <span className="rounded-md bg-muted px-2 py-0.5 text-[11px] text-muted-foreground font-semibold">
+                <span className="rounded-md bg-muted px-2 py-0.5 text-sm text-muted-foreground font-semibold">
                   {item.cat}
                 </span>
               </div>

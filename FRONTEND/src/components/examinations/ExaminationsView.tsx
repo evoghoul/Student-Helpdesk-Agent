@@ -36,7 +36,7 @@ export const ExaminationsView: React.FC<ExaminationsViewProps> = ({ onAskHelpdes
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-foreground">{t.examsTitle || "Upcoming Examinations"}</h2>
-            <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-bold text-blue-800">
+            <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-sm font-bold text-blue-800">
               Agent 30
             </span>
           </div>
@@ -65,7 +65,7 @@ export const ExaminationsView: React.FC<ExaminationsViewProps> = ({ onAskHelpdes
       </div>
 
       {/* Highlight Card: Nearest Examination */}
-      <div className="relative overflow-hidden rounded-3xl border-2 border-blue-200 bg-gradient-to-r from-blue-50/90 via-indigo-50/60 to-white p-6 shadow-sm">
+      <div className="relative overflow-hidden rounded-xl border-2 border-blue-200 bg-gradient-to-r from-blue-50/90 via-indigo-50/60 to-white p-6 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2.5">
             <div className="flex items-center gap-2">
@@ -93,12 +93,12 @@ export const ExaminationsView: React.FC<ExaminationsViewProps> = ({ onAskHelpdes
           </div>
 
           {/* Countdown Block */}
-          <div className="flex flex-col items-start md:items-end justify-center rounded-2xl bg-card/95 p-5 border border-blue-100 shadow-sm shrink-0 min-w-[190px]">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+          <div className="flex flex-col items-start md:items-end justify-center rounded-lg bg-card/95 p-5 border border-blue-100 shadow-sm shrink-0 min-w-[190px]">
+            <div className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
               {t.examCountdown}
             </div>
             <div className="text-3xl font-black text-blue-700 mt-1">7 {t.daysRemaining}</div>
-            <div className="text-[11px] text-muted-foreground mt-1">
+            <div className="text-sm text-muted-foreground mt-1">
               {t.reportingTime}: <strong className="text-foreground">{nearest.reportingTime}</strong>
             </div>
           </div>
@@ -106,7 +106,7 @@ export const ExaminationsView: React.FC<ExaminationsViewProps> = ({ onAskHelpdes
       </div>
 
       {/* Full Examination Schedule List */}
-      <div className="rounded-2xl border border-slate-200 bg-card overflow-hidden shadow-2xs">
+      <div className="rounded-lg border border-slate-200 bg-card overflow-hidden shadow-2xs">
         <div className="bg-muted/50/80 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
           <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
             {t.endSemesterSchedule}
@@ -122,7 +122,7 @@ export const ExaminationsView: React.FC<ExaminationsViewProps> = ({ onAskHelpdes
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xs font-semibold text-muted-foreground">{exam.code}</span>
                     <h5 className="font-bold text-foreground text-sm">{exam.subject}</h5>
-                    <span className="rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                    <span className="rounded-md bg-muted px-2 py-0.5 text-sm font-medium text-muted-foreground">
                       {exam.examType}
                     </span>
                   </div>
@@ -148,7 +148,7 @@ export const ExaminationsView: React.FC<ExaminationsViewProps> = ({ onAskHelpdes
                   </span>
                   <button
                     onClick={() => onAskHelpdesk(`When is my ${exam.subject} exam?`)}
-                    className="text-[11px] font-semibold text-blue-600 hover:underline cursor-pointer"
+                    className="text-sm font-semibold text-blue-600 hover:underline cursor-pointer"
                   >
                     Ask Helpdesk
                   </button>

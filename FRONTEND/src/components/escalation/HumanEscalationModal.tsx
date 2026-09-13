@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { CURRENT_STUDENT } from "@/data/student";
 import { useLanguage } from "@/context/LanguageContext";
+import { useStudent } from "@/context/StudentContext";
 
 interface HumanEscalationModalProps {
   isOpen: boolean;
@@ -27,6 +28,8 @@ export const HumanEscalationModal: React.FC<HumanEscalationModalProps> = ({
   contextSummary,
   onClose,
 }) => {
+  const { studentData } = useStudent();
+  const student = studentData?.profile || CURRENT_STUDENT;
   const [escalationReason, setEscalationReason] = useState(
     "Attendance condonation review for Digital Electronics (68%) & Examination seating clarification"
   );
@@ -40,8 +43,8 @@ export const HumanEscalationModal: React.FC<HumanEscalationModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
-      <div className="relative w-full max-w-lg rounded-3xl bg-card p-6 shadow-2xl border border-slate-200">
+    <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
+      <div className="relative w-full max-w-lg rounded-xl bg-card p-6 shadow-2xl border border-slate-200">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-100 text-violet-700">
@@ -51,7 +54,7 @@ export const HumanEscalationModal: React.FC<HumanEscalationModalProps> = ({
               <h3 className="text-base font-bold text-foreground">
                 {t.humanEscalationTitle}
               </h3>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 {t.humanEscalationSub}
               </p>
             </div>
@@ -78,7 +81,7 @@ export const HumanEscalationModal: React.FC<HumanEscalationModalProps> = ({
               </p>
             </div>
 
-            <div className="rounded-2xl bg-muted/50 p-4 border border-slate-200 text-left text-xs space-y-1.5 text-foreground">
+            <div className="rounded-lg bg-muted/50 p-4 border border-slate-200 text-left text-xs space-y-1.5 text-foreground">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Assigned Officer:</span>
                 <span className="font-bold text-foreground">Mr. R. Raghavan (Senior Academic Counselor)</span>
@@ -102,12 +105,12 @@ export const HumanEscalationModal: React.FC<HumanEscalationModalProps> = ({
           </div>
         ) : (
           <div className="space-y-4 pt-4 text-xs">
-            <div className="rounded-2xl bg-blue-50/70 p-3.5 border border-blue-100 space-y-1 text-foreground">
+            <div className="rounded-lg bg-blue-50/70 p-3.5 border border-blue-100 space-y-1 text-foreground">
               <div className="font-bold text-blue-950 flex items-center gap-1.5">
                 <ShieldCheck className="h-4 w-4 text-blue-600" />
                 <span>{t.zeroRepeatGuarantee || "Zero-Repeat Context Transfer Guarantee"}</span>
               </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 Your conversation and relevant context have been forwarded to Student Support so you do not need to repeat your issue.
               </p>
             </div>
@@ -116,16 +119,16 @@ export const HumanEscalationModal: React.FC<HumanEscalationModalProps> = ({
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Student:</span>
                 <span className="font-bold text-foreground">
-                  {CURRENT_STUDENT.name} ({CURRENT_STUDENT.id})
+                  {student.name} ({student.id})
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Department:</span>
-                <span>{CURRENT_STUDENT.department}</span>
+                <span>{student.department}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Faculty Advisor:</span>
-                <span>{CURRENT_STUDENT.mentor.name}</span>
+                <span>{student.mentor.name}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Priority:</span>

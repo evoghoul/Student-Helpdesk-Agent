@@ -4,11 +4,38 @@ import React, { createContext, useContext, useState, useRef, useEffect } from "r
 import {
   processQuery,
   ConversationTurn,
+  QueryCategory,
+  StructuredCardData,
 } from "@/lib/ai-engine";
 import { CURRENT_STUDENT } from "@/data/student";
 import { apiClient } from "@/lib/api-client";
 import { useStudent } from "@/context/StudentContext";
 import { useLanguage } from "@/context/LanguageContext";
+
+// Define a minimal interface for SpeechRecognition since it's a web API that might not be in standard DOM lib yet
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+}
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+  message: string;
+}
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  maxAlternatives: number;
+  lang: string;
+  abort: () => void;
+  start: () => void;
+  onstart: ((this: SpeechRecognition, ev: Event) => void) | null;
+  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => void) | null;
+  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => void) | null;
+  onend: ((this: SpeechRecognition, ev: Event) => void) | null;
+}
+interface WindowWithSpeech extends Window {
+  SpeechRecognition?: { new(): SpeechRecognition };
+  webkitSpeechRecognition?: { new(): SpeechRecognition };
+}
 
 interface AgentChatContextType {
   messages: ConversationTurn[];
@@ -33,7 +60,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const { language } = useLanguage();
 
-  const buildInitialGreeting = (s: typeof student, lang: string = "en"): ConversationTurn => {
+  const buildInitialGreeting = React.useCallback((s: typeof student, lang: string = "en"): ConversationTurn => {
     let content = `Hello ${s.name}! I am your **Student Helpdesk Agent (Agent 65)**.\n\nI have securely authenticated your identity (**${s.id}**) and connected to your academic records. You can ask me anything about your **attendance**, **examination dates**, **marks**, **fees**, **curriculum progress**, or **university policies**.\n\nHow can I support your university journey today?`;
     let followUps = [
       "What is my attendance in Digital Logic design?",
@@ -72,7 +99,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         suggestedFollowUps: followUps,
       },
     };
-  };
+  }, []);
 
   const [messages, setMessages] = useState<ConversationTurn[]>(() => [buildInitialGreeting(student, language)]);
 
@@ -84,13 +111,13 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       lastStudentIdRef.current = student.id;
       setMessages([buildInitialGreeting(student, language)]);
     }
-  }, [language, student.id]);
+  }, [language, student.id, student, buildInitialGreeting]);
   useEffect(() => {
     if (lastStudentIdRef.current !== student.id) {
       lastStudentIdRef.current = student.id;
       setMessages([buildInitialGreeting(student)]);
     }
-  }, [student.id]);
+  }, [student.id, student, buildInitialGreeting]);
 
   const [inputQuery, setInputQuery] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -99,9 +126,9 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [activeContextSubject, setActiveContextSubject] = useState<string | undefined>("Digital Logic design");
 
   const distressCallbackRef = useRef<(() => void) | null>(null);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
-  const silenceTimerRef = useRef<any>(null);
+  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const stopListening = () => {
     setIsListening(false);
@@ -112,13 +139,17 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (recognitionRef.current) {
       try {
         recognitionRef.current.abort();
-      } catch (e) {}
+      } catch {
+        // ignore
+      }
       recognitionRef.current = null;
     }
     if (mediaStreamRef.current) {
       try {
         mediaStreamRef.current.getTracks().forEach((t) => t.stop());
-      } catch (e) {}
+      } catch {
+        // ignore
+      }
       mediaStreamRef.current = null;
     }
   };
@@ -152,13 +183,15 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           {
             role: "assistant",
             content: backendResp.content,
+            messageId: backendResp.message_id,
+            conversationId: backendResp.conversation_id,
             responseMeta: {
               text: backendResp.content,
-              category: (backendResp.category as any) || "PERSONAL_DATA",
+              category: ((backendResp.category as string) || "PERSONAL_DATA") as QueryCategory,
               sourceAgent: backendResp.source_agent || "Agent 65 (Live FastAPI Backend)",
               authorizedFor: student.id,
               isDistress: backendResp.is_distress,
-              structuredCard: backendResp.structured_card,
+              structuredCard: backendResp.structured_card as StructuredCardData,
               suggestedFollowUps: backendResp.suggested_follow_ups,
             },
           },
@@ -207,7 +240,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
 
     const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      (window as unknown as WindowWithSpeech).SpeechRecognition || (window as unknown as WindowWithSpeech).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       alert(
@@ -225,7 +258,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaStreamRef.current = stream;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.warn("[Agent65 Speech] Microphone access denied or not found:", err);
       alert(
         language === "hi"
@@ -263,7 +296,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setIsListening(true);
       };
 
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         // Reset timer on receiving speech
         if (silenceTimerRef.current) {
           clearTimeout(silenceTimerRef.current);
@@ -288,7 +321,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
       };
 
-      recognition.onerror = (event: any) => {
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.warn("[Agent65 Speech] Recognition event error:", event.error);
 
         // DO NOT stop on "no-speech" — student is just pausing before speaking

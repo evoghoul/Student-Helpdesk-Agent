@@ -37,7 +37,7 @@ export const PoliciesView: React.FC<PoliciesViewProps> = ({ onAskHelpdesk }) => 
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-foreground">{t.policiesTitle || "University Policies & Guidelines"}</h2>
-            <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-bold text-foreground">
+            <span className="rounded-full bg-muted px-2.5 py-0.5 text-sm font-bold text-foreground">
               Agent 53
             </span>
           </div>
@@ -64,14 +64,14 @@ export const PoliciesView: React.FC<PoliciesViewProps> = ({ onAskHelpdesk }) => 
         {filteredPolicies.map((pol) => (
           <div
             key={pol.id}
-            className="rounded-2xl border border-slate-200 bg-card p-5 shadow-2xs hover:shadow-sm hover:border-slate-300 transition-all flex flex-col justify-between"
+            className="rounded-lg border border-slate-200 bg-card p-5 shadow-2xs hover:shadow-sm hover:border-slate-300 transition-all flex flex-col justify-between"
           >
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700">
+                <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-sm font-bold text-blue-700">
                   {pol.category}
                 </span>
-                <span className="text-[11px] text-slate-400">Effective: {pol.effectiveDate}</span>
+                <span className="text-sm text-slate-400">Effective: {pol.effectiveDate}</span>
               </div>
 
               <h3 className="text-base font-bold text-foreground mb-1">{pol.title}</h3>
@@ -79,7 +79,7 @@ export const PoliciesView: React.FC<PoliciesViewProps> = ({ onAskHelpdesk }) => 
 
               <div className="mt-3 space-y-1">
                 {pol.keyPoints.slice(0, 2).map((pt, i) => (
-                  <div key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
+                  <div key={i} className="text-sm text-muted-foreground flex items-start gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
                     <span>{pt}</span>
                   </div>
@@ -111,10 +111,10 @@ export const PoliciesView: React.FC<PoliciesViewProps> = ({ onAskHelpdesk }) => 
       {/* Policy Detail Modal */}
       {selectedPolicy && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
-          <div className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto overscroll-contain rounded-3xl bg-card p-6 shadow-2xl border border-slate-200">
+          <div className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto overscroll-contain rounded-xl bg-card p-6 shadow-2xl border border-slate-200">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
-                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700">
+                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-sm font-bold text-blue-700">
                   {selectedPolicy.category}
                 </span>
                 <h3 className="text-lg font-bold text-foreground mt-1">{selectedPolicy.title}</h3>
@@ -146,7 +146,7 @@ export const PoliciesView: React.FC<PoliciesViewProps> = ({ onAskHelpdesk }) => 
 
               <div>
                 <h4 className="font-bold text-foreground text-sm mb-1">Senate Ordinance Text:</h4>
-                <div className="rounded-xl bg-muted/50 p-3 border border-slate-100 whitespace-pre-line text-muted-foreground font-mono text-[11px]">
+                <div className="rounded-xl bg-muted/50 p-3 border border-slate-100 whitespace-pre-line text-muted-foreground font-mono text-sm">
                   {selectedPolicy.fullText}
                 </div>
               </div>

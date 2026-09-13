@@ -80,7 +80,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
                   setSelectedSubject(sub);
                   setSimulatedClasses(sub.classesNeeded70 || 1);
                 }}
-                className={`rounded-2xl border p-4 transition-all cursor-pointer ${
+                className={`rounded-lg border p-4 transition-all cursor-pointer ${
                   isSelected
                     ? "border-blue-500 bg-blue-50/30 ring-2 ring-blue-100 shadow-sm"
                     : "border-slate-200 bg-card hover:border-slate-300 hover:shadow-2xs"
@@ -123,7 +123,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
 
                 {/* Progress Bar */}
                 <div className="mt-3">
-                  <div className="flex justify-between text-[11px] text-muted-foreground mb-1">
+                  <div className="flex justify-between text-sm text-muted-foreground mb-1">
                     <span>
                       {t.classesAttended || "Attended"}: <strong>{sub.attended}</strong> / {sub.total}
                     </span>
@@ -149,9 +149,9 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
 
                 {/* Subtext advice */}
                 {isAttention && (
-                  <div className="mt-2.5 rounded-lg bg-amber-50 p-2 text-[11px] text-amber-900 font-medium flex items-center justify-between">
+                  <div className="mt-2.5 rounded-lg bg-amber-50 p-2 text-sm text-amber-900 font-medium flex items-center justify-between">
                     <span>{t.attendNext || "Attend next"} <strong>{sub.classesNeeded70} {t.consecutiveClasses || "classes"}</strong> {t.toReach70 || "to reach 70%"}.</span>
-                    <span className="text-[11px] font-bold text-amber-700 underline">{t.simulateAttendance || "Simulate"}</span>
+                    <span className="text-sm font-bold text-amber-700 underline">{t.simulateAttendance || "Simulate"}</span>
                   </div>
                 )}
               </div>
@@ -162,7 +162,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
         {/* Right: Subject Detail & Consecutive Classes Simulator (5 Cols) */}
         <div className="@4xl:col-span-5">
           {selectedSubject ? (
-            <div className="@4xl:sticky @4xl:top-28 rounded-2xl border border-blue-200 bg-card p-5 shadow-sm space-y-4">
+            <div className="@4xl:sticky @4xl:top-28 rounded-lg border border-blue-200 bg-card p-5 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div>
                   <span className="font-mono text-xs text-blue-600 font-bold">
@@ -181,17 +181,17 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
               {/* Attendance KPI Summary */}
               <div className="grid grid-cols-3 gap-2 text-center text-xs">
                 <div className="rounded-xl bg-muted/50 p-2.5 border border-slate-100">
-                  <div className="text-[11px] text-muted-foreground">{t.classesAttended || "Attended"}</div>
+                  <div className="text-sm text-muted-foreground">{t.classesAttended || "Attended"}</div>
                   <div className="text-base font-bold text-foreground">{selectedSubject.attended}</div>
                 </div>
                 <div className="rounded-xl bg-muted/50 p-2.5 border border-slate-100">
-                  <div className="text-[11px] text-muted-foreground">{t.missed || "Missed"}</div>
+                  <div className="text-sm text-muted-foreground">{t.missed || "Missed"}</div>
                   <div className="text-base font-bold text-rose-600">
                     {selectedSubject.total - selectedSubject.attended}
                   </div>
                 </div>
                 <div className="rounded-xl bg-muted/50 p-2.5 border border-slate-100">
-                  <div className="text-[11px] text-muted-foreground">{t.currentAttendance || "Current %"}</div>
+                  <div className="text-sm text-muted-foreground">{t.currentAttendance || "Current %"}</div>
                   <div
                     className={`text-base font-bold ${
                       selectedSubject.percentage < 70 ? "text-amber-800" : "text-emerald-700"
@@ -203,7 +203,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
               </div>
 
               {/* Actionable Consecutive Recovery Simulator */}
-              <div className="rounded-2xl bg-gradient-to-br from-blue-50/80 to-indigo-50/50 p-4 border border-blue-100 space-y-3">
+              <div className="rounded-lg bg-gradient-to-br from-blue-50/80 to-indigo-50/50 p-4 border border-blue-100 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-blue-900">
                     <Calculator className="h-4 w-4 text-blue-600" />
@@ -264,7 +264,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
                   {selectedSubject.scheduleDays.map((slot) => (
                     <span
                       key={slot}
-                      className="rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground"
+                      className="rounded-md bg-muted px-2 py-0.5 text-sm font-medium text-foreground"
                     >
                       {slot}
                     </span>
@@ -284,7 +284,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
               </button>
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-xs text-muted-foreground">
+            <div className="rounded-lg border border-dashed border-slate-300 p-8 text-center text-xs text-muted-foreground">
               Select a subject from the left to inspect detailed metrics and consecutive class calculations.
             </div>
           )}

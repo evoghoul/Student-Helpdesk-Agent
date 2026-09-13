@@ -1,3 +1,4 @@
+
 /**
  * API Client for connecting Frontend to Agent 65 FastAPI Backend.
  * Uses NEXT_PUBLIC_BACKEND_URL or defaults to http://localhost:8000/api/v1
@@ -5,6 +6,7 @@
 
 const BACKEND_BASE_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000/api/v1";
+
 
 export interface BackendTokenResponse {
   access_token: string;
@@ -14,6 +16,26 @@ export interface BackendTokenResponse {
   roll_no: string;
   full_name: string;
   programme_code: string;
+}
+
+export interface ProfileResponse {
+  roll_no: string;
+  cgpa?: number;
+  fee_outstanding?: number;
+  overall_attendance_pct?: number;
+}
+
+export interface DashboardResponse {
+  profile?: ProfileResponse;
+  timetable?: Array<{
+    day_of_week: string;
+    time_slot?: string;
+    course_title: string;
+    course_code: string;
+    room_no: string;
+    faculty_name: string;
+    slot_type?: string;
+  }>;
 }
 
 export interface BackendMessageResponse {
@@ -29,7 +51,7 @@ export interface BackendMessageResponse {
     effective_date: string;
     summary?: string;
   }>;
-  structured_card?: any;
+  structured_card?: unknown;
   is_distress: boolean;
   suggested_follow_ups?: string[];
   created_at: string;
@@ -60,7 +82,7 @@ class Agent65ApiClient {
     return this.token;
   }
 
-  async login(username: string = "251FA04E13", password: string = "251FA04E13"): Promise<BackendTokenResponse | null> {
+  async login(username: string = "251FA04E03", password: string = "251FA04E03"): Promise<BackendTokenResponse | null> {
     try {
       const resp = await fetch(`${BACKEND_BASE_URL}/auth/login`, {
         method: "POST",
@@ -81,7 +103,7 @@ class Agent65ApiClient {
     let token = this.getToken();
     if (!token) {
       const savedRoll = typeof window !== "undefined" ? localStorage.getItem("agent65_active_student") : null;
-      const rollToUse = savedRoll || "251FA04E13";
+      const rollToUse = savedRoll || "251FA04E03";
       const loginData = await this.login(rollToUse, rollToUse);
       if (loginData) {
         token = loginData.access_token;
@@ -90,7 +112,7 @@ class Agent65ApiClient {
     return token;
   }
 
-  async getProfile(): Promise<any | null> {
+  async getProfile(): Promise<ProfileResponse | null> {
     const token = await this.ensureAuthenticated();
     if (!token) return null;
     try {
@@ -99,12 +121,12 @@ class Agent65ApiClient {
       });
       if (!resp.ok) return null;
       return await resp.json();
-    } catch (e) {
+    } catch {
       return null;
     }
   }
 
-  async getDashboard(): Promise<any | null> {
+  async getDashboard(): Promise<DashboardResponse | null> {
     const token = await this.ensureAuthenticated();
     if (!token) return null;
     try {
@@ -113,7 +135,7 @@ class Agent65ApiClient {
       });
       if (!resp.ok) return null;
       return await resp.json();
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -156,7 +178,7 @@ class Agent65ApiClient {
 
     if (!token || convId === "local-conversation-session") {
       const savedRoll = typeof window !== "undefined" ? localStorage.getItem("agent65_active_student") : null;
-      const rollToUse = savedRoll || "251FA04E13";
+      const rollToUse = savedRoll || "251FA04E03";
       token = await this.login(rollToUse, rollToUse).then((t) => t?.access_token || null);
       convId = await this.getOrCreateConversation(true);
       if (!token || convId === "local-conversation-session") {
@@ -212,7 +234,7 @@ class Agent65ApiClient {
     }
   }
 
-  async createServiceRequest(category: string, title: string, description: string): Promise<any | null> {
+  async createServiceRequest(category: string, title: string, description: string): Promise<unknown | null> {
     const token = await this.ensureAuthenticated();
     if (!token) return null;
     try {
@@ -227,6 +249,44 @@ class Agent65ApiClient {
       if (resp.ok) return await resp.json();
     } catch (e) {
       console.warn("Could not post service request to backend:", e);
+    }
+    return null;
+  }
+
+  async sendFeedback(
+    conversationId: string | null | undefined,
+    messageId: string | null | undefined,
+    rating: "up" | "down",
+    comment?: string,
+    messagesContext?: Array<{ role: string; content: string }>,
+    responseText?: string
+  ): Promise<{ status: string; saved_for_training: boolean; rating: string; message: string } | null> {
+    const token = await this.ensureAuthenticated();
+    if (!token) return null;
+    try {
+      const convId = conversationId || this.activeConversationId || "local-conversation-session";
+      const msgId = messageId || `msg-${Date.now()}`;
+      const resp = await fetch(
+        `${BACKEND_BASE_URL}/conversations/${convId}/messages/${msgId}/feedback`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            rating,
+            comment,
+            messages: messagesContext,
+            response_text: responseText,
+          }),
+        }
+      );
+      if (resp.ok) {
+        return await resp.json();
+      }
+    } catch (e) {
+      console.warn("[Agent65] Feedback submission failed:", e);
     }
     return null;
   }

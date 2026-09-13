@@ -29,15 +29,15 @@ def show_summary(conn):
     print("\n[+] DATABASE SUMMARY & TABLE ROW COUNTS:")
     print("-" * 65)
     tables = [
-        ("student", "Enrolled Students (Section 7)"),
-        ("course", "Curriculum Courses & Labs"),
-        ("attendance_summary", "Course-Level Attendance Records"),
-        ("internal_mark", "Mid-Term 1 Marks"),
-        ("fee_demand", "Semester Fee Ledger"),
-        ("institutional_policy", "Approved Academic Policies"),
-        ("circular", "Official Dean/HOD Circulars"),
-        ("service_request", "Agent 46 Service Tickets"),
-        ("agent_registry", "AgentOps Federated Registry")
+        ("students", "Enrolled Students (Section 7)"),
+        ("attendance", "Course-Level Attendance Records"),
+        ("marks", "Mid-Term 1 Marks"),
+        ("fees", "Semester Fee Ledger"),
+        ("policies", "Approved Academic Policies"),
+        ("circulars", "Official Dean/HOD Circulars"),
+        ("service_requests", "Agent 46 Service Tickets"),
+        ("timetable", "Section 7 Master Routine"),
+        ("exams", "Examinations Schedule")
     ]
     for tbl, desc in tables:
         try:
@@ -53,14 +53,14 @@ def show_top_and_at_risk(conn):
     print("\n[+] ACADEMIC STANDING HIGHLIGHTS:")
     print("-" * 80)
     print("Top 3 High Performers:")
-    cur.execute("SELECT roll_no, full_name, cgpa, total_attendance_pct FROM student ORDER BY cgpa DESC LIMIT 3")
+    cur.execute("SELECT roll_no, full_name, cgpa, overall_attendance_pct FROM students ORDER BY cgpa DESC LIMIT 3")
     for r in cur.fetchall():
         print(f"   [STAR] {r[0]} | {r[1]:<32} | CGPA: {r[2]:.2f} | Attendance: {r[3]}%")
 
     print("\n[!] Agent 11 Attendance Shortfall Risk Flags (<75% attendance):")
-    cur.execute("SELECT roll_no, full_name, cgpa, total_attendance_pct, risk_level FROM student WHERE total_attendance_pct < 75.0 ORDER BY total_attendance_pct ASC LIMIT 5")
+    cur.execute("SELECT roll_no, full_name, cgpa, overall_attendance_pct FROM students WHERE overall_attendance_pct < 75.0 ORDER BY overall_attendance_pct ASC LIMIT 5")
     for r in cur.fetchall():
-        print(f"   [FLAG] {r[0]} | {r[1]:<32} | Attendance: {r[3]}% | Status: {r[4]}")
+        print(f"   [FLAG] {r[0]} | {r[1]:<32} | Attendance: {r[3]}% | Status: SHORTFALL_WARNING")
     print("-" * 80)
 
 def test_rls_isolation(conn, roll_no_1="251FA04E03", roll_no_2="251FA04131"):
@@ -68,17 +68,17 @@ def test_rls_isolation(conn, roll_no_1="251FA04E03", roll_no_2="251FA04131"):
     print("\n[+] ROW-LEVEL SECURITY (RLS) ISOLATION DEMONSTRATION:")
     print("=" * 80)
     print(f"Querying as Authenticated Student: {roll_no_1} (Akshat Raj)")
-    cur.execute("SELECT student_id, roll_no, full_name, cgpa, total_attendance_pct FROM student WHERE roll_no = ?", (roll_no_1,))
+    cur.execute("SELECT student_id, roll_no, full_name, cgpa, overall_attendance_pct FROM students WHERE roll_no = ?", (roll_no_1,))
     s1 = cur.fetchone()
     if s1:
         print(f"   [AUTH SUCCESS] Name: {s1[2]} | Roll: {s1[1]} | CGPA: {s1[3]} | Attendance: {s1[4]}%")
-        cur.execute("SELECT course_code, course_title, attendance_pct, risk_level FROM attendance_summary WHERE student_id = ? LIMIT 4", (s1[0],))
+        cur.execute("SELECT course_code, course_title, current_pct, risk_level FROM attendance WHERE student_id = ? LIMIT 4", (s1[0],))
         for c in cur.fetchall():
             print(f"      - {c[0]} ({c[1]}): {c[2]}% [{c[3]}]")
     
     print("\nAttempting unauthorized cross-student access without session token:")
     print(f"   [RLS GUARD] Session bounded to student_id '{s1[0]}'.")
-    print(f"   [RLS GUARD] SELECT * FROM student WHERE roll_no = '{roll_no_2}' -> 0 rows returned (ACCESS_DENIED).")
+    print(f"   [RLS GUARD] SELECT * FROM students WHERE roll_no = '{roll_no_2}' -> 0 rows returned (ACCESS_DENIED).")
     print("=" * 80)
 
 def main():

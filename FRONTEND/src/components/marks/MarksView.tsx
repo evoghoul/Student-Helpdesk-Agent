@@ -41,10 +41,10 @@ export const MarksView: React.FC<MarksViewProps> = ({ onAskHelpdesk }) => {
 
         {/* GPA Badge */}
         <div className="flex items-center gap-3">
-          <div className="rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-2.5 text-white shadow-sm flex items-center gap-3">
+          <div className="rounded-lg bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-2.5 text-white shadow-sm flex items-center gap-3">
             <Award className="h-6 w-6 text-emerald-100" />
             <div>
-              <div className="text-[11px] uppercase font-bold tracking-wider text-emerald-100">
+              <div className="text-sm uppercase font-bold tracking-wider text-emerald-100">
                 {t.cgpaLabel || "Cumulative CGPA"}
               </div>
               <div className="text-xl font-black">{student.cgpa} / 10.0</div>
@@ -57,7 +57,7 @@ export const MarksView: React.FC<MarksViewProps> = ({ onAskHelpdesk }) => {
       <div className="grid grid-cols-1 @4xl:grid-cols-12 gap-6">
         {/* Left: Recent Assessments Table (8 Cols) */}
         <div className="@4xl:col-span-8 space-y-4">
-          <div className="rounded-2xl border border-slate-200 bg-card overflow-hidden shadow-2xs">
+          <div className="rounded-lg border border-slate-200 bg-card overflow-hidden shadow-2xs">
             <div className="bg-muted/50/80 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
               <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 {t.marksTitle || "Graded Assessments"} ({t.semesterLabel || "Semester"} {student.semester})
@@ -77,7 +77,7 @@ export const MarksView: React.FC<MarksViewProps> = ({ onAskHelpdesk }) => {
                         <span className="font-bold text-foreground text-sm">
                           {item.subjectName}
                         </span>
-                        <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700">
+                        <span className="rounded-full bg-blue-50 px-2 py-0.5 text-sm font-bold text-blue-700">
                           {item.assessmentType}
                         </span>
                       </div>
@@ -91,7 +91,7 @@ export const MarksView: React.FC<MarksViewProps> = ({ onAskHelpdesk }) => {
                         </span>
                         <span className="text-xs text-slate-400">/ {item.maxMarks}</span>
                       </div>
-                      <span className="inline-block rounded-md bg-emerald-100 px-2 py-0.2 text-[11px] font-bold text-emerald-800">
+                      <span className="inline-block rounded-md bg-emerald-100 px-2 py-0.2 text-sm font-bold text-emerald-800">
                         {item.percentage}% (Grade {item.grade})
                       </span>
                     </div>
@@ -99,7 +99,7 @@ export const MarksView: React.FC<MarksViewProps> = ({ onAskHelpdesk }) => {
 
                   {/* Feedback Snippet */}
                   <div className="mt-2.5 rounded-lg bg-muted/50 p-2.5 border border-slate-100 text-xs text-muted-foreground flex items-start gap-2">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 shrink-0 mt-0.5">
+                    <span className="text-sm font-bold uppercase tracking-wider text-slate-400 shrink-0 mt-0.5">
                       Feedback:
                     </span>
                     <p className="italic text-foreground">{item.feedback}</p>
@@ -112,7 +112,7 @@ export const MarksView: React.FC<MarksViewProps> = ({ onAskHelpdesk }) => {
 
         {/* Right: Upcoming Assessments Card (4 Cols) */}
         <div className="@4xl:col-span-4 space-y-4">
-          <div className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50/50 to-white p-5 shadow-2xs space-y-3">
+          <div className="rounded-lg border border-indigo-200 bg-gradient-to-br from-indigo-50/50 to-white p-5 shadow-2xs space-y-3">
             <div className="flex items-center gap-2 text-indigo-900 font-bold text-xs">
               <Sparkles className="h-4 w-4 text-indigo-600" />
               <span>{t.upcomingAssessment}</span>
@@ -126,12 +126,12 @@ export const MarksView: React.FC<MarksViewProps> = ({ onAskHelpdesk }) => {
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-foreground">{upcoming.title}</span>
-                    <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
+                    <span className="text-sm font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
                       {upcoming.date}
                     </span>
                   </div>
                   <div className="text-xs font-medium text-muted-foreground">{upcoming.subject}</div>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
                     Syllabus: {upcoming.syllabus}
                   </p>
                 </div>

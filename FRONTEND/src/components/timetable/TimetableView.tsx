@@ -65,7 +65,7 @@ function getLiveSlotStatus(
   return "Upcoming";
 }
 
-export const TimetableView: React.FC<TimetableViewProps> = ({ onAskHelpdesk }) => {
+export const TimetableView: React.FC<TimetableViewProps> = () => {
   const { studentData } = useStudent();
   const { t } = useLanguage();
   const student = studentData?.profile;
@@ -86,20 +86,20 @@ export const TimetableView: React.FC<TimetableViewProps> = ({ onAskHelpdesk }) =
         const dash = await apiClient.getDashboard();
         if (dash && Array.isArray(dash.timetable) && dash.timetable.length > 0) {
           const byDay: Record<string, TimetableSlot[]> = {};
-          dash.timetable.forEach((item: any, idx: number) => {
+          dash.timetable.forEach((item: { day_of_week: string; time_slot?: string; course_title: string; course_code: string; room_no: string; faculty_name: string; slot_type?: string }, idx: number) => {
             const day = item.day_of_week;
             if (!byDay[day]) byDay[day] = [];
             const timeParts = (item.time_slot || "").split(/[-–]/).map((p: string) => p.trim());
             byDay[day].push({
               id: `${day.slice(0, 3).toUpperCase()}-${idx + 1}`,
-              time: item.time_slot,
+              time: item.time_slot || "",
               startTime: timeParts[0] || "",
               endTime: timeParts[1] || "",
               subject: item.course_title,
               code: item.course_code,
               room: item.room_no,
               faculty: item.faculty_name,
-              type: item.slot_type || "Lecture",
+              type: (item.slot_type || "Lecture") as "Lecture" | "Lab" | "Break" | "Tutorial" | "Self Learning" | "Counseling",
               status: "Upcoming",
             });
           });
@@ -129,12 +129,12 @@ export const TimetableView: React.FC<TimetableViewProps> = ({ onAskHelpdesk }) =
             <h2 className="text-xl font-bold text-foreground">{t.timetableTitle}</h2>
             <Badge variant="info">Section-7 (N-312)</Badge>
             {isLiveSynced ? (
-              <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[11px] gap-1">
+              <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-sm gap-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Live Database Schedule
               </Badge>
             ) : (
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[11px] gap-1">
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-sm gap-1">
                 <Radio className="h-3 w-3" />
                 Verified Routine
               </Badge>
@@ -167,7 +167,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({ onAskHelpdesk }) =
                 }`}
               >
                 {label}
-                {isToday && <span className="ml-1 text-[10px] text-blue-600 font-bold">• Today</span>}
+                {isToday && <span className="ml-1 text-xs text-blue-600 font-bold">• Today</span>}
               </button>
             );
           })}
@@ -181,7 +181,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({ onAskHelpdesk }) =
             <MapPin className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-            <span className="text-[10px] font-bold text-blue-800 uppercase tracking-wider">Classroom & Section</span>
+            <span className="text-xs font-bold text-blue-800 uppercase tracking-wider">Classroom & Section</span>
             <p className="text-xs font-bold text-foreground truncate">{SECTION_METADATA.section} ({SECTION_METADATA.room})</p>
           </div>
         </div>
@@ -191,7 +191,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({ onAskHelpdesk }) =
             <User className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-            <span className="text-[10px] font-bold text-indigo-800 uppercase tracking-wider">{t.classTeacher}</span>
+            <span className="text-xs font-bold text-indigo-800 uppercase tracking-wider">{t.classTeacher}</span>
             <p className="text-xs font-bold text-foreground truncate">{SECTION_METADATA.classTeacher}</p>
           </div>
         </div>
@@ -201,11 +201,11 @@ export const TimetableView: React.FC<TimetableViewProps> = ({ onAskHelpdesk }) =
             <Phone className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-            <span className="text-[10px] font-bold text-purple-800 uppercase tracking-wider">{t.coordinator}</span>
+            <span className="text-xs font-bold text-purple-800 uppercase tracking-wider">{t.coordinator}</span>
             <p className="text-xs font-bold text-foreground truncate" title={`${SECTION_METADATA.timetableCoordinator} (${SECTION_METADATA.coordinatorPhone})`}>
               {SECTION_METADATA.timetableCoordinator}
             </p>
-            <p className="text-[10px] font-mono text-purple-700 font-medium truncate">{SECTION_METADATA.coordinatorPhone}</p>
+            <p className="text-xs font-mono text-purple-700 font-medium truncate">{SECTION_METADATA.coordinatorPhone}</p>
           </div>
         </div>
 
@@ -214,14 +214,14 @@ export const TimetableView: React.FC<TimetableViewProps> = ({ onAskHelpdesk }) =
             <GraduationCap className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-            <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">HOD, CSE</span>
+            <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">HOD, CSE</span>
             <p className="text-xs font-bold text-foreground truncate">{SECTION_METADATA.hodCse}</p>
           </div>
         </div>
       </div>
 
       {/* Timeline List */}
-      <div className="rounded-2xl border border-slate-200 bg-card p-5 sm:p-6 shadow-2xs space-y-4">
+      <div className="rounded-lg border border-slate-200 bg-card p-5 sm:p-6 shadow-2xs space-y-4">
         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -284,11 +284,11 @@ export const TimetableView: React.FC<TimetableViewProps> = ({ onAskHelpdesk }) =
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-bold text-foreground text-sm">{slot.subject}</span>
                           {slot.code && (
-                            <span className="rounded-md bg-muted px-2 py-0.5 font-mono text-[11px] text-muted-foreground font-semibold">
+                            <span className="rounded-md bg-muted px-2 py-0.5 font-mono text-sm text-muted-foreground font-semibold">
                               {slot.code}
                             </span>
                           )}
-                          <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                          <span className="rounded-full bg-muted px-2 py-0.5 text-sm font-medium text-muted-foreground">
                             {slot.type}
                           </span>
                         </div>
@@ -315,7 +315,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({ onAskHelpdesk }) =
 
                         {/* Status Tag calculated from live clock */}
                         <span
-                          className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                          className={`rounded-full px-2 py-0.5 text-sm font-bold ${
                             isCurrent
                               ? "bg-blue-600 text-white animate-pulse"
                               : isNext

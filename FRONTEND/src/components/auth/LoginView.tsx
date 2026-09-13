@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import React, { useState } from "react";
 import {
   ShieldCheck,
@@ -45,6 +47,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
       await loginAsStudent(regd, pwd);
     } catch (err) {
       console.warn("Backend login error:", err);
+      setError("Authentication failed. Please check your credentials.");
+      setIsLoading(false);
+      return;
     }
     setIsLoading(false);
     onLogin();
@@ -84,9 +89,11 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
         <div className="mx-auto max-w-7xl flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* Vignan University Official Logo */}
-            <img
+            <Image
               src="/vignan-logo.png"
               alt="Vignan Foundation"
+              width={160}
+              height={48}
               className="h-10 sm:h-12 w-auto object-contain"
             />
             <div className="h-8 w-px bg-slate-200 hidden sm:block" />
@@ -95,7 +102,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
                 <span className="font-bold text-sm tracking-tight text-foreground">
                   {t.appName || "Student Helpdesk"}
                 </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700 border border-blue-200">
+                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 border border-blue-200">
                   <Sparkles className="h-2.5 w-2.5" />
                   AGENT 65
                 </span>
@@ -122,10 +129,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
       <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           {/* Card Container */}
-          <div className="rounded-2xl border border-slate-200 bg-card p-7 sm:p-8 shadow-xl shadow-slate-200/60 space-y-6">
+          <div className="rounded-lg border border-slate-200 bg-card p-7 sm:p-8 shadow-sm space-y-6">
             {/* Header / Avatar */}
             <div className="text-center space-y-2">
-              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-lg shadow-blue-600/20 ring-4 ring-blue-50 text-white mb-1">
+              <div className="inline-flex h-14 w-14 items-center justify-center rounded-lg bg-blue-600 text-white mb-1 shadow-sm">
                 <Bot className="h-7 w-7" />
               </div>
               <h1 className="text-2xl font-bold tracking-tight text-foreground">
@@ -149,7 +156,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-muted-foreground flex items-center justify-between">
                   <span>{t.rollNoLabel || "Student Roll Number"}</span>
-                  <span className="text-[11px] text-blue-600 font-normal">
+                  <span className="text-xs text-blue-600 font-normal">
                     {t.loginRollFormat || "Format: 251FA04E03"}
                   </span>
                 </label>
@@ -160,7 +167,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
                     value={studentId}
                     onChange={(e) => setStudentId(e.target.value)}
                     placeholder={t.enterStudentId || "Enter Student ID"}
-                    className="w-full rounded-xl border border-slate-200 bg-muted/50 py-2.5 pl-10 pr-4 text-sm text-foreground placeholder-slate-400 focus:border-blue-500 focus:bg-card focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
+                    className="w-full rounded-md border border-slate-200 bg-muted/50 py-2.5 pl-10 pr-4 text-sm text-foreground placeholder-slate-400 focus:border-blue-500 focus:bg-card focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
                     required
                   />
                 </div>
@@ -169,9 +176,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-muted-foreground flex items-center justify-between">
                   <span>{t.loginPasswordPin || "Institutional Password / PIN"}</span>
-                  <a href="#" className="text-[11px] text-blue-600 hover:text-blue-700 transition-colors">
+                  <button type="button" className="text-xs text-blue-600 hover:text-blue-700 transition-colors">
                     {t.loginForgotPin || "Forgot PIN?"}
-                  </a>
+                  </button>
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -180,7 +187,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full rounded-xl border border-slate-200 bg-muted/50 py-2.5 pl-10 pr-4 text-sm text-foreground placeholder-slate-400 focus:border-blue-500 focus:bg-card focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
+                    className="w-full rounded-md border border-slate-200 bg-muted/50 py-2.5 pl-10 pr-4 text-sm text-foreground placeholder-slate-400 focus:border-blue-500 focus:bg-card focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
                     required
                   />
                 </div>
@@ -196,7 +203,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
                   />
                   <span>{t.loginKeepAuth || "Keep me authenticated"}</span>
                 </label>
-                <span className="flex items-center gap-1 text-muted-foreground text-[11px]">
+                <span className="flex items-center gap-1 text-muted-foreground text-xs">
                   <Fingerprint className="h-3.5 w-3.5 text-blue-500" />
                   {t.loginBiometricReady || "Biometric ready"}
                 </span>
@@ -206,7 +213,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 py-3 px-4 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 hover:from-blue-500 hover:to-indigo-500 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:ring-offset-2 transition-all cursor-pointer disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 rounded-md bg-blue-600 py-3 px-4 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:ring-offset-2 transition-all cursor-pointer disabled:opacity-50"
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">
@@ -225,7 +232,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
             {/* Quick Demo Access Divider */}
             <div className="relative flex items-center justify-center pt-1">
               <div className="border-t border-slate-200 w-full" />
-              <span className="bg-card px-3 text-[11px] uppercase tracking-wider text-slate-400 font-semibold absolute">
+              <span className="bg-card px-3 text-xs uppercase tracking-wider text-slate-400 font-semibold absolute">
                 {t.loginInstantDemo || "Instant Demo Access"}
               </span>
             </div>
@@ -234,10 +241,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
             <button
               onClick={handleDemoLogin}
               type="button"
-              className="w-full flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50/60 hover:bg-blue-100/60 p-3 text-left transition-all group cursor-pointer"
+              className="w-full flex items-center justify-between rounded-md border border-slate-200 bg-card hover:bg-slate-50 p-3 text-left transition-all group cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xs shadow-sm">
+                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-blue-600 text-white font-bold text-xs shadow-sm">
                   {CURRENT_STUDENT.name.split(" ").map(w => w[0]).join("").slice(0,2).toUpperCase()}
                 </div>
                 <div>
@@ -247,18 +254,18 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
                     </span>
                     <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
                   </div>
-                  <p className="text-[11px] font-mono text-muted-foreground">
+                  <p className="text-xs font-mono text-muted-foreground">
                     {CURRENT_STUDENT.id} • {CURRENT_STUDENT.programme}
                   </p>
                 </div>
               </div>
-              <span className="rounded-lg bg-blue-100 px-2.5 py-1 text-[11px] font-semibold text-blue-700 border border-blue-200 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all">
+              <span className="rounded-md bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-all">
                 {t.signIn || "Sign In"}
               </span>
             </button>
 
             {/* Security Guarantee Badges */}
-            <div className="pt-2 border-t border-slate-100 grid grid-cols-2 gap-2 text-[11px] text-muted-foreground">
+            <div className="pt-2 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
                 <span>{t.loginRowLevelAuth || "Row-Level Authorization"}</span>

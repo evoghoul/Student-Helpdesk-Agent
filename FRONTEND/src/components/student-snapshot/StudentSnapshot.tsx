@@ -94,7 +94,7 @@ const SnapshotCard: React.FC<SnapshotCardProps> = ({
     <div
       onClick={onClick}
       className={cn(
-        "group relative flex h-full min-h-[168px] cursor-pointer flex-col justify-between rounded-2xl border bg-card p-4 transition-all hover:shadow-md hover:-translate-y-0.5",
+        "group relative flex h-full min-h-[168px] cursor-pointer flex-col justify-between rounded-lg border bg-card p-4 transition-all hover:shadow-md hover:-translate-y-0.5",
         emphasize ? "border-amber-200" : "border-slate-200",
         toneStyle.border
       )}
@@ -102,7 +102,7 @@ const SnapshotCard: React.FC<SnapshotCardProps> = ({
       <div className="flex flex-col flex-1">
         {/* Card Header */}
         <div className="mb-2 flex items-center justify-between gap-2">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground truncate">
+          <span className="text-sm font-bold uppercase tracking-wider text-muted-foreground truncate">
             {label}
           </span>
           <div
@@ -126,7 +126,7 @@ const SnapshotCard: React.FC<SnapshotCardProps> = ({
         </div>
 
         {/* Subtext Line - Fixed height with ellipsis */}
-        <p className="mt-0.5 h-7 text-[11px] leading-snug text-muted-foreground line-clamp-1 truncate" title={typeof subtext === "string" ? subtext : undefined}>
+        <p className="mt-0.5 h-7 text-sm leading-snug text-muted-foreground line-clamp-1 truncate" title={typeof subtext === "string" ? subtext : undefined}>
           {subtext}
         </p>
       </div>
@@ -169,7 +169,7 @@ export const StudentSnapshot: React.FC<StudentSnapshotProps> = ({ onNavigateTab 
             {t.snapshotSubtitle} • {student?.id || "251FA04E03"} • Class Teacher: Mr. T. Latesh Babu
           </p>
         </div>
-        <span className="self-start sm:self-auto inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700 border border-emerald-100">
+        <span className="self-start sm:self-auto inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-medium text-emerald-700 border border-emerald-100">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
           {t.sectionSynchronized}
         </span>

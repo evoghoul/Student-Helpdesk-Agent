@@ -31,12 +31,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onAskHelpdesk, onNav
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-foreground">{t.calendarTitle || "Academic Calendar 2026-27 (Semester-I)"}</h2>
-            <span className="rounded-full bg-teal-100 px-2.5 py-0.5 text-[11px] font-bold text-teal-800">
+            <span className="rounded-full bg-teal-100 px-2.5 py-0.5 text-sm font-bold text-teal-800">
               VFSTR Official
             </span>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Vignan's Foundation for Science, Technology and Research (Vadlamudi) • B.Tech 2nd (R25), 3rd (R22C24) & 4th (R22) Year • Dated: 6/1/2026
+            Vignan&apos;s Foundation for Science, Technology and Research (Vadlamudi) • B.Tech 2nd (R25), 3rd (R22C24) & 4th (R22) Year • Dated: 6/1/2026
           </p>
         </div>
 
@@ -60,7 +60,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onAskHelpdesk, onNav
               <div
                 key={evt.id}
                 onClick={() => setSelectedEvent(evt)}
-                className={`rounded-2xl border p-4 transition-all cursor-pointer ${
+                className={`rounded-lg border p-4 transition-all cursor-pointer ${
                   isSelected
                     ? "border-teal-500 bg-teal-50/30 ring-2 ring-teal-100 shadow-sm"
                     : "border-slate-200 bg-card hover:border-slate-300 hover:shadow-2xs"
@@ -69,7 +69,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onAskHelpdesk, onNav
                 <div className="flex flex-col @lg:flex-row @lg:items-center justify-between gap-2">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-bold text-foreground">
+                      <span className="rounded-full bg-muted px-2.5 py-0.5 text-sm font-bold text-foreground">
                         {evt.category}
                       </span>
                       <h4 className="font-bold text-foreground text-sm">{evt.title}</h4>
@@ -84,7 +84,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onAskHelpdesk, onNav
                       {evt.endDate && ` – ${evt.endDate}`}
                     </div>
                     <span
-                      className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-bold mt-1 ${
+                      className={`inline-block rounded-full px-2 py-0.5 text-sm font-bold mt-1 ${
                         isCompleted
                           ? "bg-muted text-muted-foreground"
                           : "bg-teal-100 text-teal-800"
@@ -102,7 +102,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onAskHelpdesk, onNav
         {/* Right: Selected Event Card (4 Cols) */}
         <div className="@4xl:col-span-4">
           {selectedEvent ? (
-            <div className="@4xl:sticky @4xl:top-28 rounded-2xl border border-teal-200 bg-card p-5 shadow-2xs space-y-4">
+            <div className="@4xl:sticky @4xl:top-28 rounded-lg border border-teal-200 bg-card p-5 shadow-2xs space-y-4">
               <div className="flex items-center gap-2 border-b border-slate-100 pb-2.5">
                 <Info className="h-4 w-4 text-teal-600" />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
@@ -111,7 +111,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onAskHelpdesk, onNav
               </div>
 
               <div className="space-y-2">
-                <span className="rounded-full bg-teal-50 px-2.5 py-0.5 text-[11px] font-bold text-teal-800">
+                <span className="rounded-full bg-teal-50 px-2.5 py-0.5 text-sm font-bold text-teal-800">
                   {selectedEvent.category}
                 </span>
                 <h3 className="text-base font-bold text-foreground">{selectedEvent.title}</h3>
@@ -123,7 +123,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onAskHelpdesk, onNav
                 <p className="text-xs text-muted-foreground leading-relaxed pt-1">
                   {selectedEvent.description}
                 </p>
-                <div className="text-[11px] text-slate-400 pt-2">
+                <div className="text-sm text-slate-400 pt-2">
                   Sourced from {selectedEvent.sourceAgent}
                 </div>
               </div>
@@ -137,7 +137,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onAskHelpdesk, onNav
               </button>
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-xs text-slate-400">
+            <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center text-xs text-slate-400">
               Select an event to view full details.
             </div>
           )}

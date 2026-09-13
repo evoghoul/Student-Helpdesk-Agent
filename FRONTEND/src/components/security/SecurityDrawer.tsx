@@ -13,6 +13,7 @@ import { CONNECTED_AGENTS } from "@/data/connected-agents";
 import { INITIAL_SECURITY_LOGS, SecurityLogItem } from "@/data/security-logs";
 import { CURRENT_STUDENT } from "@/data/student";
 import { useLanguage } from "@/context/LanguageContext";
+import { useStudent } from "@/context/StudentContext";
 
 interface SecurityDrawerProps {
   isOpen: boolean;
@@ -21,12 +22,14 @@ interface SecurityDrawerProps {
 
 export const SecurityDrawer: React.FC<SecurityDrawerProps> = ({ isOpen, onClose }) => {
   const { t } = useLanguage();
+  const { studentData } = useStudent();
+  const student = studentData?.profile || CURRENT_STUDENT;
   const [activeTab, setActiveTab] = useState<"architecture" | "logs" | "agents">("architecture");
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-xs">
+    <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-xs">
       <div className="relative w-full max-w-2xl h-full bg-card shadow-2xl border-l border-slate-200 flex flex-col animate-in slide-in-from-right duration-300">
         {/* Drawer Header */}
         <div className="flex items-center justify-between border-b border-slate-200 p-5 bg-gradient-to-r from-blue-50 to-white">
@@ -36,7 +39,7 @@ export const SecurityDrawer: React.FC<SecurityDrawerProps> = ({ isOpen, onClose 
             </div>
             <div>
               <h3 className="text-base font-bold text-foreground">{t.securityTitle || "Security & Access Audit"}</h3>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Row-Level Security (RLS) Isolation • Agent 65 Core
               </p>
             </div>
@@ -97,31 +100,31 @@ export const SecurityDrawer: React.FC<SecurityDrawerProps> = ({ isOpen, onClose 
           {activeTab === "architecture" && (
             <div className="space-y-4">
               {/* Authenticated Verification Card */}
-              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 space-y-2">
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 p-4 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-emerald-950 flex items-center gap-1.5">
                     <ShieldCheck className="h-4 w-4 text-emerald-600" />
                     <span>{t.footerRls}</span>
                   </span>
-                  <span className="rounded-md bg-emerald-200/80 px-2 py-0.5 text-[11px] font-bold text-emerald-900">
+                  <span className="rounded-md bg-emerald-200/80 px-2 py-0.5 text-sm font-bold text-emerald-900">
                     ENFORCED AT DATA LAYER
                   </span>
                 </div>
-                <p className="text-emerald-900/90 leading-relaxed text-[11px]">
-                  The system only retrieves information from the authenticated student&apos;s own record (<strong>{CURRENT_STUDENT.id}</strong>). Cross-tenant queries are blocked before reaching database engines.
+                <p className="text-emerald-900/90 leading-relaxed text-sm">
+                  The system only retrieves information from the authenticated student&apos;s own record (<strong>{student.id}</strong>). Cross-tenant queries are blocked before reaching database engines.
                 </p>
               </div>
 
               {/* Data Flow Pipeline Diagram */}
-              <div className="rounded-2xl border border-slate-200 bg-muted/50/60 p-4 space-y-3">
+              <div className="rounded-lg border border-slate-200 bg-muted/50/60 p-4 space-y-3">
                 <h4 className="font-bold text-foreground text-xs uppercase tracking-wider">
                   Request Authorization & Pipeline Sequence:
                 </h4>
 
                 <div className="space-y-2">
                   {[
-                    { step: "1", title: "Authenticate Student", desc: `Identity confirmed as ${CURRENT_STUDENT.name} (${CURRENT_STUDENT.id}) via Agent 44.` },
-                    { step: "2", title: "Establish Identity Context", desc: `OAuth2 token injected: ${CURRENT_STUDENT.securityToken}.` },
+                    { step: "1", title: "Authenticate Student", desc: `Identity confirmed as ${student.name} (${student.id}) via Agent 44.` },
+                    { step: "2", title: "Establish Identity Context", desc: "OAuth2 token injected: [Verified]." },
                     { step: "3", title: "Classify Question Intent", desc: "Categorized into Personal Data, Institutional Info, Service, or Distress." },
                     { step: "4", title: "Authorize Requested Scope", desc: "Validates caller rights. Rejects attempts to request other students' data." },
                     { step: "5", title: "Retrieve Only Student's Own Record", desc: "Data queried directly from specific specialized agent (e.g. Agent 11)." },
@@ -133,12 +136,12 @@ export const SecurityDrawer: React.FC<SecurityDrawerProps> = ({ isOpen, onClose 
                       key={s.step}
                       className="flex items-start gap-3 rounded-xl bg-card p-2.5 border border-slate-200 shadow-2xs"
                     >
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[11px] font-bold text-white shrink-0">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white shrink-0">
                         {s.step}
                       </span>
                       <div>
                         <div className="font-bold text-foreground">{s.title}</div>
-                        <div className="text-[11px] text-muted-foreground mt-0.5">{s.desc}</div>
+                        <div className="text-sm text-muted-foreground mt-0.5">{s.desc}</div>
                       </div>
                     </div>
                   ))}
@@ -150,10 +153,10 @@ export const SecurityDrawer: React.FC<SecurityDrawerProps> = ({ isOpen, onClose 
           {activeTab === "logs" && (
             <div className="space-y-3">
               <div className="flex items-center justify-between pb-1">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                <span className="text-sm font-bold uppercase tracking-wider text-slate-400">
                   Real-time Security Ledger
                 </span>
-                <span className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+                <span className="text-sm text-emerald-600 font-semibold flex items-center gap-1">
                   <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                   Live Audit Telemetry
                 </span>
@@ -168,7 +171,7 @@ export const SecurityDrawer: React.FC<SecurityDrawerProps> = ({ isOpen, onClose 
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-foreground">{log.event}</span>
                       <span
-                        className={`rounded-full px-2 py-0.2 text-[11px] font-bold ${
+                        className={`rounded-full px-2 py-0.2 text-sm font-bold ${
                           log.status === "SUCCESS"
                             ? "bg-emerald-100 text-emerald-800"
                             : log.status === "FORWARDED"
@@ -179,7 +182,7 @@ export const SecurityDrawer: React.FC<SecurityDrawerProps> = ({ isOpen, onClose 
                         {log.status}
                       </span>
                     </div>
-                    <div className="text-[11px] text-muted-foreground flex items-center gap-2">
+                    <div className="text-sm text-muted-foreground flex items-center gap-2">
                       <span className="flex items-center gap-1">
                         <Timer className="h-3 w-3" />
                         {log.time}
@@ -189,7 +192,7 @@ export const SecurityDrawer: React.FC<SecurityDrawerProps> = ({ isOpen, onClose 
                       <span>•</span>
                       <span className="font-mono text-muted-foreground">{log.scope}</span>
                     </div>
-                    <p className="text-[11px] text-muted-foreground italic">{log.details}</p>
+                    <p className="text-sm text-muted-foreground italic">{log.details}</p>
                   </div>
                 ))}
               </div>
@@ -202,7 +205,7 @@ export const SecurityDrawer: React.FC<SecurityDrawerProps> = ({ isOpen, onClose 
                 <h4 className="font-bold text-foreground text-xs">
                   Federated Institutional Agent Matrix
                 </h4>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   Agent 65 coordinates requests across 12 distributed data sources.
                 </p>
               </div>
@@ -216,25 +219,25 @@ export const SecurityDrawer: React.FC<SecurityDrawerProps> = ({ isOpen, onClose 
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-foreground">{agent.name}</span>
-                        <span className="rounded-md bg-blue-50 px-1.5 py-0.2 font-mono text-[11px] font-bold text-blue-700">
+                        <span className="rounded-md bg-blue-50 px-1.5 py-0.2 font-mono text-sm font-bold text-blue-700">
                           {agent.id}
                         </span>
                         {agent.rlsEnforced && (
-                          <span className="rounded-full bg-emerald-50 px-1.5 py-0.2 text-[10px] font-bold text-emerald-700 border border-emerald-200">
+                          <span className="rounded-full bg-emerald-50 px-1.5 py-0.2 text-xs font-bold text-emerald-700 border border-emerald-200">
                             RLS
                           </span>
                         )}
                       </div>
-                      <div className="text-[11px] text-muted-foreground">{agent.domain}</div>
-                      <div className="text-[11px] text-slate-400 font-mono">{agent.endpoint}</div>
+                      <div className="text-sm text-muted-foreground">{agent.domain}</div>
+                      <div className="text-sm text-slate-400 font-mono">{agent.endpoint}</div>
                     </div>
 
                     <div className="text-right">
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600">
+                      <span className="inline-flex items-center gap-1 text-sm font-bold text-emerald-600">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                         {agent.status}
                       </span>
-                      <div className="text-[11px] text-slate-400 mt-0.5">{agent.lastSync}</div>
+                      <div className="text-sm text-slate-400 mt-0.5">{agent.lastSync}</div>
                     </div>
                   </div>
                 ))}

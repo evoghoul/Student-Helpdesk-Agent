@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { StudentFullData, ALL_STUDENTS_MAP, ALL_STUDENTS_LIST, getStudentData } from "@/data/students-db";
+import { StudentFullData, ALL_STUDENTS_LIST, getStudentData } from "@/data/students-db";
 import { apiClient } from "@/lib/api-client";
 
 interface StudentContextType {
@@ -17,6 +17,12 @@ const StudentContext = createContext<StudentContextType | undefined>(undefined);
 export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeRoll, setActiveRoll] = useState<string>(() => {
     if (typeof window !== "undefined") {
+      const fixed = localStorage.getItem("agent65_regd_fixed_v1");
+      if (!fixed) {
+        localStorage.setItem("agent65_regd_fixed_v1", "true");
+        localStorage.setItem("agent65_active_student", "251FA04E03");
+        return "251FA04E03";
+      }
       return localStorage.getItem("agent65_active_student") || "251FA04E03";
     }
     return "251FA04E03";
@@ -26,8 +32,6 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    const localData = getStudentData(activeRoll);
-    setStudentData(localData);
     if (typeof window !== "undefined") {
       localStorage.setItem("agent65_active_student", activeRoll);
     }
@@ -42,21 +46,22 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
             ...prev,
             profile: {
               ...prev.profile,
-              cgpa: dash.profile.cgpa ?? prev.profile.cgpa,
-              feeOutstanding: dash.profile.fee_outstanding ?? prev.profile.feeOutstanding,
+              cgpa: dash.profile?.cgpa ?? prev.profile.cgpa,
+              feeOutstanding: dash.profile?.fee_outstanding ?? prev.profile.feeOutstanding,
             },
             attendance: {
               ...prev.attendance,
-              overallPercentage: dash.profile.overall_attendance_pct ?? prev.attendance.overallPercentage,
+              overallPercentage: dash.profile?.overall_attendance_pct ?? prev.attendance.overallPercentage,
             },
             fees: {
               ...prev.fees,
-              outstandingBalance: dash.profile.fee_outstanding ?? prev.fees.outstandingBalance,
+              outstandingBalance: dash.profile?.fee_outstanding ?? prev.fees.outstandingBalance,
             },
           }));
         }
-      } catch (e) {
+      } catch (err) {
         // Fallback to synchronized local data
+        console.warn("Could not sync with backend", err);
       }
     };
     syncBackend();
@@ -65,6 +70,7 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const switchStudent = (rollNo: string) => {
     const clean = rollNo.toUpperCase().trim();
     setActiveRoll(clean);
+    setStudentData(getStudentData(clean));
   };
 
   const loginAsStudent = async (rollNo: string, password?: string): Promise<boolean> => {
@@ -77,6 +83,7 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     // Update active student
     setActiveRoll(clean);
+    setStudentData(getStudentData(clean));
     setIsLoading(false);
     return true;
   };

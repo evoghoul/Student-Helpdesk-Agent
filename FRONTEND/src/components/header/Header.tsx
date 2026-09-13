@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import {
   Bell,
   Search,
@@ -130,7 +131,7 @@ export const Header: React.FC<HeaderProps> = ({
               <Search className="h-4 w-4 text-slate-400 group-hover:text-blue-500 transition-colors shrink-0" />
               <span className="truncate">{t.searchPlaceholder || "Ask Helpdesk anything (attendance, exams, fees)..."}</span>
             </div>
-            <kbd className="hidden sm:inline-block rounded-md border border-slate-200 bg-card px-1.5 py-0.5 text-[11px] font-mono text-slate-400 shadow-xs shrink-0">
+            <kbd className="hidden sm:inline-block rounded-md border border-slate-200 bg-card px-1.5 py-0.5 text-sm font-mono text-slate-400 shadow-xs shrink-0">
               Ctrl K
             </kbd>
           </button>
@@ -153,7 +154,7 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Globe className="h-3.5 w-3.5 text-blue-600 shrink-0" />
               <span className="font-bold tracking-wide">{activeLangMeta.nativeName}</span>
-              <span className="text-[10px] font-mono text-slate-400 uppercase">({currentLang})</span>
+              <span className="text-xs font-mono text-slate-400 uppercase">({currentLang})</span>
               <ChevronDown
                 className={cn(
                   "h-3 w-3 text-slate-400 transition-transform duration-200",
@@ -163,7 +164,7 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             {isLangOpen && (
-              <div className="absolute right-0 mt-2 w-80 sm:w-88 rounded-2xl border border-slate-200/90 bg-card p-2.5 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95 duration-150">
+              <div className="absolute right-0 mt-2 w-80 sm:w-88 rounded-lg border border-slate-200/90 bg-card p-2.5 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95 duration-150">
                 {/* Header title */}
                 <div className="flex items-center justify-between px-2 pt-1 pb-2 border-b border-slate-100">
                   <div className="flex items-center gap-1.5">
@@ -172,7 +173,7 @@ export const Header: React.FC<HeaderProps> = ({
                       <h4 className="text-xs font-bold text-foreground leading-tight">
                         Official Languages of India
                       </h4>
-                      <p className="text-[10px] text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         8th Schedule • 22 Recognized Languages + English
                       </p>
                     </div>
@@ -238,7 +239,7 @@ export const Header: React.FC<HeaderProps> = ({
                                 {lang.code}
                               </span>
                             </div>
-                            <span className="text-[10px] text-slate-400 truncate mt-0.5">
+                            <span className="text-xs text-slate-400 truncate mt-0.5">
                               {lang.region}
                             </span>
                           </div>
@@ -258,7 +259,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
 
                 {/* Footer status */}
-                <div className="mt-2 pt-2 border-t border-slate-100 px-2 flex items-center justify-between text-[10px] text-slate-400">
+                <div className="mt-2 pt-2 border-t border-slate-100 px-2 flex items-center justify-between text-xs text-slate-400">
                   <span>Selected: <strong className="text-foreground">{activeLangMeta.name}</strong></span>
                   <span className="font-mono text-[9px] text-emerald-600 font-semibold">23 Languages Active</span>
                 </div>
@@ -284,7 +285,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Bell className="h-4 w-4 text-muted-foreground" />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white ring-2 ring-white">
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-xs font-bold text-white ring-2 ring-white">
                 {unreadCount}
               </span>
             )}
@@ -306,7 +307,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </span>
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
               </div>
-              <p className="text-[11px] font-mono text-muted-foreground leading-tight mt-0.5">
+              <p className="text-sm font-mono text-muted-foreground leading-tight mt-0.5">
                 {student.id}
               </p>
             </div>

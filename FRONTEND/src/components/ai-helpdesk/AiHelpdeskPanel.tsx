@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useRef, useEffect } from "react";
@@ -24,10 +25,15 @@ import {
   X,
   Maximize2,
   Minimize2,
+  ThumbsUp,
+  ThumbsDown,
+  Check,
 } from "lucide-react";
 import {
   StructuredCardData,
+  ConversationTurn,
 } from "@/lib/ai-engine";
+import { apiClient } from "@/lib/api-client";
 import { CURRENT_STUDENT } from "@/data/student";
 import { QuickActionChips } from "@/components/quick-actions/QuickActionChips";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +41,7 @@ import { MarkdownText } from "@/components/ui/markdown-text";
 import { cn } from "@/lib/utils";
 import { useAgentChat } from "@/context/AgentChatContext";
 import { useLanguage } from "@/context/LanguageContext";
+import { useStudent } from "@/context/StudentContext";
 
 export interface AiHelpdeskPanelProps {
   onNavigateTab: (tab: string) => void;
@@ -75,6 +82,8 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
   } = useAgentChat();
 
   const { t, language } = useLanguage();
+  const { studentData } = useStudent();
+  const student = studentData?.profile || CURRENT_STUDENT;
   const tr = t;
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -99,6 +108,39 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     handleSend();
+  };
+
+  const [feedbackState, setFeedbackState] = React.useState<Record<number, "up" | "down">>({});
+  const [feedbackSubmitting, setFeedbackSubmitting] = React.useState<Record<number, boolean>>({});
+
+  const handleFeedback = async (
+    index: number,
+    rating: "up" | "down",
+    turn: ConversationTurn
+  ) => {
+    if (feedbackSubmitting[index]) return;
+    setFeedbackSubmitting((prev) => ({ ...prev, [index]: true }));
+    setFeedbackState((prev) => ({ ...prev, [index]: rating }));
+
+    const contextMsgs = messages.slice(0, index + 1).map((m) => ({
+      role: m.role,
+      content: m.content,
+    }));
+
+    try {
+      await apiClient.sendFeedback(
+        turn.conversationId,
+        turn.messageId,
+        rating,
+        undefined,
+        contextMsgs,
+        turn.content
+      );
+    } catch (e) {
+      console.warn("Feedback submission error:", e);
+    } finally {
+      setFeedbackSubmitting((prev) => ({ ...prev, [index]: false }));
+    }
   };
 
   // Shared visual tone tokens per card type
@@ -144,7 +186,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
   const renderStructuredCard = (card: StructuredCardData) => {
     if (card.type === "distress") {
       return (
-        <div className="mt-3 rounded-2xl border-2 border-rose-200 bg-rose-50/90 p-4 shadow-sm">
+        <div className="mt-3 rounded-lg border-2 border-rose-200 bg-rose-50/90 p-4 shadow-sm">
           <div className="flex items-center gap-2 text-rose-700 font-bold text-xs uppercase tracking-wider mb-2">
             <HeartHandshake className="h-4 w-4 text-rose-600" />
             <span>{card.badge}</span>
@@ -188,7 +230,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
       const data = card.data as Record<string, unknown>;
       const tone = cardTone.attendance;
       return (
-        <div className={cn("mt-3 rounded-2xl border p-4 shadow-xs", tone.border, tone.bg)}>
+        <div className={cn("mt-3 rounded-lg border p-4 shadow-xs", tone.border, tone.bg)}>
           <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
             <div className="flex flex-wrap items-center gap-2 min-w-0">
               <Badge variant={tone.badge} className="whitespace-normal text-left">{card.badge}</Badge>
@@ -199,18 +241,18 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
 
           <div className="grid grid-cols-2 gap-2 my-2 text-xs">
             <div className={cn("rounded-lg bg-card p-2.5 border", tone.tile)}>
-              <div className="text-[11px] text-muted-foreground">{t.classesAttended}</div>
+              <div className="text-sm text-muted-foreground">{t.classesAttended}</div>
               <div className="font-bold text-foreground">{String(data.attendedRatio || "34 / 50")}</div>
             </div>
             <div className={cn("rounded-lg bg-card p-2.5 border", tone.tile)}>
-              <div className="text-[11px] text-muted-foreground">Target for 70%</div>
+              <div className="text-sm text-muted-foreground">Target for 70%</div>
               <div className="font-bold text-amber-700">
                 {data.consecutiveNeeded70 ? `${String(data.consecutiveNeeded70)} classes consecutive` : "Requirement met"}
               </div>
             </div>
           </div>
 
-          <div className="flex items-start gap-1.5 text-[11px] text-amber-900/90 font-medium mb-3">
+          <div className="flex items-start gap-1.5 text-sm text-amber-900/90 font-medium mb-3">
             <Lightbulb className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-600" />
             <p><strong>Actionable Guidance:</strong> Attend the next 4 classes consecutively to reach 70% threshold, assuming no additional absences are incurred.</p>
           </div>
@@ -236,7 +278,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
       const seating = (data.seating && data.seating !== "undefined") ? String(data.seating) : (firstExam.hall_ticket_status || "Hall Ticket Allocated");
       const tone = cardTone.exam;
       return (
-        <div className={cn("mt-3 rounded-2xl border p-4 shadow-xs", tone.border, tone.bg)}>
+        <div className={cn("mt-3 rounded-lg border p-4 shadow-xs", tone.border, tone.bg)}>
           <div className="flex flex-wrap items-center gap-2 mb-2">
             <Badge variant={tone.badge} className="whitespace-normal text-left">{card.badge}</Badge>
             <span className="text-xs font-mono font-bold text-blue-700">7 {t.daysRemaining}</span>
@@ -271,18 +313,18 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
       const data = card.data as Record<string, unknown>;
       const tone = cardTone.fee;
       return (
-        <div className={cn("mt-3 rounded-2xl border p-4 shadow-xs", tone.border, tone.bg)}>
+        <div className={cn("mt-3 rounded-lg border p-4 shadow-xs", tone.border, tone.bg)}>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2">
             <Badge variant={tone.badge} className="whitespace-normal text-left">{card.badge}</Badge>
             <span className="text-xs font-bold text-amber-900">Due: {String(data.dueDate)}</span>
           </div>
           <div className="grid grid-cols-2 gap-2 my-2 text-xs">
             <div className={cn("rounded-lg bg-card p-2.5 border", tone.tile)}>
-              <div className="text-[11px] text-muted-foreground">{t.totalFees}</div>
+              <div className="text-sm text-muted-foreground">{t.totalFees}</div>
               <div className="font-bold text-foreground">{String(data.demand)}</div>
             </div>
             <div className={cn("rounded-lg bg-card p-2.5 border", tone.tile)}>
-              <div className="text-[11px] text-muted-foreground">{t.amountPaid}</div>
+              <div className="text-sm text-muted-foreground">{t.amountPaid}</div>
               <div className="font-bold text-emerald-600">{String(data.paid)}</div>
             </div>
           </div>
@@ -300,7 +342,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
     if (card.type === "curriculum") {
       const tone = cardTone.curriculum;
       return (
-        <div className={cn("mt-3 rounded-2xl border p-4 shadow-xs", tone.border, tone.bg)}>
+        <div className={cn("mt-3 rounded-lg border p-4 shadow-xs", tone.border, tone.bg)}>
           <div className="flex flex-wrap items-center gap-2 mb-2">
             <Badge variant={tone.badge} className="whitespace-normal text-left">{card.badge}</Badge>
             <span className="text-xs font-bold text-cyan-900">Progress: 60%</span>
@@ -322,7 +364,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
     if (card.type === "service") {
       const tone = cardTone.service;
       return (
-        <div className={cn("mt-3 rounded-2xl border p-4 shadow-xs", tone.border, tone.bg)}>
+        <div className={cn("mt-3 rounded-lg border p-4 shadow-xs", tone.border, tone.bg)}>
           <div className="flex flex-wrap items-center gap-2 mb-2">
             <Badge variant={tone.badge} className="whitespace-normal text-left">{card.badge}</Badge>
             <span className="text-xs font-bold text-indigo-950">{card.title}</span>
@@ -349,11 +391,11 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
       className={cn(
         "bg-card transition-all",
         effectiveVariant === "central" &&
-          "w-full rounded-3xl border border-slate-200/90 shadow-md shadow-blue-500/5 overflow-hidden flex flex-col",
+          "w-full rounded-xl border border-slate-200/90 shadow-md shadow-blue-500/5 overflow-hidden flex flex-col",
         effectiveVariant === "side" &&
           "flex h-full flex-col rounded-none border-0 overflow-hidden",
         effectiveVariant === "maximized" &&
-          "flex h-full w-full flex-col rounded-3xl overflow-hidden shadow-2xl border border-slate-200"
+          "flex h-full w-full flex-col rounded-xl overflow-hidden shadow-2xl border border-slate-200"
       )}
     >
       {/* Panel Header */}
@@ -368,7 +410,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
               </div>
               <div className="min-w-0 flex items-center gap-1.5 truncate">
                 <h2 className="text-sm font-bold text-foreground truncate">{t.studentHelpdesk || "Student Helpdesk"}</h2>
-                <Badge variant="primary" className="text-[10px] px-1.5 py-0 bg-blue-600 text-white shrink-0">
+                <Badge variant="primary" className="text-xs px-1.5 py-0 bg-blue-600 text-white shrink-0">
                   Agent 65
                 </Badge>
               </div>
@@ -435,7 +477,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
             <div className="flex items-center gap-3 min-w-0">
               <div
                 className={cn(
-                  "flex shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-sm shadow-blue-500/20",
+                  "flex shrink-0 items-center justify-center rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-sm shadow-blue-500/20",
                   effectiveVariant === "central" ? "h-10 w-10" : "h-10 w-10"
                 )}
               >
@@ -449,13 +491,13 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                   <Badge variant="primary" className="bg-blue-600 text-white font-semibold">
                     Agent 65
                   </Badge>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100/70 border border-blue-200/80 px-2.5 py-0.5 text-[11px] font-semibold text-blue-700">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100/70 border border-blue-200/80 px-2.5 py-0.5 text-sm font-semibold text-blue-700">
                     <span className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-pulse" />
                     Agent 65 Core Active • Auto-Scaling
                   </span>
-                  <span className="hidden md:inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700">
+                  <span className="hidden md:inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 text-sm font-medium text-emerald-700">
                     <ShieldCheck className="h-3 w-3 text-emerald-600" />
-                    RLS Verified: {CURRENT_STUDENT.id}
+                    RLS Verified: {student.id}
                   </span>
                 </div>
                 {effectiveVariant === "central" && (
@@ -566,7 +608,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
               {/* Message Bubble */}
               <div
                 className={cn(
-                  "min-w-0 rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed",
+                  "min-w-0 rounded-lg px-3.5 py-2.5 text-sm leading-relaxed",
                   isUser
                     ? "bg-blue-600 text-white shadow-xs rounded-tr-sm"
                     : "bg-card border border-slate-200 text-foreground shadow-xs rounded-tl-sm"
@@ -574,7 +616,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
               >
                 {/* Assistant Metadata Header */}
                 {!isUser && turn.responseMeta && (
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-slate-100 pb-2 mb-2 text-[11px]">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-slate-100 pb-2 mb-2 text-sm">
                     <Badge>{turn.responseMeta.category}</Badge>
                     <span className="flex items-center gap-1 text-blue-600 font-medium truncate">
                       <ShieldCheck className="h-3 w-3 shrink-0" />
@@ -594,10 +636,60 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                   renderStructuredCard(turn.responseMeta.structuredCard)
                 )}
 
+                {/* Thumbs Feedback & 8B Local AI Training Controls */}
+                {!isUser && (
+                  <div className="mt-2.5 pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] text-slate-400 font-medium">Helpful?</span>
+                      <button
+                        onClick={() => handleFeedback(index, "up", turn)}
+                        disabled={feedbackSubmitting[index]}
+                        title="Thumbs up: Store this conversation to train the local 8B model"
+                        className={cn(
+                          "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium transition-all cursor-pointer",
+                          feedbackState[index] === "up"
+                            ? "bg-emerald-100 text-emerald-800 border border-emerald-300 font-semibold"
+                            : "hover:bg-slate-100 text-slate-500 hover:text-slate-800 border border-slate-200"
+                        )}
+                      >
+                        <ThumbsUp className={cn("h-3 w-3", feedbackState[index] === "up" && "fill-emerald-600 text-emerald-600")} />
+                        <span>👍</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleFeedback(index, "down", turn)}
+                        disabled={feedbackSubmitting[index]}
+                        title="Thumbs down: Mark response as not helpful"
+                        className={cn(
+                          "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium transition-all cursor-pointer",
+                          feedbackState[index] === "down"
+                            ? "bg-rose-100 text-rose-800 border border-rose-300 font-semibold"
+                            : "hover:bg-slate-100 text-slate-500 hover:text-slate-800 border border-slate-200"
+                        )}
+                      >
+                        <ThumbsDown className={cn("h-3 w-3", feedbackState[index] === "down" && "fill-rose-600 text-rose-600")} />
+                        <span>👎</span>
+                      </button>
+                    </div>
+
+                    {feedbackState[index] === "up" && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full animate-in fade-in duration-200">
+                        <Check className="h-2.5 w-2.5 text-emerald-600" />
+                        Saved for 8B Training
+                      </span>
+                    )}
+                    {feedbackState[index] === "down" && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-500 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-full">
+                        Feedback recorded
+                      </span>
+                    )}
+                  </div>
+                )}
+
                 {/* Suggested Follow-up chips */}
                 {!isUser && turn.responseMeta?.suggestedFollowUps && (
                   <div className="mt-3 pt-2.5 border-t border-slate-100">
-                    <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                    <div className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-2">
                       Suggested follow-ups:
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -624,7 +716,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-xs">
               <Bot className="h-4 w-4" />
             </div>
-            <div className="rounded-2xl rounded-tl-sm border border-slate-200 bg-card px-4 py-3 shadow-xs">
+            <div className="rounded-lg rounded-tl-sm border border-slate-200 bg-card px-4 py-3 shadow-xs">
               <div className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-blue-600 animate-bounce" />
                 <span className="h-2 w-2 rounded-full bg-indigo-600 animate-bounce [animation-delay:0.2s]" />

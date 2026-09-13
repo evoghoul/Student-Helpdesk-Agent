@@ -136,3 +136,16 @@ class DailyAnalyticsItem(BaseModel):
     successful_answers: int
     escalated_count: int
     distress_count: int
+
+# ---------------- Feedback & 8B Training Schemas ----------------
+class MessageFeedbackCreate(BaseModel):
+    rating: str  # "up" or "down"
+    comment: Optional[str] = None
+    messages: Optional[List[Dict[str, Any]]] = None
+    response_text: Optional[str] = None
+
+class MessageFeedbackResponse(BaseModel):
+    status: str
+    saved_for_training: bool
+    rating: str
+    message: str

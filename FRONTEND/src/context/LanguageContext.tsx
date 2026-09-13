@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { Language, TranslationDictionary, TRANSLATIONS, tDynamic as tDynamicHelper } from "@/data/translations";
 
 interface LanguageContextType {
@@ -13,16 +13,15 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguageState] = useState<Language>("en");
-
-  useEffect(() => {
+  const [language, setLanguageState] = useState<Language>(() => {
     if (typeof window !== "undefined") {
       const savedLang = localStorage.getItem("agent65_lang") as Language;
       if (savedLang && savedLang in TRANSLATIONS) {
-        setLanguageState(savedLang);
+        return savedLang;
       }
     }
-  }, []);
+    return "en";
+  });
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);

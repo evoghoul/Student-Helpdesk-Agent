@@ -196,24 +196,17 @@ function StudentHelpdeskContent() {
           {activeTab === "home" && (
             <div className="space-y-6">
               {/* 1. Compact Context & Welcome Banner */}
-              <div className="relative overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white p-4 sm:p-5 shadow-md shadow-blue-600/10">
-                <div
-                  className="absolute inset-0 opacity-[0.08] pointer-events-none"
-                  style={{
-                    backgroundImage: "radial-gradient(#ffffff 1px, transparent 1px)",
-                    backgroundSize: "24px 24px",
-                  }}
-                />
+              <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-card p-4 sm:p-5 shadow-sm">
                 <div className="relative z-10 flex flex-col @2xl:flex-row @2xl:items-center justify-between gap-4">
                   <div className="space-y-1.5 max-w-2xl">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-card/15 px-2.5 py-0.5 text-[11px] font-semibold text-white border border-white/20 whitespace-nowrap">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-0.5 text-sm font-semibold text-blue-700 border border-blue-200 whitespace-nowrap">
                         <Sparkles className="h-3 w-3" />
                         {t.agent65CoreActive}
                       </span>
                       <button
                         onClick={() => setIsSecurityDrawerOpen(true)}
-                        className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/20 px-2.5 py-0.5 text-[11px] font-medium text-emerald-50 border border-emerald-300/30 hover:bg-emerald-400/30 transition-colors cursor-pointer whitespace-nowrap"
+                        className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-sm font-medium text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors cursor-pointer whitespace-nowrap"
                         title="Click to view Row-Level Security verification"
                       >
                         <ShieldCheck className="h-3.5 w-3.5" />
@@ -221,21 +214,21 @@ function StudentHelpdeskContent() {
                       </button>
                     </div>
 
-                    <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+                    <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
                       {t.welcomeBack}, {student.name}
                     </h1>
-                    <p className="text-xs sm:text-sm text-blue-100 font-normal max-w-xl leading-relaxed">
+                    <p className="text-xs sm:text-sm text-muted-foreground font-normal max-w-xl leading-relaxed">
                       {t.heroSubtitle}
                     </p>
                   </div>
 
                   {/* Telemetry Quick Pills */}
-                  <div className="flex flex-wrap @2xl:flex-col gap-2 shrink-0">
+                  <div className="hidden sm:flex flex-wrap @2xl:flex-col gap-2 shrink-0">
                     <button
                       onClick={() => setActiveTab("attendance")}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-white/15 bg-card/10 px-3 py-1.5 text-xs text-white hover:bg-card/20 transition-colors cursor-pointer"
+                      className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-muted/30 px-3 py-1.5 text-xs text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
                     >
-                      <span className="flex items-center gap-1.5 text-amber-200">
+                      <span className="flex items-center gap-1.5 text-amber-600">
                         <AlertTriangle className="h-3.5 w-3.5" />
                         <span>{t.navAttendance}</span>
                       </span>
@@ -244,9 +237,9 @@ function StudentHelpdeskContent() {
 
                     <button
                       onClick={() => setActiveTab("timetable")}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-white/15 bg-card/10 px-3 py-1.5 text-xs text-white hover:bg-card/20 transition-colors cursor-pointer"
+                      className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-muted/30 px-3 py-1.5 text-xs text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
                     >
-                      <span className="flex items-center gap-1.5 text-blue-100">
+                      <span className="flex items-center gap-1.5 text-blue-600">
                         <Clock className="h-3.5 w-3.5" />
                         <span>{t.nextClass}</span>
                       </span>
@@ -255,9 +248,9 @@ function StudentHelpdeskContent() {
 
                     <button
                       onClick={() => setActiveTab("exams")}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-white/15 bg-card/10 px-3 py-1.5 text-xs text-white hover:bg-card/20 transition-colors cursor-pointer"
+                      className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-muted/30 px-3 py-1.5 text-xs text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
                     >
-                      <span className="flex items-center gap-1.5 text-indigo-100">
+                      <span className="flex items-center gap-1.5 text-indigo-600">
                         <Calendar className="h-3.5 w-3.5" />
                         <span>{t.nextExam}</span>
                       </span>
@@ -414,7 +407,7 @@ function StudentHelpdeskContent() {
             aria-modal="true"
             aria-label="Agent 65 Fullscreen Workspace"
           >
-            <div className="w-full max-w-[92vw] h-[88vh] bg-card rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col border border-slate-200">
+            <div className="w-full max-w-[92vw] h-[88vh] bg-card rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col border border-slate-200">
               <AiHelpdeskPanel
                 variant="maximized"
                 fillHeight
@@ -451,7 +444,7 @@ function StudentHelpdeskContent() {
                 <div className="font-bold text-foreground">
                   {t.footerBrand}
                 </div>
-                <div className="text-[11px] text-muted-foreground">
+                <div className="text-sm text-muted-foreground">
                   {t.footerSub}
                 </div>
               </div>
@@ -481,7 +474,7 @@ function StudentHelpdeskContent() {
               </button>
             </div>
 
-            <div className="text-right text-[11px] text-slate-400">
+            <div className="text-right text-sm text-slate-400">
               {t.authenticatedLabel}: {student.name} ({student.id})
             </div>
           </div>
@@ -554,7 +547,7 @@ function StudentHelpdeskContent() {
         >
           <Bot className="h-6 w-6" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[11px] font-bold text-white ring-2 ring-white">
+            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-sm font-bold text-white ring-2 ring-white">
               {unreadCount}
             </span>
           )}

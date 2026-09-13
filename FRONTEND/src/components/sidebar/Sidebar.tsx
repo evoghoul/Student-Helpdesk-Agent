@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import {
   Home,
   UserCheck,
@@ -190,20 +191,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             {!isCollapsed ? (
               <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                <img
+                <Image
                   src="/vignan-logo.png"
                   alt="Vignan's University"
+                  width={155}
+                  height={48}
                   className="h-12 w-auto max-w-[155px] object-contain drop-shadow-xs group-hover:scale-[1.02] transition-transform shrink-0"
                 />
-                <span className="shrink-0 rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 border border-indigo-200 shadow-2xs">
+                <span className="shrink-0 rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-bold text-indigo-700 border border-indigo-200 shadow-2xs">
                   Agent 65
                 </span>
               </div>
             ) : (
               <div className="flex items-center justify-center w-full py-1">
-                <img
+                <Image
                   src="/vignan-logo.png"
                   alt="Vignan's University"
+                  width={100}
+                  height={32}
                   className="h-8 w-auto object-contain drop-shadow-xs"
                 />
               </div>
@@ -239,7 +244,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {navigationSections.map((section) => (
             <div key={section.title} className="space-y-1">
               {!isCollapsed && (
-                <div className="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                <div className="px-3 text-sm font-bold uppercase tracking-wider text-slate-400">
                   {section.title}
                 </div>
               )}
@@ -273,7 +278,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                       {!isCollapsed && item.badge && (
                         <span
-                          className={`shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold ${item.badgeColor}`}
+                          className={`shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-sm font-semibold ${item.badgeColor}`}
                         >
                           {item.badge}
                         </span>
@@ -306,7 +311,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <p className="text-xs font-bold text-emerald-900 leading-tight">
                     RLS Active: {student.id}
                   </p>
-                  <p className="text-[11px] text-emerald-700 leading-tight mt-0.5">
+                  <p className="text-sm text-emerald-700 leading-tight mt-0.5">
                     12 Connected Agents
                   </p>
                 </div>
@@ -335,7 +340,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <p className="text-xs font-bold text-foreground truncate leading-tight">
                     {student.name}
                   </p>
-                  <p className="text-[11px] font-mono text-muted-foreground truncate leading-tight mt-0.5">
+                  <p className="text-sm font-mono text-muted-foreground truncate leading-tight mt-0.5">
                     {student.id}
                   </p>
                 </div>

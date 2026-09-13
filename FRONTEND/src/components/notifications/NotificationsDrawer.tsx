@@ -33,7 +33,7 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-xs">
+    <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-xs">
       <div className="relative w-full max-w-md h-full bg-card shadow-2xl border-l border-slate-200 flex flex-col animate-in slide-in-from-right duration-300">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 bg-gradient-to-r from-blue-50 to-white p-5">
@@ -71,7 +71,7 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
                   onSelectNotification(item);
                   onClose();
                 }}
-                className={`rounded-2xl border p-4 transition-all cursor-pointer ${
+                className={`rounded-lg border p-4 transition-all cursor-pointer ${
                   !item.read
                     ? "bg-blue-50/40 border-blue-200/80 shadow-2xs font-medium"
                     : "bg-card border-slate-200 text-muted-foreground"
@@ -83,7 +83,7 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
                       <span className="h-2 w-2 rounded-full bg-blue-600 shrink-0" />
                     )}
                     <span
-                      className={`font-bold uppercase tracking-wider text-[11px] ${
+                      className={`font-bold uppercase tracking-wider text-sm ${
                         isUrgent
                           ? "text-rose-700"
                           : isHigh
@@ -94,14 +94,14 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
                       {item.title}
                     </span>
                   </div>
-                  <span className="text-[11px] text-slate-400 font-normal">
+                  <span className="text-sm text-slate-400 font-normal">
                     {item.timestamp}
                   </span>
                 </div>
 
                 <p className="text-xs text-foreground leading-relaxed mb-2">{item.message}</p>
 
-                <div className="flex items-center justify-between pt-1 border-t border-slate-100/80 text-[11px] text-slate-400">
+                <div className="flex items-center justify-between pt-1 border-t border-slate-100/80 text-sm text-slate-400">
                   <span>From: {item.sourceAgent}</span>
                   <span className="text-blue-600 font-semibold flex items-center gap-0.5">
                     <span>{t.viewDetails}</span>

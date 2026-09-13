@@ -35,6 +35,9 @@ class NLUEngine:
         q = query.strip()
         q_lower = q.lower()
 
+        # Detect the exact query language so Agent 65 responds in the matching language
+        effective_lang = cls.detect_language(q, client_language=language)
+
         selected_model = cls._determine_model_complexity(q)
 
         # Extract or retain active subject from context
@@ -44,7 +47,7 @@ class NLUEngine:
         # ---------------- 1. INITIAL ONBOARDING DASHBOARD ----------------
         # Return proactive academic briefing for menu, start, or open greetings/help requests
         if q_lower in ["start", "menu"] or cls.is_greeting_or_open_help(q_lower):
-            return cls.generate_proactive_briefing(session, language)
+            return cls.generate_proactive_briefing(session, effective_lang)
 
         # ---------------- 2. DETECT BACKGROUND ACTIONS & STRUCTURED CARDS ----------------
         # In modern LLM architecture, we identify if a transactional action/card should accompany the conversational response
@@ -54,13 +57,7 @@ class NLUEngine:
         category = "LOCAL_LLM_REASONING"
         topic = "Conversational AI Assistant"
         
-        if selected_model == "8B+API":
-            model_label = "8B+API Complex"
-        elif selected_model == "8B":
-            model_label = "8B Moderate"
-        else:
-            model_label = "3B Fast"
-            
+        model_label = "Local 8B Model"
         source_agent = f"Agent 65 ({model_label})"
 
         # A. Formal Service Request (Agent 46)
@@ -239,7 +236,7 @@ class NLUEngine:
 
         # I. Official Policies & Bylaws
         elif cls.has_any_word(q_lower, ["policy", "policies", "circular", "circulars", "bylaw", "bylaws", "by-law", "regulation", "regulations", "ordinance", "condonation rule", "revaluation fee", "holiday list"]):
-            pol_res = search_policies_and_circulars(q)
+            pol_res = search_policies_and_circulars(query)
             card_data = pol_res.get("structured_card")
             citations = pol_res.get("citations", [])
             category = "INSTITUTIONAL_INFO"
@@ -251,11 +248,11 @@ class NLUEngine:
         # The fine-tuned LLM is ALWAYS the conversational voice! We NEVER replace it with a canned string.
         llm_reply = cls.generate_llm_reasoning_response(
             session=session,
-            query=q,
+            query=query,
             conversation_history=conversation_history,
             active_subject=active_subject,
             action_note=action_note,
-            language=language,
+            language=effective_lang,
             selected_model=selected_model
         )
 
@@ -266,8 +263,9 @@ class NLUEngine:
             "content": llm_reply,
             "citations": citations,
             "structured_card": card_data,
-            "suggested_follow_ups": cls.generate_dynamic_followups(q, active_subject),
-            "active_subject": active_subject
+            "suggested_follow_ups": cls.generate_dynamic_followups(query, active_subject),
+            "active_subject": active_subject,
+            "language": effective_lang
         }
 
     # ---------------- HELPER METHODS & LLM REASONING LOOP ----------------
@@ -275,21 +273,9 @@ class NLUEngine:
     @classmethod
     def _determine_model_complexity(cls, query: str) -> str:
         """
-        Dynamically determine the model to use based on prompt complexity.
+        All queries are processed exclusively by the local 8B model (agent65-8b:latest).
+        Runs 100% offline with zero external API calls.
         """
-        words = len(query.split())
-        query_lower = query.lower()
-        
-        # Complex prompts (large or analytical/technical queries)
-        complex_keywords = ["explain", "why", "how", "compare", "detail", "code", "script", "analyze", "evaluate", "implement", "algorithm"]
-        if words > 30 or any(kw in query_lower for kw in complex_keywords):
-            return "8B+API"
-            
-        # Simple prompts (very short, no complex keywords)
-        if words <= 6:
-            return "3B"
-            
-        # Moderate prompts (e.g. "what is my attendance", medium length)
         return "8B"
 
     @classmethod
@@ -301,7 +287,7 @@ class NLUEngine:
         active_subject: Optional[str],
         action_note: str = "",
         language: str = "en",
-        selected_model: str = "3B"
+        selected_model: str = "8B"
     ) -> str:
         """
         Generates genuine, empathetic, contextual reasoning from the local open-source LLM (agent65).
@@ -311,77 +297,58 @@ class NLUEngine:
         name = profile.get("full_name", "there") if profile else "there"
         student_first_name = name.split()[0] if name != "there" else "there"
 
+        # Determine effective query language
+        effective_lang = cls.detect_language(query, client_language=language)
+
         # If LLM is available, generate response
         if LocalLLMClient.is_available():
-            grounded_context = cls.build_grounded_student_context(session)
+            grounded_context = cls.build_grounded_student_context(session, query, active_subject)
             
             action_section = f"\nSystem Action Status:\n{action_note}\n" if action_note else ""
 
-            INDIAN_LANG_MAP = {
-                "te": ("Telugu", "తెలుగు", "Telugu"),
-                "hi": ("Hindi", "हिन्दी", "Devanagari"),
-                "ta": ("Tamil", "தமிழ்", "Tamil"),
-                "kn": ("Kannada", "ಕನ್ನಡ", "Kannada"),
-                "ml": ("Malayalam", "മലയാളം", "Malayalam"),
-                "mr": ("Marathi", "मराठी", "Devanagari"),
-                "bn": ("Bengali", "বাংলা", "Bengali"),
-                "gu": ("Gujarati", "ગુજરાતી", "Gujarati"),
-                "pa": ("Punjabi", "ਪੰਜਾਬੀ", "Gurmukhi"),
-                "or": ("Odia", "ଓଡ଼ିଆ", "Odia"),
-                "as": ("Assamese", "অসমীয়া", "Bengali-Assamese"),
-                "ur": ("Urdu", "اردو", "Perso-Arabic"),
-                "sa": ("Sanskrit", "संस्कृतम्", "Devanagari"),
-                "ne": ("Nepali", "नेपाली", "Devanagari"),
-                "kok": ("Konkani", "कोंकणी", "Devanagari"),
-                "ks": ("Kashmiri", "کٲشُر", "Perso-Arabic"),
-                "sd": ("Sindhi", "سنڌي", "Perso-Arabic"),
-                "doi": ("Dogri", "डोगरी", "Devanagari"),
-                "mai": ("Maithili", "मैथिली", "Devanagari"),
-                "mni": ("Manipuri", "মৈতৈলোন্", "Meitei"),
-                "sat": ("Santali", "ᱥᱟᱱᱛᱟᱲᱤ", "Ol Chiki"),
-                "brx": ("Bodo", "बड़ो", "Devanagari"),
-            }
-
-            if language in INDIAN_LANG_MAP:
-                lang_name, native_name, script_name = INDIAN_LANG_MAP[language]
+            if effective_lang == "hi":
                 lang_directive = (
-                    f"2. LANGUAGE DIRECTIVE (MANDATORY {lang_name.upper()}): The user has selected {lang_name} ({native_name}). "
-                    f"You MUST respond warmly, politely, and fluently in pure {lang_name} ({native_name}) using authentic {script_name} script. "
-                    f"Express all academic guidance, attendance explanations, calculations, exam info, and timetable info directly in {native_name} script. "
-                    f"Even if previous turns in the chat history were in English or another language, switch completely to {lang_name} ({native_name}) now. "
-                    f"Do NOT mix in Marathi, Hindi, or any other unselected Indian language. "
-                    "Keep institutional identifiers like roll number '251FA04E13', room numbers, and course codes clearly readable.\n"
+                    "2. LANGUAGE DIRECTIVE (STRICT HINDI - DEVANAGARI): The student's query is in Hindi. "
+                    "You MUST respond warmly, accurately, and naturally in Hindi using standard Devanagari script. "
+                    "Do NOT respond in English.\n"
+                )
+            elif effective_lang == "hinglish":
+                lang_directive = (
+                    "2. LANGUAGE DIRECTIVE (STRICT HINGLISH): The student's query is in Hinglish (Hindi written in the English/Latin alphabet, e.g. 'mera attendance kitna hai'). "
+                    "You MUST respond in natural, friendly, conversational Hinglish (Hindi words in the English alphabet, e.g. 'Aapki attendance 76.7% hai, jo ki safe cutoff se upar hai') "
+                    "matching their language style. Do NOT respond in pure English.\n"
+                )
+            elif effective_lang == "te":
+                lang_directive = (
+                    "2. LANGUAGE DIRECTIVE (STRICT TELUGU): The student's query is in Telugu. "
+                    "You MUST respond warmly, accurately, and naturally in Telugu using standard Telugu script. "
+                    "Do NOT respond in English.\n"
+                )
+            elif effective_lang == "te_roman":
+                lang_directive = (
+                    "2. LANGUAGE DIRECTIVE (STRICT ROMANIZED TELUGU): The student's query is in Romanized Telugu (Telugu written in the English alphabet). "
+                    "You MUST respond in friendly, conversational Telugu using the English alphabet matching their communication style.\n"
                 )
             else:
                 lang_directive = (
-                    "2. LANGUAGE DIRECTIVE (STRICT ENGLISH): The user's active interface language is English. "
-                    "You MUST respond EXCLUSIVELY in natural, articulate, warm conversational English using the standard Latin alphabet. "
-                    "CRITICAL NEGATIVE CONSTRAINT: Even if previous messages in the conversation history were in Devanagari, Sanskrit, Marathi, Hindi, or another script, "
-                    "or if the student's query contains cultural or Indian phrases (such as 'Jay Bajrangbali', 'Jay Shri Ram', 'Allah Hu Akbar', 'Namaste'), "
-                    "you MUST greet or acknowledge the student warmly and provide all help, timetable details, and academic answers STRICTLY in standard English (Latin alphabet). "
-                    "You are STRICTLY FORBIDDEN from generating Devanagari, Marathi, Hindi, or any regional script when the language is English.\n"
+                    "2. LANGUAGE DIRECTIVE (STRICT ENGLISH): The student's query is in English. "
+                    "You MUST respond exclusively in natural, warm, conversational English using the standard Latin alphabet.\n"
                 )
 
             system_prompt = (
-                "You are Agent 65, an exceptionally intelligent, empathetic, and knowledgeable university student helpdesk AI "
-                "(comparable to ChatGPT and Google Gemini, running 100% locally with zero external API keys, grounded in official university records).\n\n"
+                "You are Agent 65, an intelligent university student helpdesk AI running locally with genuine reasoning grounded in verified university records.\n\n"
                 f"{grounded_context}\n"
                 f"{action_section}\n"
                 "Directives:\n"
-                f"1. Address the student strictly as '{student_first_name}' (or '{name}'). NEVER invent nicknames like 'Ashu' or slang names.\n"
+                f"1. Address the student strictly as '{student_first_name}'.\n"
                 f"{lang_directive}"
-                "3. When discussing attendance, ALWAYS report the exact percentage, classes attended out of held, the exact consecutive classes needed to cross the 75% cutoff, and the deadline date (e.g. 2026-11-15) by which it matters.\n"
-                "4. When discussing examinations or formative assessments (such as Second Formative Assessment / CIE-2), ALWAYS state the student's exact course assessment date, time slot, and examination hall venue from the verified examination records. If the student asks generally 'When is the second formative assessment?' without specifying a course, list the dates and venues for their enrolled courses (e.g. Digital Electronics on 2026-10-14, 10:00 AM - 11:30 AM in Hall B-3, and Data Structures on 2026-10-16 in Hall B-3).\n"
-                "5. When discussing graduation or curriculum credits, ALWAYS explicitly state the complete 3-part breakdown: Total Credits Required (160), Credits Earned to date (68), and Credits Still Needed to Graduate (92). When the student asks what courses they will have next semester or upcoming courses, list their upcoming semester courses from verified records: CS401 Database Management Systems (4 credits), CS402 Operating Systems (4 credits), CS403 Design & Analysis of Algorithms (4 credits), CS404 Computer Networks (3 credits), OE401 Open Elective - I (3 credits), and CS405 DBMS & OS Laboratory (2 credits) totaling 22 credits.\n"
-                "6. Maintain multi-turn conversational context across previous messages.\n"
-                "7. If the student expresses physical strain, headache, fatigue, anxiety, burnout, or feeling overwhelmed from assignments/exams, "
-                "be deeply empathetic and reassuring: advise resting their eyes, taking a 15-20 minute screen break, hydrating, breaking down tasks into "
-                "manageable 20-minute chunks, and note that the campus health dispensary (Room 104) and faculty mentors are available. NEVER bring up unrelated fees or dues.\n"
-                "8. If the student asks conceptual, technical, programming, academic, or study strategy questions, explain them clearly and comprehensively with structured Markdown, code snippets, and diagrams where appropriate.\n"
-                "9. If a System Action Status is present above (such as a service request or handover ticket created), confirm it warmly with the student and provide the tracking reference.\n"
-                "10. Never hallucinate fake grades or dates not present in the verified records.\n"
-                "11. FORMATTING CONSTRAINT: NEVER use LaTeX tags, math blocks, backslashes, \\( \\), \\[ \\], \\approx, \\frac, or $. Express calculations, complexity, and percentages in clean natural text (e.g. use 'approx. 75%', '45 / 64 = 70.3%', 'O(1)', 'O(log n)').\n"
-                "12. HTML CONSTRAINT: NEVER use raw HTML tags such as <ul>, <li>, <ol>, <br>, <table>, <tr>, <td>. Always express all formatting using clean standard Markdown (such as '-' for bullets, '**' for bold, and standard markdown tables with '|')."
+                "3. When discussing attendance, ALWAYS report the exact percentage, classes attended out of held, the exact consecutive classes needed to cross the 75% cutoff, and the deadline date from verified records.\n"
+                "4. When discussing examinations, ALWAYS state the exact course assessment date, time slot, and examination hall venue from the verified records.\n"
+                "5. When discussing graduation or curriculum credits, state the 3-part breakdown: Total Required (160), Earned (68), and Still Needed (92).\n"
+                "6. Maintain multi-turn conversational context.\n"
+                "7. If the student expresses physical strain, headache, fatigue, or stress, be empathetic and supportive.\n"
+                "8. Never hallucinate fake grades or dates not present in the verified records.\n"
+                "9. Be concise, clear, and articulate. Express all formatting using clean Markdown bullets and bold text. NEVER use LaTeX tags or raw HTML tags."
             )
             llm_reply = LocalLLMClient.chat_with_history(
                 system_prompt=system_prompt,
@@ -393,7 +360,7 @@ class NLUEngine:
                 # Script & Language Guardrail:
                 # If target language is English and student's query is in Latin script (no Indic script characters),
                 # ensure the LLM didn't leak Devanagari or other Indic scripts from earlier multi-turn history.
-                if language == "en" and not any(0x0900 <= ord(c) <= 0x0DFF for c in query):
+                if effective_lang == "en" and not any(0x0900 <= ord(c) <= 0x0DFF for c in query):
                     indic_count = sum(1 for c in llm_reply if 0x0900 <= ord(c) <= 0x0DFF)
                     if indic_count > 10:
                         import logging
@@ -413,7 +380,7 @@ class NLUEngine:
                 return llm_reply
 
         # Deterministic fallback if LLM is offline or timed out
-        return cls.generate_deterministic_fallback(session, query, active_subject, language, action_note)
+        return cls.generate_deterministic_fallback(session, query, active_subject, effective_lang, action_note)
 
     @classmethod
     def generate_deterministic_fallback(
@@ -469,7 +436,7 @@ class NLUEngine:
             sr = DataRepository.create_service_request(session, {
                 "category": "BONAFIDE_CERTIFICATE" if "bonafide" in q_lower else "OTHER",
                 "title": "Bonafide Certificate Application",
-                "description": query
+                "description": q
             })
             sr_id = sr["request_no"] if sr else "SR-2026-0001"
             return (
@@ -482,24 +449,38 @@ class NLUEngine:
             )
 
         # 5. Attendance
-        if cls.has_any_word(q_lower, ["attendance", "bunk", "classes held", "75%"]) or any(0x0C00 <= ord(c) <= 0x0C7F for c in q) or any(0x0900 <= ord(c) <= 0x097F for c in q) or "హాజరు" in q or "अटेंडेंस" in q or "उपस्थिति" in q:
+        if cls.has_any_word(q_lower, ["attendance", "bunk", "classes held", "75%"]) or any(0x0C00 <= ord(c) <= 0x0C7F for c in query) or any(0x0900 <= ord(c) <= 0x097F for c in query) or "హాజరు" in query or "अटेंडेंस" in query or "उपस्थिति" in query:
             att = DataRepository.get_attendance(session, active_subject)
             if att:
                 rec = att[0]
                 needed = calculate_consecutive_needed(rec["classes_attended"], rec["classes_held"], rec["required_pct"])
-                if language == "te" or any(0x0C00 <= ord(c) <= 0x0C7F for c in q):
+                if language == "te" or any(0x0C00 <= ord(c) <= 0x0C7F for c in query):
                     return (
                         f"నమస్కారం {first_name}, మీ **{rec['course_title']}** ప్రత్యక్ష హాజరు వివరాలు:\n\n"
                         f"• ప్రస్తుత హాజరు: **{rec['current_pct']:.1f}%** ({rec['classes_held']} తరగతులలో {rec['classes_attended']} హాజరయ్యారు)\n"
                         f"• తప్పనిసరి కటాఫ్: **{rec['required_pct']:.0f}%**\n"
                         f"• రికవరీ కోసం అవసరమైన తరగతులు: గడువు తేదీ ({rec['deadline']}) లోగా వరుసగా **{needed} తరగతులకు** తప్పకుండా హాజరు కావాలి."
                     )
-                if language == "hi" or any(0x0900 <= ord(c) <= 0x097F for c in q):
+                if language == "te_roman":
+                    return (
+                        f"Namaskaram {first_name}, mee **{rec['course_title']}** live attendance summary:\n\n"
+                        f"• Current Attendance: **{rec['current_pct']:.1f}%** ({rec['classes_held']} classes lo {rec['classes_attended']} classes attended)\n"
+                        f"• Required Cutoff: **{rec['required_pct']:.0f}%**\n"
+                        f"• Recovery Needed: 75% reach avvadaniki consecutive ga **{needed} classes** attend avvali (Deadline: {rec['deadline']})."
+                    )
+                if language == "hi" or any(0x0900 <= ord(c) <= 0x097F for c in query):
                     return (
                         f"नमस्ते {first_name}, आपके **{rec['course_title']}** विषय का लाइव उपस्थिति विवरण निम्न है:\n\n"
                         f"• वर्तमान उपस्थिति: **{rec['current_pct']:.1f}%** (कुल {rec['classes_held']} में से {rec['classes_attended']} कक्षाएं उपस्थित)\n"
                         f"• आवश्यक कटऑफ: **{rec['required_pct']:.0f}%**\n"
                         f"• सुधार के लिए आवश्यक: समय सीमा ({rec['deadline']}) से पहले बिना अनुपस्थिति के लगातार **{needed} कक्षाएं** अनिवार्य हैं।"
+                    )
+                if language == "hinglish":
+                    return (
+                        f"Namaste {first_name}, aapki **{rec['course_title']}** me live attendance summary:\n\n"
+                        f"• Current Attendance: **{rec['current_pct']:.1f}%** ({rec['classes_held']} me se {rec['classes_attended']} classes attended)\n"
+                        f"• Required Cutoff: **{rec['required_pct']:.0f}%**\n"
+                        f"• Recovery Needed: 75% cutoff reach karne ke liye lagatar **{needed} classes** attend karni hongi (Deadline: {rec['deadline']})."
                     )
                 return (
                     f"Hello {first_name}, here is your live attendance summary for **{rec['course_title']}**:\n\n"
@@ -570,14 +551,55 @@ class NLUEngine:
                 f"• Students with attendance below 65% shall be detained and must repeat the semester."
             )
 
-        if language == "hi" or any(0x0900 <= ord(c) <= 0x097F for c in q):
-            return f"नमस्ते {first_name}, मैं आपकी शैक्षणिक पूछताछ, उपस्थिति, परीक्षा कार्यक्रम, शुल्क और विश्वविद्यालय सेवाओं में सहायता के लिए यहाँ हूँ। कृपया बताएं मैं आपकी क्या सहायता कर सकता हूँ!"
-        if language == "te" or any(0x0C00 <= ord(c) <= 0x0C7F for c in q):
-            return f"నమస్కారం {first_name}, మీ విద్యాపరమైన ప్రశ్నలు, హాజరు, పరీక్షల షెడ్యూల్, ఫీజులు మరియు విశ్వవిద్యాలయ సేవలలో సహాయం చేయడానికి నేను ఇక్కడ ఉన్నాను."
-        return (
-            f"Hello {first_name}, I am here to assist you with your academic inquiries, attendance tracking, "
-            f"exam schedules, fee payments, and university services. Please let me know how I can support you!"
-        )
+    @classmethod
+    def detect_language(cls, query: str, client_language: str = "en") -> str:
+        """
+        Detects the language and script of the user's query:
+        - 'hi': Hindi in Devanagari script (e.g. 'मेरी उपस्थिति कितनी है?')
+        - 'hinglish': Hindi written in Latin/English alphabet (e.g. 'mera attendance kitna hai?')
+        - 'te': Telugu in Telugu script (e.g. 'నా హాజరు ఎంత?')
+        - 'te_roman': Telugu in Latin/English alphabet (e.g. 'naa attendance entha undi?')
+        - 'en': English (default)
+        """
+        if not query:
+            return client_language or "en"
+
+        # 1. Devanagari Unicode check
+        if any(0x0900 <= ord(c) <= 0x097F for c in query):
+            return "hi"
+
+        # 2. Telugu Unicode check
+        if any(0x0C00 <= ord(c) <= 0x0C7F for c in query):
+            return "te"
+
+        q_lower = query.lower()
+
+        # 3. Romanized Hindi / Hinglish keywords check
+        hinglish_words = [
+            "mera", "meri", "mere", "mujhe", "mujhko", "hum", "humara", "humari",
+            "kitna", "kitni", "kitne", "kya", "kab", "kaha", "kahan", "kaise", "kaisa", "kaisi",
+            "batao", "bataiye", "bata", "bolo", "boliye", "kripya", "dhanyawad", "dhanyavad",
+            "chahiye", "hoga", "hogi", "hoge", "hai", "hain", "nahin", "nahi", "theek",
+            "kaun", "konsa", "kisme", "namaste", "pranam", "aaj", "kal", "parso", "bhai",
+            "padhai", "kitne baje", "konsi", "sab", "kuch", "shukriya", "bata do"
+        ]
+        if cls.has_any_word(q_lower, hinglish_words):
+            return "hinglish"
+
+        # 4. Romanized Telugu keywords check
+        telugu_roman_words = [
+            "naaku", "naa", "maa", "entha", "eppudu", "ekkada", "cheppandi", "cheppu",
+            "undi", "unnayi", "ela", "emi", "bavunara", "namaskaram", "epudu", "epudaina",
+            "ivvandi", "chudandi", "chaduvu", "pariksha"
+        ]
+        if cls.has_any_word(q_lower, telugu_roman_words):
+            return "te_roman"
+
+        # 5. Check if client explicitly selected hi or te and query has no strong English indicators
+        if client_language in ["hi", "te"]:
+            return client_language
+
+        return "en"
 
     @staticmethod
     def has_any_word(text: str, words: List[str]) -> bool:
@@ -630,96 +652,101 @@ class NLUEngine:
         return cls.has_any_word(q, triggers)
 
     @classmethod
-    def build_grounded_student_context(cls, session: DatabaseSession) -> str:
+    def build_grounded_student_context(
+        cls,
+        session: DatabaseSession,
+        query: str = "",
+        active_subject: Optional[str] = None
+    ) -> str:
         profile = DataRepository.get_student_profile(session)
         if not profile:
             return "Student profile: Not authenticated."
 
         name = profile.get("full_name", "Student")
         first_name = name.split()[0] if name else "Student"
-
-        att = DataRepository.get_attendance(session)
-        att_parts = []
-        for a in att:
-            pct = a.get('current_pct', 0.0)
-            req = a.get('required_pct', 75.0)
-            att_cnt = a.get('classes_attended', 0)
-            held_cnt = a.get('classes_held', 0)
-            deadline = a.get('deadline', '2026-11-15')
-            if pct < req:
-                needed = calculate_consecutive_needed(att_cnt, held_cnt, req)
-                att_parts.append(
-                    f"{a['course_title']}: {pct:.1f}% ({att_cnt}/{held_cnt} classes) "
-                    f"[ALERT: Student needs EXACTLY {needed} consecutive classes without absence to reach {req:.0f}% cutoff by deadline {deadline}]"
-                )
-            else:
-                att_parts.append(f"{a['course_title']}: {pct:.1f}% ({att_cnt}/{held_cnt} classes) [SAFE]")
-        att_summary = "; ".join(att_parts) if att_parts else "No records"
-
-        exams = DataRepository.get_exams(session)
-        exam_parts = []
-        for e in exams:
-            e_type = e.get('exam_type', 'Assessment')
-            e_title = e.get('course_title', '')
-            e_date = e.get('exam_date', '')
-            e_time = e.get('time') or e.get('time_slot', '10:00 AM')
-            e_venue = e.get('venue', 'Examination Block')
-            exam_parts.append(f"{e_type} for {e_title} on {e_date} ({e_time}) in {e_venue}")
-        exam_summary = "; ".join(exam_parts) if exam_parts else "None scheduled"
-
-        tt = DataRepository.get_timetable(session, "Monday")
-        tt_parts = [f"{t['course_title']} at {t.get('time_slot', '')} in {t.get('room_no', '')}" for t in tt]
-        tt_summary = "; ".join(tt_parts) if tt_parts else "No scheduled lectures"
-
-        academic_cal_info = (
-            "VFSTR Academic Calendar 2026-27: M-2 FA-1: 06-08 Oct 2026; "
-            "M-2 FA-2: 11-13 Nov 2026; Practical Summative: 14-20 Nov 2026; "
-            "Theory Summative End-Semesters: 21 Nov to 04 Dec 2026."
-        )
-
-        fees = DataRepository.get_fees(session)
-        fee_summary = f"Total: Rs. {fees.get('total_fees', 0)}, Paid: Rs. {fees.get('paid_amount', 0)}, Pending: Rs. {fees.get('pending_amount', 0)}" if fees else "No pending fees"
-
-        marks = DataRepository.get_marks(session)
-        marks_parts = [f"{m['course_title']}: {m.get('score', 0)}/{m.get('max_score', 100)} ({m.get('assessment_type', '')})" for m in marks]
-        marks_summary = "; ".join(marks_parts) if marks_parts else "No published results"
-
-        curr = DataRepository.get_curriculum(session)
-        if curr:
-            curr_summary = (
-                f"Total Credits Required: {curr.get('total_credits_required', 160)}, "
-                f"Credits Earned: {curr.get('credits_earned', 68)}, "
-                f"Credits Still Needed to Graduate: {curr.get('credits_remaining', 92)}, "
-                f"Current Semester Credits: {curr.get('current_semester_credits', 22)}, "
-                f"Graduation Status: {curr.get('graduation_eligibility', 'On track')}"
-            )
-            next_courses = curr.get("next_semester_courses", [])
-            if next_courses:
-                next_courses_summary = ", ".join([f"{c.get('code', '')} {c.get('title', '')} ({c.get('credits', 0)} credits, {c.get('type', 'Core')})" for c in next_courses])
-            else:
-                next_courses_summary = "None listed"
-        else:
-            curr_summary = "Total Credits: 160, Earned: 68, Remaining: 92"
-            next_courses_summary = "CS401 DBMS, CS402 OS, CS403 DAA, CS404 CN, OE401 Open Elective, CS405 Lab"
-
         prog_name = profile.get("programme_name") or profile.get("degree") or "B.Tech Computer Science and Engineering"
         dept_name = profile.get("department_code") or profile.get("branch") or "CSE"
         sec_name = profile.get("section_code") or profile.get("section") or "A"
 
-        return (
-            f"Authenticated Student Verified Records (Official University DB):\n"
-            f"- Student Full Name: {name} (ID: {profile.get('student_id')}). Address the student strictly as '{first_name}' or '{name}'. Never use nicknames like 'Ashu'.\n"
-            f"- Program: {prog_name} ({dept_name}), Year {profile.get('current_year_of_study', 2)}, Section {sec_name}\n"
-            f"- Live Attendance: {att_summary}\n"
-            f"- Upcoming Examinations: {exam_summary}\n"
-            f"- Today's Schedule (Monday): {tt_summary}\n"
-            f"- Academic Grades / Marks: {marks_summary}\n"
-            f"- Fee Accounting: {fee_summary}\n"
-            f"- Curriculum & Degree Audit: {curr_summary}\n"
-            f"- Next Semester Courses: {next_courses_summary}\n"
-            f"- Official VFSTR Academic Calendar & Milestones: {academic_cal_info}\n"
-            f"- Key University Regulations: Mandatory 75% attendance to appear for summative examinations (Clause 4.2). Medical condonation permitted down to 65% with Dean approval. M-2 FA-1 assessment is scheduled for 06-08 Oct 2026. Practical Summative Assessment runs from 14-20 Nov 2026, and Theory Summative Assessment (End Semesters) runs from 21 Nov to 04 Dec 2026. Revaluation fee Rs. 500/subject."
-        )
+        q_lower = query.lower() if query else ""
+        context_lines = [
+            f"Authenticated Student Verified Records (Official University DB):",
+            f"- Student: {name} (ID: {profile.get('student_id')}), Program: {prog_name} ({dept_name}), Year {profile.get('current_year_of_study', 2)}, Section {sec_name}. Address strictly as '{first_name}'."
+        ]
+
+        # Domain triggers
+        is_att = cls.has_any_word(q_lower, ["attendance", "attendence", "present", "absent", "classes held", "classes attended", "cutoff", "shortage", "condonation", "bunk", "leave", "75%"])
+        is_exam = cls.has_any_word(q_lower, ["exam", "exams", "cie", "cie-1", "cie-2", "cie 2", "assessment", "schedule", "hall ticket", "test", "formative"])
+        is_tt = cls.has_any_word(q_lower, ["timetable", "schedule today", "classes today", "class today", "next class", "room no", "lecture time", "tea", "break", "monday"])
+        is_fee = cls.has_any_word(q_lower, ["fee", "fees", "dues", "tuition", "payment", "installment", "pay fee", "balance due", "pending"])
+        is_marks = cls.has_any_word(q_lower, ["mark", "marks", "score", "scores", "grade", "grades", "gpa", "sgpa", "cgpa", "backlog", "result"])
+        is_curr = cls.has_any_word(q_lower, ["curriculum", "credit", "credits", "graduate", "graduation", "next semester", "degree", "prerequisite"])
+
+        is_general = not (is_att or is_exam or is_tt or is_fee or is_marks or is_curr)
+
+        # 1. Attendance Records
+        if is_att or is_general:
+            att = DataRepository.get_attendance(session)
+            att_parts = []
+            for a in att:
+                c_title = a.get('course_title', '')
+                pct = a.get('current_pct', 0.0)
+                req = a.get('required_pct', 75.0)
+                att_cnt = a.get('classes_attended', 0)
+                held_cnt = a.get('classes_held', 0)
+                deadline = a.get('deadline', '2026-11-20')
+                if pct < req:
+                    needed = calculate_consecutive_needed(att_cnt, held_cnt, req)
+                    att_parts.append(f"{c_title}: {pct:.1f}% ({att_cnt}/{held_cnt}) [NEEDS {needed} classes to reach {req:.0f}% by {deadline}]")
+                else:
+                    att_parts.append(f"{c_title}: {pct:.1f}% ({att_cnt}/{held_cnt}) [SAFE]")
+            context_lines.append(f"- Live Attendance: {'; '.join(att_parts) if att_parts else 'No attendance records'}")
+            context_lines.append(f"- Key Regulation: Mandatory 75% attendance for end-semester exams (Clause 4.2). Medical condonation allowed down to 65% with Dean approval.")
+
+        # 2. Upcoming Examinations
+        if is_exam or is_general:
+            exams = DataRepository.get_exams(session)
+            exam_parts = [
+                f"{e.get('exam_type', 'Exam')} for {e.get('course_title', '')} on {e.get('exam_date', '')} ({e.get('time') or e.get('time_slot', '10:00 AM')}) at {e.get('venue', 'Examination Hall')}"
+                for e in exams[:5]
+            ]
+            context_lines.append(f"- Upcoming Examinations: {'; '.join(exam_parts) if exam_parts else 'None scheduled'}")
+            context_lines.append(f"- Academic Milestones: M-2 FA-1 (06-08 Oct 2026), M-2 FA-2 (11-13 Nov 2026), Summative End-Semesters (21 Nov - 04 Dec 2026).")
+
+        # 3. Timetable Schedule
+        if is_tt or is_general:
+            tt = DataRepository.get_timetable(session, "Monday")
+            tt_parts = [f"{t['course_title']} ({t.get('time_slot', '')} in {t.get('room_no', '')})" for t in tt]
+            context_lines.append(f"- Today's Schedule (Monday): {'; '.join(tt_parts) if tt_parts else 'No scheduled lectures'}")
+
+        # 4. Fee Ledgers
+        if is_fee or is_general:
+            fees = DataRepository.get_fees(session)
+            fee_summary = f"Total: Rs. {fees.get('total_fees', 0)}, Paid: Rs. {fees.get('paid_amount', 0)}, Pending: Rs. {fees.get('pending_amount', 0)}" if fees else "No pending fees"
+            context_lines.append(f"- Fee Accounting: {fee_summary}")
+
+        # 5. Academic Marks & Grades
+        if is_marks or is_general:
+            marks = DataRepository.get_marks(session)
+            marks_parts = [f"{m['course_title']}: {m.get('score', 0)}/{m.get('max_score', 100)} ({m.get('assessment_type', '')})" for m in marks[:5]]
+            context_lines.append(f"- Academic Marks: {'; '.join(marks_parts) if marks_parts else 'No published results'}")
+
+        # 6. Curriculum & Graduation Credits
+        if is_curr or is_general:
+            curr = DataRepository.get_curriculum(session)
+            if curr:
+                context_lines.append(
+                    f"- Curriculum Credits: Total Required (160), Earned ({curr.get('credits_earned', 68)}), "
+                    f"Still Needed ({curr.get('credits_remaining', 92)}), Current Sem ({curr.get('current_semester_credits', 22)}), Status: {curr.get('graduation_eligibility', 'On track')}"
+                )
+                next_c = curr.get("next_semester_courses", [])
+                if next_c:
+                    next_names = [f"{c.get('code', '')} {c.get('title', '')} ({c.get('credits', 0)} credits)" for c in next_c]
+                    context_lines.append(f"- Next Semester Courses: {', '.join(next_names)}")
+            else:
+                context_lines.append("- Curriculum Credits: Total Required (160), Earned (68), Still Needed (92)")
+
+        return "\n".join(context_lines)
 
     @classmethod
     def generate_dynamic_followups(cls, query: str, active_subject: Optional[str]) -> List[str]:

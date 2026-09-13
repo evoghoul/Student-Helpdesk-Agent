@@ -311,7 +311,7 @@ export const MarkdownText: React.FC<{ text: string; className?: string }> = ({
                       {block.headers.map((h, hIdx) => (
                         <th
                           key={`th-${idx}-${hIdx}`}
-                          className="px-3.5 py-2 font-semibold text-foreground/90 tracking-wide uppercase text-[11px]"
+                          className="px-3.5 py-2 font-semibold text-foreground/90 tracking-wide uppercase text-sm"
                         >
                           {renderCellContent(h, `th-${idx}-${hIdx}`)}
                         </th>

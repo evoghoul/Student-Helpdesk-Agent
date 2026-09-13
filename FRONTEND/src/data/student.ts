@@ -22,16 +22,16 @@ export interface StudentProfile {
 }
 
 export const CURRENT_STUDENT: StudentProfile = {
-  id: "251FA04E13",
-  name: "Aman Kumar",
+  id: "251FA04E03",
+  name: "Akshat Raj",
   programme: "B.Tech CSE (Section 7, Room N-312)",
   department: "Computer Science & Engineering",
   academicYear: "2025–26",
   semester: 3,
   admissionYear: 2024,
-  email: "251fa04e13@vignan.ac.in",
+  email: "251fa04e03@vignan.ac.in",
   phone: "+91 98765 43210",
-  cgpa: 8.09,
+  cgpa: 8.79,
   mentor: {
     name: "Mr. T. Latesh Babu",
     email: "latesh.babu@vignan.ac.in",
@@ -40,6 +40,6 @@ export const CURRENT_STUDENT: StudentProfile = {
   },
   authStatus: "Authenticated",
   securityLabel: "Viewing your verified Section-7 student record",
-  securityToken: "RLS-VFSTR-251FA04E13-VERIFIED",
+  securityToken: "RLS-VFSTR-251FA04E03-VERIFIED",
   sourceAgent: "Agent 44 (Student Profile - Section 7)",
 };

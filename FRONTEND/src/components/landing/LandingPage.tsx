@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import {
   Bot,
   Sparkles,
@@ -20,6 +21,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/context/LanguageContext";
 import { LanguageSelector } from "@/components/common/LanguageSelector";
+import { InteractiveLivePreview } from "./InteractiveLivePreview";
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -30,10 +32,10 @@ function useTypewriter(text: string, speed = 32, startDelay = 400) {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    setDisplayed("");
-    setDone(false);
     let i = 0;
     const timeout = setTimeout(() => {
+      setDisplayed("");
+      setDone(false);
       const interval = setInterval(() => {
         if (i < text.length) {
           setDisplayed(text.slice(0, i + 1));
@@ -54,7 +56,7 @@ function useTypewriter(text: string, speed = 32, startDelay = 400) {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
 
   const typewriterText =
     t.landingTypewriter ||
@@ -63,7 +65,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
   const { displayed, done } = useTypewriter(typewriterText, 28, 400);
 
   const [pillsVisible, setPillsVisible] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -183,9 +184,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 py-3.5">
           {/* Brand */}
           <div className="flex items-center gap-3">
-            <img
+            <Image
               src="/vignan-logo.png"
               alt="Vignan Foundation"
+              width={140}
+              height={44}
               className="h-9 sm:h-11 w-auto object-contain"
             />
             <div className="h-7 w-px bg-slate-200 hidden sm:block" />
@@ -193,7 +196,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               <span className="text-sm sm:text-base font-bold tracking-tight text-foreground leading-tight block">
                 {t.appName || "Student Helpdesk"} <span className="text-blue-600">65</span>
               </span>
-              <p className="text-[11px] text-muted-foreground leading-none">
+              <p className="text-sm text-muted-foreground leading-none">
                 {t.autonomousSystem || "Autonomous University System"}
               </p>
             </div>
@@ -285,13 +288,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 <span>{t.landingSignInDashboard || "Sign in to your dashboard"}</span>
                 <ArrowRight className="h-4 w-4" />
               </button>
-              <a
-                href="#features"
-                className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-card px-6 py-3 text-sm font-semibold text-foreground hover:bg-muted/50 transition-colors"
+              <button
+                type="button"
+                onClick={() => {
+                  const previewEl = document.getElementById("hero-live-preview-card");
+                  if (previewEl) {
+                    previewEl.scrollIntoView({ behavior: "smooth", block: "center" });
+                    previewEl.classList.add("ring-4", "ring-blue-500/50");
+                    setTimeout(() => {
+                      previewEl.classList.remove("ring-4", "ring-blue-500/50");
+                    }, 1500);
+                  }
+                }}
+                className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-card px-6 py-3 text-sm font-semibold text-foreground hover:bg-muted/50 transition-colors cursor-pointer"
               >
                 <span>{t.landingSeeWhatItCanDo || "See what it can do"}</span>
                 <ChevronRight className="h-4 w-4" />
-              </a>
+              </button>
             </div>
 
             <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-muted-foreground">
@@ -310,68 +323,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             </div>
           </div>
 
-          {/* Right Column: Floating Live Preview Card */}
-          <div className="relative hidden lg:block">
-            <div className="rounded-3xl border border-slate-200 bg-card/95 p-5 shadow-2xl shadow-blue-900/10 backdrop-blur-sm">
-              <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-md">
-                  <Bot className="h-5 w-5" />
-                </div>
-                <div>
-                  <div className="text-sm font-bold text-foreground">
-                    {t.studentHelpdesk || "Student Helpdesk"}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {t.landingLivePreview || "Agent 65 · live preview"}
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-3 py-4 text-sm">
-                <div className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-tr-sm bg-blue-600 px-4 py-2.5 text-white">
-                  {t.landingPreviewQ || "What's my attendance in Digital Electronics?"}
-                </div>
-                <div className="w-fit max-w-[88%] rounded-2xl rounded-tl-sm border border-slate-200 bg-muted/50 px-4 py-2.5 text-foreground">
-                  {t.landingPreviewA ||
-                    "You're at 68%, below the 70% threshold. Attend the next 4 classes consecutively to clear it."}
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-2 border-t border-slate-100 pt-4 text-center">
-                <div className="rounded-xl bg-amber-50 p-2.5">
-                  <div className="text-lg font-black text-amber-900">68%</div>
-                  <div className="text-[10px] font-medium text-amber-700">
-                    {t.attendanceTitle || "Attendance"}
-                  </div>
-                </div>
-                <div className="rounded-xl bg-emerald-50 p-2.5">
-                  <div className="text-lg font-black text-emerald-800">8.42</div>
-                  <div className="text-[10px] font-medium text-emerald-700">
-                    {t.cgpaLabel || "CGPA"}
-                  </div>
-                </div>
-                <div className="rounded-xl bg-indigo-50 p-2.5">
-                  <div className="text-lg font-black text-indigo-900">7d</div>
-                  <div className="text-[10px] font-medium text-indigo-700">
-                    {t.nextExam || "Next exam"}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="absolute -bottom-5 -left-8 flex items-center gap-2 rounded-2xl border border-emerald-200 bg-card px-4 py-3 shadow-lg">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-              </span>
-              <span className="text-xs font-semibold text-emerald-900">
-                {t.landingRlsVerified || "RLS guardrail verified"}
-              </span>
-            </div>
+          {/* Right Column: Floating Interactive Live Preview Card */}
+          <div className="relative mt-8 lg:mt-0">
+            <InteractiveLivePreview onExploreMore={onGetStarted} />
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="border-t border-slate-100 bg-card py-20 sm:py-28">
+      <section id="features" className="scroll-mt-20 border-t border-slate-100 bg-card py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="mx-auto max-w-2xl text-center">
             <Badge variant="primary">{t.landingFeatBadge || "Everything in one place"}</Badge>
@@ -396,10 +356,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               return (
                 <div
                   key={f.title}
-                  className="rounded-3xl border border-slate-200/90 bg-card p-7 shadow-xs hover:border-blue-300 hover:shadow-md transition-all group"
+                  className="rounded-xl border border-slate-200/90 bg-card p-7 shadow-xs hover:border-blue-300 hover:shadow-md transition-all group"
                 >
                   <div
-                    className={`inline-flex h-12 w-12 items-center justify-center rounded-2xl ${toneClasses[f.tone] || "bg-blue-50 text-blue-600"}`}
+                    className={`inline-flex h-12 w-12 items-center justify-center rounded-lg ${toneClasses[f.tone] || "bg-blue-50 text-blue-600"}`}
                   >
                     <Icon className="h-6 w-6" />
                   </div>
@@ -417,7 +377,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       </section>
 
       {/* How it Works Section */}
-      <section id="how-it-works" className="border-t border-slate-100 bg-muted/50/60 py-20 sm:py-28">
+      <section id="how-it-works" className="scroll-mt-20 border-t border-slate-100 bg-muted/50/60 py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="mx-auto max-w-2xl text-center">
             <Badge variant="info">{t.navHowItWorks || "How it works"}</Badge>
@@ -446,7 +406,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       </section>
 
       {/* Trust & Security Section */}
-      <section id="trust-&-security" className="border-t border-slate-100 bg-card py-20 sm:py-28">
+      <div id="trust-security" className="scroll-mt-20" />
+      <section id="trust-&-security" className="relative scroll-mt-20 border-t border-slate-100 bg-card py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:items-center">
             <div>
@@ -473,7 +434,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 return (
                   <div
                     key={tp.title}
-                    className="flex gap-4 rounded-2xl border border-slate-200 bg-muted/50/60 p-5"
+                    className="flex gap-4 rounded-lg border border-slate-200 bg-muted/50/60 p-5"
                   >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-card text-blue-600 shadow-xs">
                       <Icon className="h-5 w-5" />

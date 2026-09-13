@@ -92,8 +92,8 @@ export const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
-      <div className="relative w-full max-w-lg rounded-3xl bg-card p-6 shadow-2xl border border-slate-200">
+    <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
+      <div className="relative w-full max-w-lg rounded-xl bg-card p-6 shadow-2xl border border-slate-200">
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
@@ -104,7 +104,7 @@ export const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
               <h3 className="text-base font-bold text-foreground">
                 Institutional Service Request
               </h3>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Routed through Agent 46 (Workflows & Ticketing)
               </p>
             </div>
@@ -132,7 +132,7 @@ export const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
               </p>
             </div>
 
-            <div className="rounded-2xl bg-muted/50 p-4 border border-slate-200 text-left text-xs space-y-1.5 font-medium text-foreground">
+            <div className="rounded-lg bg-muted/50 p-4 border border-slate-200 text-left text-xs space-y-1.5 font-medium text-foreground">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Tracking Token:</span>
                 <span className="font-mono font-bold text-blue-700">
@@ -171,7 +171,7 @@ export const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
                 <span className="text-slate-400">•</span>
                 <span className="font-mono text-muted-foreground">{student.id}</span>
               </div>
-              <span className="text-[11px] font-bold text-blue-700 uppercase">
+              <span className="text-sm font-bold text-blue-700 uppercase">
                 Verified Identity
               </span>
             </div>

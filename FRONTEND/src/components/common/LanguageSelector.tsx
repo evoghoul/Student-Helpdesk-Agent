@@ -71,7 +71,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
       >
         <Globe className="h-3.5 w-3.5 text-blue-600 shrink-0" />
         <span className="font-bold tracking-wide">{activeLangMeta.nativeName}</span>
-        <span className="text-[10px] font-mono text-slate-400 uppercase">
+        <span className="text-xs font-mono text-slate-400 uppercase">
           ({currentLang})
         </span>
         <ChevronDown
@@ -85,7 +85,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
       {isOpen && (
         <div
           className={cn(
-            "absolute mt-2 w-80 sm:w-88 rounded-2xl border border-slate-200/90 bg-card p-2.5 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95 duration-150",
+            "absolute mt-2 w-80 sm:w-88 rounded-lg border border-slate-200/90 bg-card p-2.5 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95 duration-150",
             dropdownAlign === "right" ? "right-0" : "left-0"
           )}
         >
@@ -97,7 +97,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                 <h4 className="text-xs font-bold text-foreground leading-tight">
                   Official Languages of India
                 </h4>
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   8th Schedule • 22 Recognized Languages + English
                 </p>
               </div>
@@ -166,7 +166,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                           {lang.code}
                         </span>
                       </div>
-                      <span className="text-[10px] text-slate-400 truncate mt-0.5">
+                      <span className="text-xs text-slate-400 truncate mt-0.5">
                         {lang.region}
                       </span>
                     </div>
@@ -186,7 +186,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
           </div>
 
           {/* Footer status */}
-          <div className="mt-2 pt-2 border-t border-slate-100 px-2 flex items-center justify-between text-[10px] text-slate-400">
+          <div className="mt-2 pt-2 border-t border-slate-100 px-2 flex items-center justify-between text-xs text-slate-400">
             <span>22 Eighth Schedule Languages + English</span>
             <span className="text-emerald-600 font-medium">100% Native Script</span>
           </div>

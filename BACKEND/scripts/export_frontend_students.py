@@ -4,26 +4,46 @@ import json
 
 def generate_frontend_students():
     db_path = os.path.abspath(r'C:\StudentHelpdesk\database\student_helpdesk.db')
-    out_path = os.path.abspath(r'C:\StudentHelpdesk\front-student-main\src\data\students-db.ts')
+    out_path = os.path.abspath(r'C:\StudentHelpdesk\FRONTEND\src\data\students-db.ts')
 
     conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
-    # Fetch students
     cur.execute('''
-    SELECT student_id, roll_no, password, admission_no, full_name, gender, email,
-           department_code, programme_code, batch_label, section_code, year_of_study, semester,
-           sgpa_prev, cgpa, total_attendance_pct, risk_level, backlog_count, fee_outstanding, mentor_name, status
-    FROM student
+    SELECT student_id, roll_no, full_name, gender, email,
+           department_code, programme_code, batch_label, section_code, current_year_of_study, semester,
+           cgpa, overall_attendance_pct, backlog_count, fee_outstanding, mentor_name, status
+    FROM students
+    WHERE roll_no LIKE '251FA%'
+    ORDER BY roll_no
     ''')
     students_rows = cur.fetchall()
 
     students_dict = {}
 
     for row in students_rows:
-        sid, roll, pwd, adm, name, gender, email, dept, prog, batch, sec, yr, sem, sgpa, cgpa, tot_att, risk, backlogs, fee, mentor, status = row
+        sid = row['student_id']
+        roll = row['roll_no']
+        name = row['full_name']
+        gender = row['gender']
+        email = row['email']
+        dept = row['department_code']
+        prog = row['programme_code']
+        batch = row['batch_label']
+        sec = row['section_code']
+        yr = row['current_year_of_study']
+        sem = row['semester']
+        cgpa = row['cgpa']
+        sgpa = cgpa
+        tot_att = row['overall_attendance_pct']
+        backlogs = row['backlog_count']
+        fee = row['fee_outstanding']
+        mentor = row['mentor_name']
+        status = row['status']
+        risk = "NORMAL_ELIGIBLE" if tot_att >= 75.0 else ("SHORTFALL_WARNING" if tot_att >= 65.0 else "CRITICAL_DETAINED_DANGER")
 
-        # Calculate initials
+        # Initials
         parts = [p for p in name.split() if p]
         if len(parts) >= 2:
             initials = f'{parts[0][0]}{parts[1][0]}'.upper()
@@ -32,13 +52,12 @@ def generate_frontend_students():
         else:
             initials = 'ST'
 
-        # Format capitalized name
         cap_name = ' '.join([w.capitalize() for w in name.split()])
 
         # Attendance records
         cur.execute('''
-        SELECT course_code, course_title, faculty_name, attendance_pct, classes_held, classes_attended, risk_level, classes_needed
-        FROM attendance_summary
+        SELECT course_code, course_title, faculty_name, current_pct, classes_held, classes_attended, risk_level, classes_needed
+        FROM attendance
         WHERE student_id = ?
         ''', (sid,))
         att_rows = cur.fetchall()
@@ -47,7 +66,14 @@ def generate_frontend_students():
         tot_held = 0
         tot_att_cnt = 0
         for ar in att_rows:
-            ccode, ctitle, fac, pct, held, att_cnt, srisk, needed = ar
+            ccode = ar['course_code']
+            ctitle = ar['course_title']
+            fac = ar['faculty_name']
+            pct = ar['current_pct']
+            held = ar['classes_held']
+            att_cnt = ar['classes_attended']
+            srisk = ar['risk_level']
+            needed = ar['classes_needed']
             tot_held += held
             tot_att_cnt += att_cnt
 
@@ -78,14 +104,20 @@ def generate_frontend_students():
 
         # Internal Marks
         cur.execute('''
-        SELECT course_code, assessment_name, max_marks, marks_obtained, status
-        FROM internal_mark
+        SELECT course_code, assessment_name, max_marks, obtained_marks, percentage, status
+        FROM marks
         WHERE student_id = ?
         ''', (sid,))
         mark_rows = cur.fetchall()
         assessments = []
         for mr in mark_rows:
-            ccode, aname, max_m, obt_m, mstat = mr
+            ccode = mr['course_code']
+            aname = mr['assessment_name']
+            max_m = mr['max_marks']
+            obt_m = mr['obtained_marks']
+            pct = mr['percentage']
+            ratio = (obt_m / max_m) if max_m > 0 else 0.0
+            grade = 'O' if ratio >= 0.9 else ('A+' if ratio >= 0.8 else ('A' if ratio >= 0.7 else ('B+' if ratio >= 0.6 else 'B')))
             assessments.append({
                 'id': f'{ccode}-{aname}',
                 'courseCode': ccode,
@@ -94,17 +126,27 @@ def generate_frontend_students():
                 'date': '10 Sep 2026',
                 'maxMarks': max_m,
                 'marksObtained': obt_m,
-                'percentage': round((obt_m / max_m) * 100, 1),
-                'grade': 'O' if (obt_m / max_m) >= 0.9 else ('A+' if (obt_m / max_m) >= 0.8 else ('A' if (obt_m / max_m) >= 0.7 else ('B+' if (obt_m / max_m) >= 0.6 else 'B'))),
+                'percentage': round(pct, 1),
+                'grade': grade,
                 'status': 'Evaluated',
                 'feedback': 'Strong conceptual clarity' if obt_m >= 20 else 'Focus on core problem solving'
             })
 
         # Fee record
-        fee_due = fee
-        fee_total = 100000.0
-        fee_paid = max(0.0, fee_total - fee_due)
-        fee_status = 'CLEARED' if fee_due == 0.0 else ('OVERDUE' if fee_due >= 30000.0 else 'PARTIAL')
+        cur.execute('SELECT * FROM fees WHERE student_id = ?', (sid,))
+        fee_row = cur.fetchone()
+        if fee_row:
+            fee_total = fee_row['total_demand']
+            fee_paid = fee_row['paid_amount']
+            fee_due = fee_row['outstanding_balance']
+            fee_status = fee_row['status']
+            if fee_status == 'PAID':
+                fee_status = 'CLEARED'
+        else:
+            fee_total = 100000.0
+            fee_paid = 100000.0
+            fee_due = 0.0
+            fee_status = 'CLEARED'
 
         students_dict[roll.upper()] = {
             'profile': {
@@ -138,7 +180,7 @@ def generate_frontend_students():
             'attendance': {
                 'overallPercentage': round(tot_att, 1),
                 'totalAttended': tot_att_cnt,
-                'totalConducted': tot_held if tot_held > 0 else 250,
+                'totalConducted': tot_held if tot_held > 0 else 240,
                 'status': 'Critical' if tot_att < 65.0 else ('Attention required' if tot_att < 75.0 else 'Healthy'),
                 'sourceAgent': 'Agent 11 (Attendance Engine)',
                 'subjects': subjects
@@ -158,7 +200,8 @@ def generate_frontend_students():
             }
         }
 
-    ts_content = f'''// Synchronized Dataset of all 70 Authenticated Students of VFSTR CSE Section 7 (Room N-312)
+    ts_content = f'''/* eslint-disable @typescript-eslint/no-explicit-any */
+// Synchronized Dataset of all 70 Authenticated Students of VFSTR CSE Section 7 (Room N-312)
 // University: Vignan Foundation for Science, Technology and Research
 // Academic Year: 2025-26, Semester: 3 (Section 7)
 // Class Teacher: Mr. T. Latesh Babu | Timetable Coordinator: Mr. Uttej Kumar Nannapaneni | HOD, CSE: Dr. S V Phani Kumar
@@ -208,7 +251,7 @@ export function getStudentData(rollNo: string): StudentFullData {{
     return ALL_STUDENTS_MAP[clean];
   }}
   // Default to Akshat Raj
-  return ALL_STUDENTS_MAP["251FA04E13"] || ALL_STUDENTS_LIST[0];
+  return ALL_STUDENTS_MAP["251FA04E03"] || ALL_STUDENTS_LIST[0];
 }}
 '''
     with open(out_path, 'w', encoding='utf-8') as f:

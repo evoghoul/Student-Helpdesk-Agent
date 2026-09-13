@@ -1,11 +1,20 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from typing import List
+import os
+import json
+import logging
+import datetime
+
+logger = logging.getLogger(__name__)
+
 from app.models.schemas import (
     ConversationCreate,
     ConversationResponse,
     ConversationDetailResponse,
     MessageCreate,
-    MessageResponse
+    MessageResponse,
+    MessageFeedbackCreate,
+    MessageFeedbackResponse
 )
 from app.database import DataRepository, DatabaseSession
 from app.security import get_current_student
@@ -64,3 +73,102 @@ async def send_message(
         language=msg.language or "en"
     )
     return MessageResponse(**agent_response)
+
+@router.post("/{conversation_id}/messages/{message_id}/feedback", response_model=MessageFeedbackResponse)
+async def submit_message_feedback(
+    conversation_id: str,
+    message_id: str,
+    fb: MessageFeedbackCreate,
+    current_student: dict = Depends(get_current_student)
+):
+    session = DatabaseSession(student_id=current_student["student_id"], user_id=current_student["user_id"])
+    
+    # 1. Record feedback in database
+    try:
+        DataRepository.record_message_feedback(
+            session=session,
+            conversation_id=conversation_id,
+            message_id=message_id,
+            rating=fb.rating,
+            comment=fb.comment
+        )
+    except Exception as e:
+        logger.warning(f"Could not record feedback in DB: {e}")
+
+    saved_for_training = False
+    # 2. When rating is "up" (thumbs up), store ONLY this specific conversation turn to train the local AI model
+    if fb.rating.lower() in ["up", "thumbs_up", "thumbsup", "1", "positive"]:
+        try:
+            history = DataRepository.get_conversation_messages(session, conversation_id)
+            student_profile = DataRepository.get_student_profile(session)
+            student_name = student_profile.get("full_name", "Student") if student_profile else "Student"
+
+            system_content = (
+                f"You are Agent 65, an exceptionally intelligent, empathetic, and knowledgeable university student helpdesk AI "
+                f"running locally with zero external API keys, grounded in official university records. "
+                f"Student profile: {student_name}."
+            )
+
+            prompt_msgs = [{"role": "system", "content": system_content}]
+            assistant_response = fb.response_text or ""
+
+            if history:
+                target_idx = -1
+                for idx, m in enumerate(history):
+                    if m.get("message_id") == message_id:
+                        target_idx = idx
+                        break
+                
+                if target_idx != -1:
+                    for m in history[:target_idx]:
+                        role = "user" if m.get("sender_role") == "STUDENT" else "assistant"
+                        prompt_msgs.append({"role": role, "content": m.get("content", "")})
+                    assistant_response = history[target_idx].get("content", "")
+                else:
+                    for m in history[:-1]:
+                        role = "user" if m.get("sender_role") == "STUDENT" else "assistant"
+                        prompt_msgs.append({"role": role, "content": m.get("content", "")})
+                    if not assistant_response and history:
+                        assistant_response = history[-1].get("content", "")
+            elif fb.messages:
+                for m in fb.messages:
+                    prompt_msgs.append({"role": m.get("role", "user"), "content": m.get("content", "")})
+                if not assistant_response and fb.messages and fb.messages[-1].get("role") == "assistant":
+                    assistant_response = fb.messages[-1].get("content", "")
+
+            if assistant_response:
+                if not prompt_msgs or prompt_msgs[-1].get("role") != "assistant":
+                    prompt_msgs.append({"role": "assistant", "content": assistant_response})
+
+                training_entry = {
+                    "messages": prompt_msgs,
+                    "model_response": assistant_response,
+                    "gemini_response": assistant_response,
+                    "rating": "thumbs_up",
+                    "student_id": current_student.get("student_id"),
+                    "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
+                }
+
+                training_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "training_data.jsonl"))
+                with open(training_file, "a", encoding="utf-8") as f:
+                    f.write(json.dumps(training_entry, ensure_ascii=False) + "\n")
+                saved_for_training = True
+                logger.info(f"Appended approved thumbs_up conversation turn {message_id} to training_data.jsonl")
+        except Exception as err:
+            logger.error(f"Failed to append to training_data.jsonl: {err}")
+
+    if saved_for_training:
+        return MessageFeedbackResponse(
+            status="success",
+            saved_for_training=True,
+            rating=fb.rating,
+            message="Conversation turn saved to training dataset for 8B local model."
+        )
+    else:
+        return MessageFeedbackResponse(
+            status="success",
+            saved_for_training=False,
+            rating=fb.rating,
+            message="Feedback recorded. Thank you for helping improve Agent 65."
+        )
+
