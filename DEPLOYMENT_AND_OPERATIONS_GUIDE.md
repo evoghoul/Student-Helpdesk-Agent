@@ -219,18 +219,18 @@ Iske liye aapko bas ek baar Cloudflare Tunnel run karna hai:
 
 #### Daily One-Click Start:
 Hamne aapke liye ek shortcut file bana di hai:
-👉 **`start_laptop_hybrid_tunnel.bat`** (project ke main folder me hai).
+👉 **`hybrid.bat`** (ya **`start_laptop_hybrid_tunnel.bat`**) - project ke root folder me hai.
 
-1. Bas is file par **Double-Click** karein!
+1. Bas **`hybrid.bat`** par **Double-Click** karein!
 2. Ye automatically:
    * Aapke laptop par **Ollama** start kar dega.
-   * Ek live public link create kar dega, jaise:
+   * Permanent Static Domain start karega:
      ```
-     https://subtle-clouds-random.trycloudflare.com
+     https://resonate-trimester-glade.ngrok-free.dev
      ```
-3. Render dashboard me jakar `LOCAL_MODEL_URL` me ye link paste kar dein:
+3. Render dashboard me `LOCAL_MODEL_URL` me ye permanent link already set hai:
    ```
-   LOCAL_MODEL_URL = https://subtle-clouds-random.trycloudflare.com
+   LOCAL_MODEL_URL = https://resonate-trimester-glade.ngrok-free.dev
    ```
 4. **Boom!** Ab jo koi bhi live website par chat karega:
    * Query seedha aapke laptop par aayegi.

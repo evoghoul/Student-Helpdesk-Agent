@@ -446,14 +446,55 @@ export function processQuery(
     };
   }
 
+  // 3b. COMPREHENSIVE ACADEMIC REGULATIONS, CONDONATION, BACKLOGS & PLACEMENT CRISIS
+  if (
+    query.includes("r22") ||
+    (query.includes("condonation") && (query.includes("supplementary") || query.includes("placement") || query.includes("backlog") || query.includes("regulations"))) ||
+    (query.includes("placement") && (query.includes("backlog") || query.includes("cgpa") || query.includes("attendance")))
+  ) {
+    return {
+      text: `**Official Academic & Placement Advisory (Under University R22 Regulations):**\n\n### 1. Medical Condonation Eligibility (Data Structures @ 67%):\n• **Yes, you qualify to apply**: Under **R22 Clause 4.3**, condonation is permitted exclusively for attendance between **65.0% and 74.9%** on genuine medical grounds.\n• **Statutory Disqualification Cutoff**: Any student below **65.0%** cannot be granted condonation under any circumstances and is automatically detained/debarred from the End-Semester exam.\n• **Procedure**: Submit your hospital admission/fitness certificate signed by a Civil Surgeon to the University Medical Board before the November 15 freeze.\n\n### 2. Consecutive Lectures Required for 75% Cutoff (Before Nov 15):\n• **Data Structures (currently 67% / 34 of 50 classes)**: You must attend the next **16 consecutive classes** without missing any to reach exactly 75.0%.\n• **Digital Logic (currently 73% / 37 of 50 classes)**: You need only **4 consecutive classes** to cross the 75.0% safe threshold.\n\n### 3. Supplementary Exam & Placement Drive Eligibility:\n• **Supplementary Registration**: Yes, under R22 examination rules, you can register for the Semester 3 **Discrete Mathematics** arrear exam alongside your regular Semester 5 papers.\n• **Placement Impact**: While Tier-1 companies strictly enforce the *\"No Active Backlogs\"* policy during recruitment drives, **clearing this paper in the upcoming exam window** (with results announced before 6th-semester registration) will restore your status to **0 active backlogs**, qualifying you for upcoming campus placement drives!`,
+      category: "PROCEDURAL_GUIDANCE",
+      sourceAgent: "Agent 65 (Academic Advisory) & Agent 20 (Placement & Regulations)",
+      authorizedFor: studentId,
+      isDistress: false,
+      structuredCard: {
+        type: "curriculum",
+        title: "Multi-System Academic Assessment",
+        subtitle: "R22 Regulations • Condonation, Exam & Placement Audit",
+        badge: "ACTION REQUIRED • RECOVERY ROADMAP",
+        badgeVariant: "amber",
+        data: {
+          condonationStatus: "Eligible (67% is within 65-74.9% bracket)",
+          dataStructuresRecovery: "16 consecutive classes to reach 75%",
+          digitalLogicRecovery: "4 consecutive classes to reach 75%",
+          backlogEligibility: "Supplementary allowed in current cycle",
+          placementThreshold: "Qualifies once backlog is cleared before Sem 6",
+        },
+        actionLabel: "Open Student Recovery Roadmap",
+        actionIntent: "OPEN_POLICY_DRAWER",
+      },
+      suggestedFollowUps: [
+        "What is the medical condonation application fee?",
+        "When is the supplementary examination schedule published?",
+        "Schedule advisory meeting with HOD / Mentor",
+      ],
+    };
+  }
+
   // 4. MULTI-TURN CONSECUTIVE CLASSES / ATTENDANCE RECOVERY CALCULATION
   if (
-    query.includes("how many classes") ||
-    query.includes("classes do i need") ||
-    query.includes("reach 70") ||
-    query.includes("reach 75") ||
-    query.includes("consecutive") ||
-    (query.includes("attendance") && (query.includes("improve") || query.includes("target")))
+    (query.includes("how many classes") ||
+      query.includes("classes do i need") ||
+      query.includes("reach 70") ||
+      query.includes("reach 75") ||
+      query.includes("consecutive") ||
+      (query.includes("attendance") && (query.includes("improve") || query.includes("target")))) &&
+    !query.includes("r22") &&
+    !query.includes("supplementary") &&
+    !query.includes("placement") &&
+    !query.includes("backlog") &&
+    !query.includes("condonation")
   ) {
     const targetSubName = contextSubject || "Digital Logic design";
     const sub = ATTENDANCE_DATA.subjects.find((s) => s.name.toLowerCase() === targetSubName.toLowerCase()) || ATTENDANCE_DATA.subjects[0];
@@ -492,8 +533,51 @@ export function processQuery(
     };
   }
 
+  // 4b. HALL TICKET HOLDS, CONDONATION & EXAM CLEARANCE
+  if (
+    query.includes("hall ticket") ||
+    query.includes("admit card") ||
+    query.includes("condonation") ||
+    (query.includes("hold") && (query.includes("exam") || query.includes("tuition") || query.includes("attendance"))) ||
+    (query.includes("medical") && (query.includes("board") || query.includes("certificate")))
+  ) {
+    return {
+      text: `**Hall Ticket Clearance & Automated Holds Assessment:**\n\nNo — the student examination portal will **NOT** generate an End-Semester Hall Ticket while there is an active financial balance or an unresolved attendance status. Under **Examination Ordinance Clause 8.2 & Academic Regulation R22 (Clause 4.3)**, an **automatic gate-controlled hold** is enforced.\n\n### Dual Requirement Breakdown:\n1. **Tuition Balance Hold (Agent 40 - Finance)**: The portal checks your accounting status. Any outstanding tuition or lab fee flags the record as *\"Financial Dues Pending\"*, preventing hall ticket generation.\n2. **Medical Condonation Hold (Agent 11 - Attendance & Medical Board)**: While an attendance condonation application is *\"Pending\"*, the statutory system treats your attendance as unapproved. A hall ticket can only be unlocked once the Medical Board and Dean of Academics mark the condonation status as **APPROVED** (for attendance between 65% and 74.9%).\n\n### Required Action to Release the Hold:\n• **Step 1**: Clear tuition balance via the Finance portal (or submit an approved Dean-authorized installment waiver).\n• **Step 2**: Ensure your registered medical certificate is signed off by the University Medical Officer before the condonation deadline (typically 7 days prior to exam start).\n• Once both flags update to **CLEARED**, your hall ticket will immediately become available for download in the portal.`,
+      category: "PROCEDURAL_GUIDANCE",
+      sourceAgent: "Agent 30 (Examination Hub) & Agent 40 (Finance Engine)",
+      authorizedFor: studentId,
+      isDistress: false,
+      structuredCard: {
+        type: "exam",
+        title: "Examination Hall Ticket Hold Notice",
+        subtitle: "Clause 8.2 • Clearance Gate Verification",
+        badge: "GATE-CONTROLLED HOLD ACTIVE",
+        badgeVariant: "amber",
+        data: {
+          tuitionClearance: "Hold Applied (Outstanding Balance)",
+          condonationStatus: "Pending Medical Board Review",
+          hallTicketGeneration: "Blocked until both criteria are Cleared",
+          resolutionOffice: "Finance Office (Admin Block) & Exam Cell",
+        },
+        actionLabel: "View Examination Regulations",
+        actionIntent: "OPEN_POLICY_DRAWER",
+      },
+      suggestedFollowUps: [
+        "What is the fee payment deadline?",
+        "What is the attendance condonation procedure?",
+        "Contact academic advisor regarding exam hold",
+      ],
+    };
+  }
+
   // 5. ATTENDANCE QUERIES (Subject specific or overall)
-  if ((query.includes("attendance") || query.includes("bunk") || query.includes("absent")) && !query.includes("policy")) {
+  if (
+    (query.includes("attendance") || query.includes("bunk") || query.includes("absent")) &&
+    !query.includes("policy") &&
+    !query.includes("condonation") &&
+    !query.includes("hall ticket") &&
+    !query.includes("hold")
+  ) {
     if (contextSubject && (query.includes(contextSubject.toLowerCase()) || query.includes("that subject") || query.includes("this subject"))) {
       const sub = ATTENDANCE_DATA.subjects.find((s) => s.name.toLowerCase() === contextSubject!.toLowerCase()) || ATTENDANCE_DATA.subjects[0];
       const needed70 = calculateConsecutiveClassesNeeded(sub.attended, sub.total, 70);

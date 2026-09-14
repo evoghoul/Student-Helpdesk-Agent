@@ -235,7 +235,7 @@ class NLUEngine:
             ]
 
         # D. Attendance Card (Non-destructive widget attachment)
-        elif cls.has_any_word(q_lower, ["attendance", "classes held", "classes attended", "attendance shortage", "bunk", "bunked", "75%"]) and not cls.has_any_word(q_lower, ["policy", "policies", "regulation", "regulations", "condonation rule"]):
+        elif cls.has_any_word(q_lower, ["attendance", "classes held", "classes attended", "attendance shortage", "bunk", "bunked", "75%"]) and not cls.has_any_word(q_lower, ["policy", "policies", "regulation", "regulations", "condonation", "hall ticket", "admit card", "hold"]):
             att_res = get_attendance_summary(session, active_subject)
             direct_response_text = att_res.get("text", "")
             card_data = att_res.get("structured_card")

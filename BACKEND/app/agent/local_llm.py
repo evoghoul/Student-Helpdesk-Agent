@@ -50,7 +50,11 @@ class LocalLLMClient:
         candidates = [candidate for candidate in candidates if candidate]
         # 1. First priority: Check local Ollama daemon
         try:
-            resp = requests.get(f"{get_ollama_base_url()}/api/tags", timeout=timeout)
+            resp = requests.get(
+                f"{get_ollama_base_url()}/api/tags",
+                timeout=timeout,
+                headers={"ngrok-skip-browser-warning": "true"}
+            )
             if resp.status_code == 200:
                 models = resp.json().get("models", [])
                 if models:
@@ -211,7 +215,12 @@ class LocalLLMClient:
             }
             try:
                 # Fast 4.0s connection timeout so that if the laptop is off, it quickly cascades to cloud
-                resp = requests.post(url, json=payload, timeout=(4.0, timeout))
+                resp = requests.post(
+                    url,
+                    json=payload,
+                    timeout=(4.0, timeout),
+                    headers={"ngrok-skip-browser-warning": "true"}
+                )
                 if resp.status_code == 200:
                     data = resp.json()
                     msg = data.get("message", {}).get("content", "").strip()
@@ -314,14 +323,14 @@ class LocalLLMClient:
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
-        candidate_models = ["qwen/qwen3.6-27b", "openai/gpt-oss-20b", "llama-3.3-70b-versatile", "llama-3.1-8b-instant"]
+        candidate_models = ["openai/gpt-oss-20b", "openai/gpt-oss-120b", "groq/compound", "qwen/qwen3.6-27b"]
         import time
         for candidate_model in candidate_models:
             payload = {
                 "model": candidate_model,
                 "messages": messages,
                 "temperature": 0.4,
-                "max_tokens": 4096
+                "max_tokens": 700
             }
             try:
                 resp = requests.post(url, headers=headers, json=payload, timeout=timeout)

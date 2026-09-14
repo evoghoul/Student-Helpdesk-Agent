@@ -56,7 +56,13 @@ class Settings(BaseSettings):
             return [str(i).strip() for i in v if str(i).strip()]
         return [str(v)]
 
-    model_config = SettingsConfigDict(env_file=".env", extra="allow")
+    model_config = SettingsConfigDict(
+        env_file=(
+            os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".env")),
+            ".env"
+        ),
+        extra="allow"
+    )
 
     def validate_production_security(self):
         if self.ENVIRONMENT.lower() == "production" and (not self.SECRET_KEY or self.SECRET_KEY == DEFAULT_INSECURE_SECRET):
