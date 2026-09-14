@@ -226,8 +226,8 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             ...response,
             sourceAgent: "Agent 65 [Deterministic Institution Rules]",
             llm_provider: "local",
-            model_used: model === "3B" ? "agent65-3b:latest" : "agent65-8b:latest",
-            used_fallback: false,
+            model_used: "Rules Engine Only",
+            used_fallback: true,
           },
         },
       ]);

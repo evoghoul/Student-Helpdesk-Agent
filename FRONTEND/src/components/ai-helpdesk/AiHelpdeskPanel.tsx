@@ -845,8 +845,10 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
               <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/80">
                 <span className="font-medium text-slate-500">Active AI Model:</span>
                 <span className="font-bold text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs font-mono text-[11px]">
-                  {verifyingTurn.responseMeta?.model_used && verifyingTurn.responseMeta.model_used !== "database-direct" && verifyingTurn.responseMeta.model_used !== "Rules"
+                  {verifyingTurn.responseMeta?.model_used && !["database-direct", "Rules", "deterministic-fallback"].includes(verifyingTurn.responseMeta.model_used)
                     ? verifyingTurn.responseMeta.model_used
+                    : verifyingTurn.responseMeta?.model_used === "Rules Engine Only" || ["database-direct", "Rules", "deterministic-fallback"].includes(verifyingTurn.responseMeta?.model_used || "")
+                    ? "Rules Engine Only"
                     : "agent65-8b:latest"}
                 </span>
               </div>
