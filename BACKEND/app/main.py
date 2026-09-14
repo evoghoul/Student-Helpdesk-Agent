@@ -34,6 +34,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.FRONTEND_ORIGINS,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -120,6 +121,7 @@ async def list_students():
 async def root():
     return RedirectResponse(url="/docs")
 
+@app.get("/health", tags=["Health"])
 @app.get("/api/v1/health", tags=["Health"])
 async def health_check():
     return {

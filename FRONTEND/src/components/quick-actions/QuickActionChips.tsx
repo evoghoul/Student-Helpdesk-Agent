@@ -14,14 +14,22 @@ import {
   FileCheck2,
   Sparkles,
   BookOpen,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 interface QuickActionChipsProps {
   onSelectAction: (query: string) => void;
+  showActions: boolean;
+  onToggleActions: () => void;
 }
 
-export const QuickActionChips: React.FC<QuickActionChipsProps> = ({ onSelectAction }) => {
+export const QuickActionChips: React.FC<QuickActionChipsProps> = ({
+  onSelectAction,
+  showActions,
+  onToggleActions,
+}) => {
   const { t, language } = useLanguage();
   const [showAll, setShowAll] = React.useState(false);
 
@@ -59,7 +67,7 @@ export const QuickActionChips: React.FC<QuickActionChipsProps> = ({ onSelectActi
     },
     {
       label: t.quickCurriculum,
-      query: language === "te" ? "నేను గ్రాడ్యుయేట్ కావడానికి ఇంకా ఎన్ని క్రెడిట్లు కావాలి?" : language === "hi" ? "ग्रेजुएशन के लिए मुझे अभी कितने क्रेडिट चाहिए?" : "How many credits do I still need to graduate?",
+      query: language === "te" ? "ఈ సెమిస్టర్ సబ్జెక్టులు ఏమిటి?" : language === "hi" ? "इस सेमेस्टर मेरे विषय क्या हैं?" : "What are my subjects this semester?",
       icon: BookOpen,
       color: "text-cyan-600 bg-cyan-50 border-cyan-200",
     },
@@ -127,9 +135,29 @@ export const QuickActionChips: React.FC<QuickActionChipsProps> = ({ onSelectActi
     <div className="space-y-2 pt-1 border-t border-slate-100">
       {/* Primary Category Row */}
       <div className="space-y-1">
-        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-          {t.quickActionsTitle}
-        </span>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            {t.quickActionsTitle}
+          </span>
+          <button
+            type="button"
+            onClick={onToggleActions}
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-card text-slate-500 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-500 cursor-pointer"
+            title={showActions ? "Minimize quick actions" : "Show quick actions"}
+            aria-label={showActions ? "Minimize quick actions" : "Show quick actions"}
+            aria-expanded={showActions}
+            aria-controls="agent65-quick-action-list"
+          >
+            {showActions ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+          </button>
+        </div>
+      </div>
+
+      <div
+        id="agent65-quick-action-list"
+        aria-hidden={!showActions}
+        className={showActions ? "space-y-2" : "hidden"}
+      >
         <div className="flex flex-wrap items-center gap-1.5 pb-1">
           {primaryActions.slice(0, showAll ? primaryActions.length : 5).map((action, i) => {
             const Icon = action.icon;
@@ -145,39 +173,39 @@ export const QuickActionChips: React.FC<QuickActionChipsProps> = ({ onSelectActi
             );
           })}
         </div>
-      </div>
 
-      {/* Contextual / Workflow Actions */}
-      <div className="space-y-1">
-        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-          {t.contextualActionsTitle}
-        </span>
-        <div className="flex flex-wrap items-center gap-1.5 pb-1">
-          {contextualActions.slice(0, showAll ? contextualActions.length : 3).map((action, i) => {
-            const Icon = action.icon;
-            return (
-              <button
-                key={i}
-                onClick={() => onSelectAction(action.query)}
-                className="group flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-card px-2.5 py-1 text-sm font-medium text-foreground hover:border-blue-300 hover:bg-blue-50/50 hover:text-blue-700 transition-all cursor-pointer shadow-2xs"
-              >
-                <Icon className="h-3 w-3 text-slate-400 group-hover:text-blue-600" />
-                <span>{action.label}</span>
-                {action.badge && (
-                  <span className="rounded-full bg-amber-100 px-1.5 py-0.2 text-[9px] font-semibold text-amber-700">
-                    {action.badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-          
-          <button
-            onClick={() => setShowAll(!showAll)}
-            className="flex shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-muted/30 px-2.5 py-1 text-sm font-medium text-slate-600 hover:bg-muted/60 transition-all cursor-pointer shadow-2xs"
-          >
-            <span>{showAll ? "Show less" : "More actions..."}</span>
-          </button>
+        {/* Contextual / Workflow Actions */}
+        <div className="space-y-1">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            {t.contextualActionsTitle}
+          </span>
+          <div className="flex flex-wrap items-center gap-1.5 pb-1">
+            {contextualActions.slice(0, showAll ? contextualActions.length : 3).map((action, i) => {
+              const Icon = action.icon;
+              return (
+                <button
+                  key={i}
+                  onClick={() => onSelectAction(action.query)}
+                  className="group flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-card px-2.5 py-1 text-sm font-medium text-foreground hover:border-blue-300 hover:bg-blue-50/50 hover:text-blue-700 transition-all cursor-pointer shadow-2xs"
+                >
+                  <Icon className="h-3 w-3 text-slate-400 group-hover:text-blue-600" />
+                  <span>{action.label}</span>
+                  {action.badge && (
+                    <span className="rounded-full bg-amber-100 px-1.5 py-0.2 text-[9px] font-semibold text-amber-700">
+                      {action.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="flex shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-muted/30 px-2.5 py-1 text-sm font-medium text-slate-600 hover:bg-muted/60 transition-all cursor-pointer shadow-2xs"
+            >
+              <span>{showAll ? "Show less" : "More actions..."}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

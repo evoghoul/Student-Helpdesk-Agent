@@ -2,8 +2,14 @@ from typing import Dict, Any, List
 from app.database import DataRepository
 
 def search_policies_and_circulars(query: str) -> Dict[str, Any]:
-    policies = DataRepository.search_policies(query)
-    circulars = DataRepository.search_circulars(query)
+    normalized_query = query.lower()
+    asks_for_circulars = any(term in normalized_query for term in ("circular", "notice", "notification"))
+    asks_for_policies = any(term in normalized_query for term in ("policy", "policies", "regulation", "regulations", "bylaw", "ordinance", "rule"))
+
+    # Keep source-specific requests separate. Both repository methods provide a
+    # useful default when a more specific search term has no exact match.
+    policies = DataRepository.search_policies(query) if asks_for_policies or not asks_for_circulars else []
+    circulars = DataRepository.search_circulars(query) if asks_for_circulars or not asks_for_policies else []
     
     citations = []
     text_lines = []

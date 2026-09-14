@@ -277,6 +277,14 @@ class DataRepository:
         return None
 
     @staticmethod
+    def update_conversation_context(session: DatabaseSession, conversation_id: str, context_data: Dict[str, Any]) -> None:
+        """Persist conversation memory while enforcing the authenticated student boundary."""
+        DataRepository._execute_insert(
+            "UPDATE conversations SET context_data = ?, updated_at = ? WHERE conversation_id = ? AND student_id = ?",
+            (json.dumps(context_data), datetime.datetime.now(datetime.timezone.utc).isoformat(), conversation_id, session.student_id)
+        )
+
+    @staticmethod
     def create_conversation(session: DatabaseSession, title: str) -> Dict[str, Any]:
         conv_id = f"conv-{uuid.uuid4().hex[:8]}"
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()

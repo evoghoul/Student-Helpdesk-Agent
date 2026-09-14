@@ -4,8 +4,9 @@
  * Uses NEXT_PUBLIC_BACKEND_URL or defaults to http://localhost:8000/api/v1
  */
 
-const BACKEND_BASE_URL =
+const RAW_BACKEND_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000/api/v1";
+const BACKEND_BASE_URL = RAW_BACKEND_URL.replace(/\/+$/, "");
 
 
 export interface BackendTokenResponse {

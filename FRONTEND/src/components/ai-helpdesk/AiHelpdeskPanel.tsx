@@ -25,6 +25,8 @@ import {
   X,
   Maximize2,
   Minimize2,
+  ChevronDown,
+  ChevronUp,
   ThumbsUp,
   ThumbsDown,
   Check,
@@ -112,6 +114,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
 
   const [feedbackState, setFeedbackState] = React.useState<Record<number, "up" | "down">>({});
   const [feedbackSubmitting, setFeedbackSubmitting] = React.useState<Record<number, boolean>>({});
+  const [showQuickActions, setShowQuickActions] = React.useState(true);
 
   const handleFeedback = async (
     index: number,
@@ -385,6 +388,9 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
   };
 
   const isFullHeight = effectiveVariant === "side" || effectiveVariant === "maximized";
+  const centralMessageHeight = showQuickActions
+    ? "h-[270px] sm:h-[300px] md:h-[320px]"
+    : "h-[390px] sm:h-[430px] md:h-[460px]";
 
   return (
     <div
@@ -574,7 +580,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
       <div
         className={cn(
           "overflow-y-auto overscroll-contain space-y-4 bg-muted/50/50",
-          effectiveVariant === "central" && "h-[270px] sm:h-[300px] md:h-[320px] p-4 sm:p-5",
+          effectiveVariant === "central" && `${centralMessageHeight} p-4 sm:p-5`,
           effectiveVariant === "side" && "flex-1 min-h-0 p-4",
           effectiveVariant === "maximized" && "flex-1 min-h-0 p-6"
         )}
@@ -781,7 +787,11 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
         </form>
 
         {/* Quick Action Chips Bar & Contextual Actions */}
-        <QuickActionChips onSelectAction={(query) => handleSend(query, "3B")} />
+        <QuickActionChips
+          onSelectAction={(query) => handleSend(query, "3B")}
+          showActions={showQuickActions}
+          onToggleActions={() => setShowQuickActions((visible) => !visible)}
+        />
       </div>
     </div>
   );

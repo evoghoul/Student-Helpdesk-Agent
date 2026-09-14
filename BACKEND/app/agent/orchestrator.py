@@ -101,6 +101,7 @@ class Agent65Orchestrator:
         # Update conversational memory context
         if conv and nlu_result.get("active_subject"):
             conv.setdefault("context_data", {})["active_subject"] = nlu_result["active_subject"]
+            DataRepository.update_conversation_context(session, conversation_id, conv["context_data"])
 
         # ---------------- 5. RECORD PRIVACY-SAFE ANALYTICS (Workflow Step 10) ----------------
         DataRepository.record_query_metric(

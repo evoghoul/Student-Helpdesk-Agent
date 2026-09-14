@@ -83,6 +83,22 @@ class NLUEngine:
             topic = "Student Services Directory"
             source_agent = "Agent 46 (Student Services)"
 
+        # The calendar quick action is also a read-only institutional lookup.
+        elif cls.has_any_word(q_lower, ["academic calendar", "calendar events", "upcoming events"]):
+            direct_response_text = (
+                "Here are the next official academic calendar events:\n\n"
+                "• **14 Sep 2026** - Vinayaka Chavithi Holiday\n"
+                "• **02 Oct 2026** - Gandhi Jayanthi Holiday\n"
+                "• **06-08 Oct 2026** - Module-2 Formative Assessment 1\n"
+                "• **18-21 Oct 2026** - Dasara Holidays & Vijaya Dasami\n"
+                "• **11-13 Nov 2026** - Module-2 Formative Assessment 2\n"
+                "• **14 Nov-04 Dec 2026** - Practical and Theory Summative Assessments\n"
+                "• **14 Dec 2026** - Commencement of II Semester"
+            )
+            category = "INSTITUTIONAL_INFO"
+            topic = "Academic Calendar"
+            source_agent = "Agent 55 (Academic Calendar)"
+
         # A. Formal Service Request (Agent 46)
         elif cls.has_any_word(q_lower, ["apply for", "certificate", "bonafide", "railway concession", "transit pass", "id card", "lost card", "mentor meeting", "book mentor", "lodge grievance", "file complaint", "grievance"]):
             sr_cat = "OTHER"
@@ -219,7 +235,7 @@ class NLUEngine:
             ]
 
         # D. Attendance Card (Non-destructive widget attachment)
-        elif cls.has_any_word(q_lower, ["attendance", "classes held", "classes attended", "attendance shortage", "bunk", "bunked", "75%"]):
+        elif cls.has_any_word(q_lower, ["attendance", "classes held", "classes attended", "attendance shortage", "bunk", "bunked", "75%"]) and not cls.has_any_word(q_lower, ["policy", "policies", "regulation", "regulations", "condonation rule"]):
             att_res = get_attendance_summary(session, active_subject)
             direct_response_text = att_res.get("text", "")
             card_data = att_res.get("structured_card")
@@ -238,7 +254,7 @@ class NLUEngine:
             source_agent = "Agent 11 (Attendance System)"
 
         # D. Exam Card
-        elif cls.has_any_word(q_lower, ["exam", "exams", "cie", "cie-1", "cie-2", "cie 2", "second formative", "formative assessment", "hall ticket", "examination schedule", "exam date"]):
+        elif cls.has_any_word(q_lower, ["exam", "exams", "assessment", "assessments", "cie", "cie-1", "cie-2", "cie 2", "second formative", "formative assessment", "hall ticket", "examination schedule", "exam date"]):
             exam_res = get_exams_summary(session)
             direct_response_text = exam_res.get("text", "")
             card_data = exam_res.get("structured_card")
@@ -298,10 +314,33 @@ class NLUEngine:
             source_agent = "Agent 30 (Assessment Engine)"
 
         # H. Curriculum & Degree Card
-        elif cls.has_any_word(q_lower, ["curriculum", "credit", "credits", "graduate", "graduation", "next semester", "prerequisite", "degree audit"]):
+        elif cls.has_any_word(q_lower, ["curriculum", "credit", "credits", "graduate", "graduation", "next semester", "prerequisite", "degree audit", "subject", "subjects", "semester"]):
             curr_res = get_curriculum_summary(session)
-            direct_response_text = curr_res.get("text", "")
-            card_data = curr_res.get("structured_card")
+            if cls.has_any_word(q_lower, ["subject", "subjects"]):
+                enrolled_subjects = DataRepository.get_attendance(session)
+                unique_subjects = []
+                seen_subjects = set()
+                for subject in enrolled_subjects:
+                    key = subject.get("course_code") or subject.get("course_title")
+                    if key and key not in seen_subjects:
+                        seen_subjects.add(key)
+                        unique_subjects.append(subject)
+
+                if unique_subjects:
+                    subject_lines = ["These are your subjects registered for the current semester:\n"]
+                    subject_lines.extend(
+                        f"• **{subject.get('course_code', 'Course')}** - {subject.get('course_title', 'Unnamed subject')}"
+                        for subject in unique_subjects
+                    )
+                    direct_response_text = "\n".join(subject_lines)
+                else:
+                    direct_response_text = "No registered subjects were found for the current semester."
+                card_data = None
+                topic = "Registered Semester Subjects"
+                source_agent = "Agent 52 (Curriculum & Enrollment)"
+            else:
+                direct_response_text = curr_res.get("text", "")
+                card_data = curr_res.get("structured_card")
             citations = [
                 {
                     "title": "B.Tech Curriculum Framework 2026",
@@ -310,9 +349,10 @@ class NLUEngine:
                     "summary": "Total 120 credits required for B.Tech degree completion."
                 }
             ]
-            category = "ACADEMIC_AUDIT"
-            topic = "Curriculum & Degree Audit"
-            source_agent = "Agent 20 (Curriculum Engine)"
+            category = "PERSONAL_DATA" if cls.has_any_word(q_lower, ["subject", "subjects"]) else "ACADEMIC_AUDIT"
+            if not cls.has_any_word(q_lower, ["subject", "subjects"]):
+                topic = "Curriculum & Degree Audit"
+                source_agent = "Agent 20 (Curriculum Engine)"
 
         # I. Official Policies & Bylaws
         elif cls.has_any_word(q_lower, ["policy", "policies", "circular", "circulars", "bylaw", "bylaws", "by-law", "regulation", "regulations", "ordinance", "condonation rule", "revaluation fee", "holiday list"]):
