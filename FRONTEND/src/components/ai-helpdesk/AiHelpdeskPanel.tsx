@@ -678,16 +678,6 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                       </span>
                     )}
 
-                    {/* Simple Button to Verify Which AI Model is Being Used */}
-                    <button
-                      type="button"
-                      onClick={() => setVerifyingTurn(turn)}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all cursor-pointer shadow-2xs hover:shadow-xs active:scale-95"
-                      title="Click to verify which AI model is being used for this output"
-                    >
-                      <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-                      <span>Verify AI Model</span>
-                    </button>
                   </div>
                 )}
 
