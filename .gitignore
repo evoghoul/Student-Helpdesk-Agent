@@ -66,3 +66,4 @@ BACKEND/database/*.db
 
 # Keep database file so anyone cloning gets pre-seeded data out-of-the-box
 !database/student_helpdesk.db
+.neon

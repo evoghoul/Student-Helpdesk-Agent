@@ -107,10 +107,10 @@ PG_SCHEMAS = [
         course_code TEXT NOT NULL,
         course_title TEXT NOT NULL,
         assessment_name TEXT NOT NULL,
-        max_marks INTEGER NOT NULL,
-        obtained_marks INTEGER NOT NULL,
-        percentage REAL NOT NULL,
-        status TEXT NOT NULL
+        max_marks INTEGER,
+        obtained_marks INTEGER,
+        percentage REAL,
+        status TEXT
     );
     """,
     """
@@ -121,9 +121,9 @@ PG_SCHEMAS = [
         time_slot TEXT NOT NULL,
         course_code TEXT NOT NULL,
         course_title TEXT NOT NULL,
-        room_no TEXT NOT NULL,
-        faculty_name TEXT NOT NULL,
-        slot_type TEXT NOT NULL
+        room_no TEXT,
+        faculty_name TEXT,
+        slot_type TEXT
     );
     """,
     """
@@ -134,8 +134,8 @@ PG_SCHEMAS = [
         total_demand REAL NOT NULL,
         paid_amount REAL NOT NULL,
         outstanding_balance REAL NOT NULL,
-        due_date TEXT NOT NULL,
-        status TEXT NOT NULL,
+        due_date TEXT,
+        status TEXT,
         next_installment_amount REAL,
         next_installment_date TEXT,
         penalty_warning TEXT
@@ -149,31 +149,29 @@ PG_SCHEMAS = [
         course_code TEXT NOT NULL,
         course_title TEXT NOT NULL,
         exam_date TEXT NOT NULL,
-        time TEXT NOT NULL,
-        venue TEXT NOT NULL,
-        hall_ticket_status TEXT NOT NULL
+        time TEXT,
+        venue TEXT,
+        hall_ticket_status TEXT
     );
     """,
     """
     CREATE TABLE IF NOT EXISTS policies (
         policy_id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
-        category TEXT NOT NULL,
-        summary TEXT NOT NULL,
-        full_text TEXT NOT NULL,
+        clause_no TEXT,
         effective_date TEXT,
-        version TEXT
+        summary TEXT,
+        authority TEXT
     );
     """,
     """
     CREATE TABLE IF NOT EXISTS circulars (
-        circular_id TEXT PRIMARY KEY,
+        circular_no TEXT PRIMARY KEY,
         title TEXT NOT NULL,
-        issued_date TEXT NOT NULL,
-        summary TEXT NOT NULL,
-        category TEXT NOT NULL,
-        action_required TEXT,
-        deadline TEXT
+        issued_date TEXT,
+        effective_date TEXT,
+        summary TEXT,
+        issued_by TEXT
     );
     """,
     """
@@ -257,10 +255,13 @@ PG_SCHEMAS = [
     """,
     """
     CREATE TABLE IF NOT EXISTS curriculum (
-        curriculum_id TEXT PRIMARY KEY,
-        programme_code TEXT,
-        regulations TEXT,
-        semester INTEGER,
+        regulation TEXT PRIMARY KEY,
+        programme TEXT,
+        total_credits_required INTEGER,
+        credits_earned INTEGER,
+        credits_remaining INTEGER,
+        current_semester_credits INTEGER,
+        graduation_eligibility TEXT,
         next_semester_courses TEXT
     );
     """
@@ -281,9 +282,9 @@ TABLES_TO_MIGRATE = [
     ("timetable", ["student_id", "day_of_week", "time_slot", "course_code", "course_title", "room_no", "faculty_name", "slot_type"]),
     ("fees", ["student_id", "academic_year", "total_demand", "paid_amount", "outstanding_balance", "due_date", "status", "next_installment_amount", "next_installment_date", "penalty_warning"]),
     ("exams", ["student_id", "exam_type", "course_code", "course_title", "exam_date", "time", "venue", "hall_ticket_status"]),
-    ("policies", ["policy_id", "title", "category", "summary", "full_text", "effective_date", "version"]),
-    ("circulars", ["circular_id", "title", "issued_date", "summary", "category", "action_required", "deadline"]),
-    ("curriculum", ["curriculum_id", "programme_code", "regulations", "semester", "next_semester_courses"])
+    ("policies", ["policy_id", "title", "clause_no", "effective_date", "summary", "authority"]),
+    ("circulars", ["circular_no", "title", "issued_date", "effective_date", "summary", "issued_by"]),
+    ("curriculum", ["regulation", "programme", "total_credits_required", "credits_earned", "credits_remaining", "current_semester_credits", "graduation_eligibility", "next_semester_courses"])
 ]
 
 def migrate(sqlite_path: str, pg_url: str):
@@ -301,8 +302,25 @@ def migrate(sqlite_path: str, pg_url: str):
     pg_cur = pg_conn.cursor()
 
     print("\n1. Creating tables in PostgreSQL...")
+    try:
+        pg_cur.execute("DROP TABLE IF EXISTS policies, circulars, curriculum CASCADE;")
+    except Exception:
+        pass
     for ddl in PG_SCHEMAS:
         pg_cur.execute(ddl)
+    try:
+        pg_cur.execute("ALTER TABLE marks ALTER COLUMN obtained_marks DROP NOT NULL;")
+        pg_cur.execute("ALTER TABLE marks ALTER COLUMN percentage DROP NOT NULL;")
+        pg_cur.execute("ALTER TABLE marks ALTER COLUMN max_marks DROP NOT NULL;")
+        pg_cur.execute("ALTER TABLE marks ALTER COLUMN status DROP NOT NULL;")
+        pg_cur.execute("ALTER TABLE timetable ALTER COLUMN slot_type DROP NOT NULL;")
+        pg_cur.execute("ALTER TABLE timetable ALTER COLUMN room_no DROP NOT NULL;")
+        pg_cur.execute("ALTER TABLE timetable ALTER COLUMN faculty_name DROP NOT NULL;")
+        pg_cur.execute("ALTER TABLE fees ALTER COLUMN due_date DROP NOT NULL;")
+        pg_cur.execute("ALTER TABLE fees ALTER COLUMN status DROP NOT NULL;")
+        pg_cur.execute("ALTER TABLE exams ALTER COLUMN hall_ticket_status DROP NOT NULL;")
+    except Exception:
+        pass
     pg_conn.commit()
     print("[OK] All PostgreSQL tables verified/created.")
 
@@ -323,10 +341,8 @@ def migrate(sqlite_path: str, pg_url: str):
         pg_cur.execute(f"TRUNCATE TABLE {table_name} CASCADE;")
 
         insert_sql = f"INSERT INTO {table_name} ({cols_str}) VALUES ({placeholders})"
-        for r in rows:
-            values = tuple(r[c] for c in columns)
-            pg_cur.execute(insert_sql, values)
-
+        all_values = [tuple(r[c] for c in columns) for r in rows]
+        pg_cur.executemany(insert_sql, all_values)
         pg_conn.commit()
         print(f" [OK: {len(rows)} rows inserted]")
 
