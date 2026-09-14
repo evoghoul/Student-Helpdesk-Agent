@@ -170,11 +170,6 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       return selectedModel === "3B" ? "agent65-3b:latest" : "agent65-8b:latest";
     }
 
-    const normalized = modelName.toLowerCase();
-    if (["rules", "rules engine only", "deterministic-fallback", "database-direct"].includes(normalized)) {
-      return "Rules Engine Only";
-    }
-
     return modelName;
   };
 

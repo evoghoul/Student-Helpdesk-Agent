@@ -825,8 +825,8 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                   <Cpu className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold leading-tight">AI Model Verification</h3>
-                  <p className="text-[11px] text-blue-100">Live Inference Telemetry & Authenticity</p>
+                  <h3 className="text-sm font-bold leading-tight">AI Model Used for This Response</h3>
+                  <p className="text-[11px] text-blue-100">Actual inference model and runtime used</p>
                 </div>
               </div>
               <button
@@ -845,16 +845,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
               <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/80">
                 <span className="font-medium text-slate-500">Active AI Model:</span>
                 <span className="font-bold text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs font-mono text-[11px]">
-                  {(() => {
-                    const rawModel = verifyingTurn.responseMeta?.model_used;
-                    const normalized = rawModel?.trim();
-                    if (!normalized) return "agent65-8b:latest";
-                    const lower = normalized.toLowerCase();
-                    if (["rules", "rules engine only", "deterministic-fallback", "database-direct"].includes(lower)) {
-                      return "Rules Engine Only";
-                    }
-                    return normalized;
-                  })()}
+                  {verifyingTurn.responseMeta?.model_used?.trim() || "agent65-8b:latest"}
                 </span>
               </div>
 
@@ -867,11 +858,13 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                     {(() => {
                       const runtimeModel = verifyingTurn.responseMeta?.model_used || "";
                       const lower = runtimeModel.toLowerCase();
-                      if (verifyingTurn.responseMeta?.llm_provider === "cloud") return "Groq Cloud (Tier 2)";
-                      if (["rules", "rules engine only", "deterministic-fallback", "database-direct"].includes(lower)) return "Rules Engine Only";
+                      if (verifyingTurn.responseMeta?.llm_provider === "cloud") return "Cloud API Fallback";
+                      if (["deterministic-fallback", "rules", "rules engine only", "database-direct"].includes(lower)) {
+                        return "Deterministic Rules Engine";
+                      }
                       if (lower.includes("3b")) return "Ollama Local (3B Fast Edge)";
                       if (lower.includes("8b") || lower.includes("agent65")) return "Ollama Local (8B Tier 1)";
-                      return "Rules Engine Only";
+                      return "Deterministic Rules Engine";
                     })()}
                   </div>
                 </div>

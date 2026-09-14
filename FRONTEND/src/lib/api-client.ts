@@ -144,7 +144,10 @@ class Agent65ApiClient {
     if (!token) return null;
     try {
       const resp = await fetch(`${BACKEND_BASE_URL}/me`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true" 
+        },
       });
       if (!resp.ok) return null;
       return await resp.json();
@@ -158,7 +161,10 @@ class Agent65ApiClient {
     if (!token) return null;
     try {
       const resp = await fetch(`${BACKEND_BASE_URL}/student/dashboard`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true" 
+        },
       });
       if (!resp.ok) return null;
       return await resp.json();
@@ -178,6 +184,7 @@ class Agent65ApiClient {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true"
           },
           body: JSON.stringify({ title: "Helpdesk Session" }),
         });
@@ -223,6 +230,7 @@ class Agent65ApiClient {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true"
           },
             body: JSON.stringify({ content, language, selected_model: selectedModel }),
         }
@@ -247,6 +255,7 @@ class Agent65ApiClient {
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
+              "ngrok-skip-browser-warning": "true"
             },
             body: JSON.stringify({ content, language, selected_model: selectedModel }),
           }
@@ -273,6 +282,7 @@ class Agent65ApiClient {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true"
         },
         body: JSON.stringify({ category, title, description }),
       });
@@ -303,6 +313,7 @@ class Agent65ApiClient {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true"
           },
           body: JSON.stringify({
             rating,
