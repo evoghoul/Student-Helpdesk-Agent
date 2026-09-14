@@ -845,11 +845,16 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
               <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/80">
                 <span className="font-medium text-slate-500">Active AI Model:</span>
                 <span className="font-bold text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs font-mono text-[11px]">
-                  {verifyingTurn.responseMeta?.model_used && !["database-direct", "Rules", "deterministic-fallback"].includes(verifyingTurn.responseMeta.model_used)
-                    ? verifyingTurn.responseMeta.model_used
-                    : verifyingTurn.responseMeta?.model_used === "Rules Engine Only" || ["database-direct", "Rules", "deterministic-fallback"].includes(verifyingTurn.responseMeta?.model_used || "")
-                    ? "Rules Engine Only"
-                    : "agent65-8b:latest"}
+                  {(() => {
+                    const rawModel = verifyingTurn.responseMeta?.model_used;
+                    const normalized = rawModel?.trim();
+                    if (!normalized) return "agent65-8b:latest";
+                    const lower = normalized.toLowerCase();
+                    if (["rules", "rules engine only", "deterministic-fallback", "database-direct"].includes(lower)) {
+                      return "Rules Engine Only";
+                    }
+                    return normalized;
+                  })()}
                 </span>
               </div>
 
@@ -859,11 +864,15 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                   <div className="text-[10px] uppercase tracking-wider font-semibold text-slate-400">Inference Runtime</div>
                   <div className="font-bold text-slate-800 flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                    {verifyingTurn.responseMeta?.llm_provider === "cloud"
-                      ? "Groq Cloud (Tier 2)"
-                      : verifyingTurn.responseMeta?.model_used?.includes("3b")
-                      ? "Ollama Local (3B Fast Edge)"
-                      : "Ollama Local (8B Tier 1)"}
+                    {(() => {
+                      const runtimeModel = verifyingTurn.responseMeta?.model_used || "";
+                      const lower = runtimeModel.toLowerCase();
+                      if (verifyingTurn.responseMeta?.llm_provider === "cloud") return "Groq Cloud (Tier 2)";
+                      if (["rules", "rules engine only", "deterministic-fallback", "database-direct"].includes(lower)) return "Rules Engine Only";
+                      if (lower.includes("3b")) return "Ollama Local (3B Fast Edge)";
+                      if (lower.includes("8b") || lower.includes("agent65")) return "Ollama Local (8B Tier 1)";
+                      return "Rules Engine Only";
+                    })()}
                   </div>
                 </div>
 

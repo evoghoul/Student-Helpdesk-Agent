@@ -164,6 +164,20 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     distressCallbackRef.current = cb;
   };
 
+  const normalizeModelName = (rawModel?: string | null, selectedModel: "3B" | "8B" = "8B") => {
+    const modelName = rawModel?.trim();
+    if (!modelName || modelName === "database-direct") {
+      return selectedModel === "3B" ? "agent65-3b:latest" : "agent65-8b:latest";
+    }
+
+    const normalized = modelName.toLowerCase();
+    if (["rules", "rules engine only", "deterministic-fallback", "database-direct"].includes(normalized)) {
+      return "Rules Engine Only";
+    }
+
+    return modelName;
+  };
+
   const handleSend = async (textToSend?: string, model: "3B" | "8B" = "8B") => {
     const query = (textToSend || inputQuery).trim();
     if (!query || isTyping) return;
@@ -194,7 +208,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
               structuredCard: backendResp.structured_card as StructuredCardData,
               suggestedFollowUps: backendResp.suggested_follow_ups,
               llm_provider: backendResp.llm_provider || "local",
-              model_used: backendResp.model_used && backendResp.model_used !== "database-direct" ? backendResp.model_used : (model === "3B" ? "agent65-3b:latest" : "agent65-8b:latest"),
+              model_used: normalizeModelName(backendResp.model_used, model),
               used_fallback: backendResp.used_fallback ?? false,
             },
           },
