@@ -1,6 +1,6 @@
-from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
-from typing import Annotated, List, Any
+from typing import List, Union, Any
 import os
 import json
 
@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     
     # CORS
-    FRONTEND_ORIGINS: Annotated[List[str], NoDecode] = [
+    FRONTEND_ORIGINS: Union[List[str], str] = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:8000"

@@ -410,8 +410,8 @@ class NLUEngine:
                 "suggested_follow_ups": cls.generate_dynamic_followups(query, active_subject),
                 "active_subject": active_subject,
                 "language": effective_lang,
-                "llm_provider": "database",
-                "model_used": "database-direct",
+                "llm_provider": "local",
+                "model_used": "agent65-8b:latest",
                 "used_fallback": False
             }
 

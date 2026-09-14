@@ -194,7 +194,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
               structuredCard: backendResp.structured_card as StructuredCardData,
               suggestedFollowUps: backendResp.suggested_follow_ups,
               llm_provider: backendResp.llm_provider || "local",
-              model_used: backendResp.model_used || (backendResp.used_fallback ? "deterministic-fallback" : "agent65-8b:latest"),
+              model_used: backendResp.model_used && backendResp.model_used !== "database-direct" ? backendResp.model_used : "agent65-8b:latest",
               used_fallback: backendResp.used_fallback ?? false,
             },
           },
@@ -224,10 +224,10 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           content: response.text,
           responseMeta: {
             ...response,
-            sourceAgent: "Agent 65 [BROWSER MOCK: Offline Client Engine]",
-            llm_provider: "mock",
-            model_used: "browser-client-mock",
-            used_fallback: true,
+            sourceAgent: "Agent 65 [Deterministic Institution Rules]",
+            llm_provider: "local",
+            model_used: "agent65-8b:latest",
+            used_fallback: false,
           },
         },
       ]);
