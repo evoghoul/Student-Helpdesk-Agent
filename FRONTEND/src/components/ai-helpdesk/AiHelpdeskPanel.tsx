@@ -674,6 +674,31 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                         Feedback recorded
                       </span>
                     )}
+
+                    {/* Live AI Telemetry Badge */}
+                    {turn.responseMeta?.model_used && (
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shadow-2xs",
+                          turn.responseMeta.llm_provider === "local"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : turn.responseMeta.llm_provider === "cloud"
+                            ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+                            : "bg-slate-50 text-slate-600 border-slate-200"
+                        )}
+                        title={`Inference Provider: ${turn.responseMeta.llm_provider || "local"} • Model: ${turn.responseMeta.model_used}`}
+                      >
+                        <span
+                          className={cn(
+                            "h-1.5 w-1.5 rounded-full",
+                            turn.responseMeta.llm_provider === "local"
+                              ? "bg-emerald-500 animate-pulse"
+                              : "bg-indigo-500"
+                          )}
+                        />
+                        {turn.responseMeta.llm_provider === "local" ? "Local AI" : "Cloud AI"}: {turn.responseMeta.model_used}
+                      </span>
+                    )}
                   </div>
                 )}
 
