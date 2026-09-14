@@ -559,7 +559,8 @@ class NLUEngine:
                 system_prompt=system_prompt,
                 history=conversation_history,
                 user_prompt=query,
-                model=selected_model
+                model=selected_model,
+                language=effective_lang
             )
             if llm_reply:
                 # Script & Language Guardrail:
@@ -578,7 +579,8 @@ class NLUEngine:
                             system_prompt=system_prompt,
                             history=clean_history,
                             user_prompt=query,
-                            model=selected_model
+                            model=selected_model,
+                            language=effective_lang
                         )
                         if retry_reply and sum(1 for c in retry_reply if 0x0900 <= ord(c) <= 0x0DFF) <= 10:
                             llm_reply = retry_reply

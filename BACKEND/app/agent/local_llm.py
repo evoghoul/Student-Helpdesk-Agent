@@ -113,7 +113,8 @@ class LocalLLMClient:
         system_prompt: str,
         user_prompt: str,
         model: Optional[str] = None,
-        timeout: float = 30.0
+        timeout: float = 30.0,
+        language: str = "en"
     ) -> Tuple[Optional[str], str, str]:
         """
         Generate a single-turn response from the hybrid LLM cascade.
@@ -123,7 +124,7 @@ class LocalLLMClient:
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
         ]
-        return cls._send_chat(messages, model=model, timeout=timeout)
+        return cls._send_chat(messages, model=model, timeout=timeout, language=language)
 
     @classmethod
     def chat_with_history(
@@ -133,7 +134,8 @@ class LocalLLMClient:
         user_prompt: str,
         model: Optional[str] = None,
         max_history_turns: int = 4,
-        timeout: float = 30.0
+        timeout: float = 30.0,
+        language: str = "en"
     ) -> Tuple[Optional[str], str, str]:
         """
         Generate a multi-turn contextual response from the hybrid LLM cascade.
@@ -156,23 +158,42 @@ class LocalLLMClient:
                 messages.append({"role": role, "content": content})
 
         messages.append({"role": "user", "content": user_prompt})
-        return cls._send_chat(messages, model=model, timeout=timeout)
+        return cls._send_chat(messages, model=model, timeout=timeout, language=language)
 
     @classmethod
     def _send_chat(
         cls,
         messages: List[Dict[str, str]],
         model: Optional[str] = None,
-        timeout: float = 30.0
+        timeout: float = 30.0,
+        language: str = "en"
     ) -> Tuple[Optional[str], str, str]:
         """
-        3-Tier Hybrid Cascade:
-        Tier 1: Local Ollama (agent65-8b:latest) with 20.0s timeout.
-        Tier 2: Cloud Accelerated (Groq Qwen-27B / Gemini 2.5 Flash) if local fails or times out.
-        Tier 3: Returns (None, "mock", "deterministic-fallback") to trigger offline deterministic rules.
+        3-Tier Hybrid Cascade with Smart Indic Language Routing:
+        - For Hindi, Hinglish, Telugu: Prioritizes Cloud API (Gemini / Groq) for superior Indic vocabulary and phrasing, with local fallback.
+        - For English / General: Prioritizes Local Ollama (agent65-8b:latest), with Cloud API fallback.
+        - Offline Tier: Returns (None, "mock", "deterministic-fallback") if models are unreachable.
         """
         provider = getattr(settings, "LLM_PROVIDER", "local")
         target_model = cls.resolve_model_name(model)
+        is_indic = language in ["hi", "hinglish", "te", "te_roman"]
+
+        gemini_key = getattr(settings, "GEMINI_API_KEY", "")
+        groq_key = getattr(settings, "GROQ_API_KEY", "") or getattr(settings, "CLOUD_API_KEY", "")
+
+        # ---------------- PRIORITY FOR INDIC LANGUAGES (Hindi / Hinglish / Telugu) ----------------
+        # Cloud LLMs (Gemini / Groq) possess vast native multilingual vocabularies & zero script drift
+        if is_indic and (gemini_key or groq_key):
+            if gemini_key:
+                res = cls._send_gemini_chat(messages, timeout=14.0)
+                if res:
+                    logger.info("Successfully generated Indic language response via Gemini Cloud API")
+                    return res, "cloud", "Gemini 3.6 Flash (Indic)"
+            if groq_key:
+                res = cls._send_groq_chat(messages, timeout=14.0)
+                if res:
+                    logger.info("Successfully generated Indic language response via Groq Cloud API")
+                    return res, "cloud", "Groq Cloud (Indic)"
 
         # ---------------- TIER 1: LOCAL OLLAMA INFERENCE ----------------
         if provider != "cloud":
@@ -198,20 +219,18 @@ class LocalLLMClient:
                         logger.info(f"Successfully generated response from local 8B model ({target_model})")
                         return cls.clean_latex_formatting(msg), "local", target_model
             except Exception as e:
-                logger.warning(f"Local Ollama 8B chat failed/timed out ({target_model}): {e}. Shifting to Tier 2 Cloud Acceleration.")
+                logger.warning(f"Local Ollama chat failed/timed out ({target_model}): {e}. Shifting to Cloud Acceleration.")
 
         # ---------------- TIER 2: CLOUD ACCELERATED FALLBACK ----------------
-        groq_key = getattr(settings, "GROQ_API_KEY", "") or getattr(settings, "CLOUD_API_KEY", "")
-        if groq_key:
-            res = cls._send_groq_chat(messages, timeout=12.0)
-            if res:
-                return res, "cloud", "Groq Llama-3.3-70B / 3.1-8B"
-
-        gemini_key = getattr(settings, "GEMINI_API_KEY", "")
         if gemini_key:
-            res = cls._send_gemini_chat(messages, timeout=12.0)
+            res = cls._send_gemini_chat(messages, timeout=14.0)
             if res:
-                return res, "cloud", "Gemini 2.5 Flash"
+                return res, "cloud", "Gemini 3.6 Flash"
+
+        if groq_key:
+            res = cls._send_groq_chat(messages, timeout=14.0)
+            if res:
+                return res, "cloud", "Groq Cloud"
 
         # ---------------- TIER 3: DETERMINISTIC OFFLINE RULES ----------------
         return None, "mock", "deterministic-fallback"
@@ -226,7 +245,6 @@ class LocalLLMClient:
         if not api_key:
             return None
         
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
         headers = {
             "Content-Type": "application/json"
         }
@@ -255,26 +273,30 @@ class LocalLLMClient:
         if system_instruction:
             payload["systemInstruction"] = system_instruction
             
+        candidate_models = ["gemini-3.6-flash", "gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash"]
         import time
-        for attempt in range(2):
-            try:
-                resp = requests.post(url, headers=headers, json=payload, timeout=timeout)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    candidates = data.get("candidates", [])
-                    if candidates:
-                        msg = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
-                        if msg:
-                            cleaned_msg = cls.clean_latex_formatting(msg)
-                            return cleaned_msg
-                elif resp.status_code == 429:
-                    time.sleep(2.0)
-                    continue
-                else:
-                    logger.warning(f"Gemini API returned {resp.status_code}: {resp.text}")
+        for cand_model in candidate_models:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{cand_model}:generateContent?key={api_key}"
+            for attempt in range(2):
+                try:
+                    resp = requests.post(url, headers=headers, json=payload, timeout=timeout)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        candidates = data.get("candidates", [])
+                        if candidates:
+                            msg = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
+                            if msg:
+                                cleaned_msg = cls.clean_latex_formatting(msg)
+                                return cleaned_msg
+                    elif resp.status_code == 429:
+                        time.sleep(1.5)
+                        continue
+                    else:
+                        logger.warning(f"Gemini model {cand_model} returned {resp.status_code}: {resp.text[:200]}")
+                        break
+                except Exception as e:
+                    logger.warning(f"Gemini API request failed ({cand_model}): {e}")
                     break
-            except Exception as e:
-                logger.warning(f"Gemini API request failed: {e}")
                 
         return None
 
@@ -292,7 +314,7 @@ class LocalLLMClient:
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
-        candidate_models = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768", "gemma2-9b-it"]
+        candidate_models = ["qwen/qwen3.6-27b", "openai/gpt-oss-20b", "llama-3.3-70b-versatile", "llama-3.1-8b-instant"]
         import time
         for candidate_model in candidate_models:
             payload = {
@@ -310,10 +332,10 @@ class LocalLLMClient:
                         cleaned_msg = cls.clean_latex_formatting(msg)
                         return cleaned_msg
                 elif resp.status_code == 429:
-                    time.sleep(2.0)
+                    time.sleep(1.0)
                     continue
                 else:
-                    logger.warning(f"Groq API model {candidate_model} returned {resp.status_code}: {resp.text}")
+                    logger.warning(f"Groq API model {candidate_model} returned {resp.status_code}: {resp.text[:200]}")
             except Exception as e:
                 logger.warning(f"Groq API model {candidate_model} request failed: {e}")
         return None
