@@ -1,5 +1,5 @@
 @echo off
-title Agent 65 - Laptop Hybrid Ollama Tunnel
+title Agent 65 - Laptop Hybrid Ollama Tunnel (Permanent Domain)
 color 0A
 
 echo ========================================================
@@ -17,32 +17,51 @@ if %ERRORLEVEL% EQU 0 (
 )
 
 echo.
-echo [2/2] Checking Cloudflare Tunnel (cloudflared)...
-where cloudflared >nul 2>&1
-if %ERRORLEVEL% NEQ 0 (
-    echo.
-    echo   [!] 'cloudflared' was not found in your PATH.
-    echo   You can download it in 10 seconds from:
-    echo   https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe
-    echo   Rename it to 'cloudflared.exe' and put it in this folder.
-    echo.
-    echo   Alternative: If you have ngrok installed:
-    echo   ngrok http 11434
-    echo.
-    pause
-    exit /b 1
+echo [2/2] Checking Permanent Tunnel (ngrok)...
+if exist "%~dp0ngrok.exe" (
+    echo   [OK] Found ngrok.exe with permanent domain configured!
+    goto run_ngrok
 )
 
+where ngrok >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    goto run_ngrok
+)
+
+echo   [!] ngrok was not found. Falling back to Cloudflare Tunnel...
+goto run_cloudflare
+
+:run_ngrok
 echo.
 echo ========================================================
-echo   STARTING CLOUDFLARE TUNNEL FOR OLLAMA (PORT 11434)
+echo   PERMANENT STATIC DOMAIN (NEVER CHANGES):
+echo   https://resonate-trimester-glade.ngrok-free.dev
+echo.
+echo   Render LOCAL_MODEL_URL:
+echo   https://resonate-trimester-glade.ngrok-free.dev
 echo ========================================================
-echo Copy the *.trycloudflare.com URL below into your Render
-echo environment variable: LOCAL_MODEL_URL
 echo.
 echo Press Ctrl+C anytime to stop.
 echo ========================================================
 echo.
 
-cloudflared tunnel --url http://localhost:11434
+"%~dp0ngrok.exe" http 11434 --url=resonate-trimester-glade.ngrok-free.dev
+if %ERRORLEVEL% NEQ 0 (
+    echo.
+    echo [!] ngrok exited with code %ERRORLEVEL%. Switching to Cloudflare fallback...
+    goto run_cloudflare
+)
+pause
+exit /b 0
+
+:run_cloudflare
+echo.
+echo ========================================================
+echo   STARTING CLOUDFLARE QUICK TUNNEL (FALLBACK)
+echo ========================================================
+if exist "%~dp0cloudflared.exe" (
+    "%~dp0cloudflared.exe" tunnel --url http://localhost:11434
+) else (
+    cloudflared tunnel --url http://localhost:11434
+)
 pause
