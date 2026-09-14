@@ -110,7 +110,7 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 Open Terminal 2:
 ```bash
-cd front-student-main
+cd FRONTEND
 
 # 1. Install dependencies
 npm install
@@ -135,28 +135,51 @@ You can log in with any pre-seeded Section 7 student profile:
 
 ---
 
+## Architecture & Functionality
+
+The platform is designed around a decoupled, hybrid-cloud architecture:
+
+1. **Frontend (Next.js / Vercel)**:
+   - Built with Next.js, React, and Tailwind CSS.
+   - Communicates with the backend REST API via `api-client.ts`.
+   - Manages state using React Context (StudentContext, AgentChatContext, LanguageContext).
+   - Deployed on **Vercel** or **Render** (`https://student-helpdesk-agent.onrender.com`).
+
+2. **Backend API (FastAPI / Ngrok / Render)**:
+   - A lightweight FastAPI server providing endpoints for Auth (`/api/v1/auth`), Conversations (`/api/v1/conversations`), and Health (`/api/v1/health`).
+   - Uses **SQLite** for robust, relational data storage, secured via **Row-Level Security (RLS)** ensuring students only access their own data.
+   - Deployed on **Render** or locally exposed via **Ngrok/Cloudflare Tunnels**.
+
+3. **Cognitive NLU Engine & AI Cascade**:
+   - The **Orchestrator** (`orchestrator.py`) manages the message flow.
+   - The **NLU Engine** (`nlu_engine.py`) classifies intents (e.g., Attendance, Exams, Fees) and structures deterministic responses or queries the database.
+   - **Local LLM Client** (`local_llm.py`): Attempts to use local **Ollama** first (Tier 1). If Ollama times out or the prompt is complex/multilingual, it gracefully falls back to Cloud APIs like **Gemini / Groq** (Tier 2). If all generative models fail, it falls back to a safe Database-grounded deterministic response (Tier 3).
+
+---
+
 ## Project Structure
 
 ```
 StudentHelpdesk/
 ├── BACKEND/                     # FastAPI backend
 │   ├── app/
-│   │   ├── agent/               # Cognitive NLU engine & Local LLM client
+│   │   ├── agent/               # Cognitive NLU engine, Orchestrator, & Local LLM client
 │   │   ├── api/                 # Auth, Conversations, Service Requests routes
 │   │   ├── database.py          # In-memory & SQLite data repository with RLS
 │   │   ├── models/schemas.py    # Pydantic request/response models
 │   │   └── security.py          # Password verification & JWT authentication
-│   └── requirements.txt         # Python dependencies (FastAPI, Uvicorn, Jose, Passlib, Requests)
-├── database/
-│   └── student_helpdesk.db      # Pre-seeded SQLite database (70 students, marks, fees, timetable)
-├── front-student-main/          # Next.js 16 (React 19 + Tailwind CSS) frontend
+│   └── requirements.txt         # Python dependencies
+├── FRONTEND/                    # Next.js (React + Tailwind CSS) frontend
 │   └── src/
 │       ├── components/          # Header, Sidebar, AI Chat Panel, Calendar, Exams, Timetable
 │       ├── context/             # StudentContext, AgentChatContext, LanguageContext
-│       └── data/                # Translations (23 Indian languages), Calendar, Exams
+│       ├── lib/                 # api-client.ts, translations, auth logic
+│       └── data/                # Static institutional data, Calendar, Exams
+├── database/
+│   └── student_helpdesk.db      # Pre-seeded SQLite database (70 students, marks, fees, timetable)
 ├── models/
 │   └── Modelfile.llama31        # Ollama custom system prompt modelfile
-├── .gitignore                   # Excludes node_modules, .venv, .next, 5GB models
+├── .gitignore                   # Excludes node_modules, .venv, .next, local DBs
 └── README.md                    # This guide
 ```
 
