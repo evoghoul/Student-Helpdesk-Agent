@@ -625,7 +625,8 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                       type="button"
                       onClick={() => {
                         const isLocal = turn.responseMeta?.llm_provider === "local" || (turn.responseMeta?.model_used && turn.responseMeta.model_used.includes("agent65"));
-                        const model = turn.responseMeta?.model_used || (isLocal ? "agent65-8b:latest" : "llama-3.3-70b-versatile");
+                        const isCloud = turn.responseMeta?.llm_provider === "cloud" || (turn.responseMeta?.model_used && turn.responseMeta.model_used.includes("llama"));
+                        const model = isLocal ? (turn.responseMeta?.model_used || "agent65-8b:latest") : isCloud ? (turn.responseMeta?.model_used || "llama-3.3-70b-versatile") : "Rules";
                         const provider = isLocal ? "Local AI (Laptop via Ollama)" : "Cloud AI (Groq Accelerated)";
                         const agent = turn.responseMeta?.sourceAgent || "Agent 65 (Autonomous Helpdesk)";
                         alert(`🎯 Active Model Response Telemetry:\n\n• Model: ${model}\n• Provider: ${provider}\n• Agent: ${agent}\n• Status: Verified Response`);
@@ -653,7 +654,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                       ) : (
                         <>
                           <Zap className="h-3.5 w-3.5 text-amber-300" />
-                          <span>⚡ Rules: {turn.responseMeta?.model_used || "Deterministic"}</span>
+                          <span>⚡ Rules</span>
                         </>
                       )}
                     </button>
