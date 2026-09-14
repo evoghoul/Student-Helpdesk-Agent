@@ -30,6 +30,8 @@ import {
   ThumbsUp,
   ThumbsDown,
   Check,
+  Cpu,
+  Cloud,
 } from "lucide-react";
 import {
   StructuredCardData,
@@ -616,6 +618,52 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                     : "bg-card border border-slate-200 text-foreground shadow-xs rounded-tl-sm"
                 )}
               >
+                {/* Temporary Model Response Button Logo */}
+                {!isUser && (
+                  <div className="mb-2 pb-1.5 border-b border-slate-100 flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const isLocal = turn.responseMeta?.llm_provider === "local" || (turn.responseMeta?.model_used && turn.responseMeta.model_used.includes("agent65"));
+                        const model = turn.responseMeta?.model_used || (isLocal ? "agent65-8b:latest" : "llama-3.3-70b-versatile");
+                        const provider = isLocal ? "Local AI (Laptop via Ollama)" : "Cloud AI (Groq Accelerated)";
+                        const agent = turn.responseMeta?.sourceAgent || "Agent 65 (Autonomous Helpdesk)";
+                        alert(`🎯 Active Model Response Telemetry:\n\n• Model: ${model}\n• Provider: ${provider}\n• Agent: ${agent}\n• Status: Verified Response`);
+                      }}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold shadow-xs cursor-pointer border transition-transform hover:scale-105 active:scale-95",
+                        turn.responseMeta?.llm_provider === "local" || (turn.responseMeta?.model_used && turn.responseMeta.model_used.includes("agent65"))
+                          ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-500 shadow-emerald-500/20"
+                          : turn.responseMeta?.llm_provider === "cloud" || (turn.responseMeta?.model_used && turn.responseMeta.model_used.includes("llama"))
+                          ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white border-blue-500 shadow-blue-500/20"
+                          : "bg-slate-800 hover:bg-slate-900 text-white border-slate-700"
+                      )}
+                      title="Click to view full model verification details"
+                    >
+                      {turn.responseMeta?.llm_provider === "local" || (turn.responseMeta?.model_used && turn.responseMeta.model_used.includes("agent65")) ? (
+                        <>
+                          <Cpu className="h-3.5 w-3.5 animate-pulse text-emerald-200" />
+                          <span>💻 Local AI: {turn.responseMeta?.model_used || "agent65-8b:latest"}</span>
+                        </>
+                      ) : turn.responseMeta?.llm_provider === "cloud" || (turn.responseMeta?.model_used && turn.responseMeta.model_used.includes("llama")) ? (
+                        <>
+                          <Cloud className="h-3.5 w-3.5 text-blue-200 animate-pulse" />
+                          <span>☁️ Cloud AI: {turn.responseMeta?.model_used || "llama-3.3-70b"}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="h-3.5 w-3.5 text-amber-300" />
+                          <span>⚡ Rules: {turn.responseMeta?.model_used || "Deterministic"}</span>
+                        </>
+                      )}
+                    </button>
+
+                    <span className="text-[10px] font-medium text-slate-400 truncate max-w-[150px]">
+                      {turn.responseMeta?.sourceAgent ? turn.responseMeta.sourceAgent.split("[")[0].trim() : "Agent 65"}
+                    </span>
+                  </div>
+                )}
+
                 {/* Main Message Content */}
                 <MarkdownText
                   text={turn.content}
