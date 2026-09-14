@@ -745,7 +745,13 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                               : "bg-indigo-500"
                           )}
                         />
-                        {turn.responseMeta.llm_provider === "local" ? "Local AI" : "Cloud AI"}: {turn.responseMeta.model_used}
+                        {turn.responseMeta.llm_provider === "local"
+                          ? "Local AI"
+                          : turn.responseMeta.llm_provider === "cloud"
+                          ? "Cloud AI"
+                          : turn.responseMeta.llm_provider === "database"
+                          ? "Database"
+                          : "Rules"}: {turn.responseMeta.model_used}
                       </span>
                     )}
                   </div>
