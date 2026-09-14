@@ -327,7 +327,7 @@ class LocalLLMClient:
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
-        candidate_models = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "llama3-8b-8192", "mixtral-8x7b-32768"]
+        candidate_models = ["llama-3.1-8b-instant", "llama3-8b-8192", "mixtral-8x7b-32768", "gemma2-9b-it"]
         import time
         for candidate_model in candidate_models:
             payload = {
