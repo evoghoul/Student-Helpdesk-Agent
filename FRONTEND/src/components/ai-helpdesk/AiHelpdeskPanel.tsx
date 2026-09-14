@@ -701,7 +701,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                       {turn.responseMeta.suggestedFollowUps.map((prompt, pIdx) => (
                         <button
                           key={pIdx}
-                          onClick={() => handleSend(prompt)}
+                          onClick={() => handleSend(prompt, "3B")}
                           className="rounded-lg border border-slate-200 bg-muted/50 px-2.5 py-1.5 text-xs font-medium text-foreground hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 transition-colors cursor-pointer text-left"
                         >
                           {prompt}
@@ -800,9 +800,9 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
           </button>
         </form>
 
-        {/* Quick Action Chips Bar & Contextual Actions */}
+        {/* Quick Action Chips Bar & Contextual Actions (Uses Fast 3B Model) */}
         <QuickActionChips
-          onSelectAction={(query) => handleSend(query, "8B")}
+          onSelectAction={(query) => handleSend(query, "3B")}
           showActions={showQuickActions}
           onToggleActions={() => setShowQuickActions((visible) => !visible)}
         />
@@ -857,7 +857,11 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                   <div className="text-[10px] uppercase tracking-wider font-semibold text-slate-400">Inference Runtime</div>
                   <div className="font-bold text-slate-800 flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                    {verifyingTurn.responseMeta?.llm_provider === "cloud" ? "Groq Cloud (Accelerated)" : "Ollama Local (8B Neural)"}
+                    {verifyingTurn.responseMeta?.llm_provider === "cloud"
+                      ? "Groq Cloud (Tier 2)"
+                      : verifyingTurn.responseMeta?.model_used?.includes("3b")
+                      ? "Ollama Local (3B Fast Edge)"
+                      : "Ollama Local (8B Tier 1)"}
                   </div>
                 </div>
 

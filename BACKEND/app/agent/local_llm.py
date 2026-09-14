@@ -102,7 +102,7 @@ class LocalLLMClient:
         """Map UI complexity labels to real Ollama model names."""
         requested = (model or "").strip()
         if requested.upper() == "3B":
-            return getattr(settings, "LOCAL_FAST_MODEL_NAME", "agent65:latest")
+            return getattr(settings, "LOCAL_FAST_MODEL_NAME", "agent65-3b:latest")
         if requested.upper() == "8B":
             return getattr(settings, "LOCAL_MODEL_NAME", DEFAULT_MODEL)
         return requested or cls.get_active_model()

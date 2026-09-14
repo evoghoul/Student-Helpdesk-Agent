@@ -411,7 +411,7 @@ class NLUEngine:
                 "active_subject": active_subject,
                 "language": effective_lang,
                 "llm_provider": "local",
-                "model_used": "agent65-8b:latest",
+                "model_used": "agent65-3b:latest",
                 "used_fallback": False
             }
 
