@@ -117,9 +117,9 @@ def generate_frontend_students():
         for mr in mark_rows:
             ccode = mr['course_code']
             aname = mr['assessment_name']
-            max_m = mr['max_marks']
-            obt_m = mr['obtained_marks']
-            pct = mr['percentage']
+            max_m = mr['max_marks'] or 100
+            obt_m = mr['obtained_marks'] if mr['obtained_marks'] is not None else 0.0
+            pct = mr['percentage'] if mr['percentage'] is not None else ((obt_m / max_m * 100) if max_m > 0 else 0.0)
             ratio = (obt_m / max_m) if max_m > 0 else 0.0
             grade = 'O' if ratio >= 0.9 else ('A+' if ratio >= 0.8 else ('A' if ratio >= 0.7 else ('B+' if ratio >= 0.6 else 'B')))
             assessments.append({
@@ -133,7 +133,7 @@ def generate_frontend_students():
                 'percentage': round(pct, 1),
                 'grade': grade,
                 'status': 'Evaluated',
-                'feedback': 'Strong conceptual clarity' if obt_m >= 20 else 'Focus on core problem solving'
+                'feedback': 'Strong conceptual clarity' if (obt_m or 0) >= 20 else 'Focus on core problem solving'
             })
 
         # Fee record

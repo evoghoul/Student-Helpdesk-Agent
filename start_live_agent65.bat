@@ -1,6 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
-title Agent 65 - Live Server & Public Tunnel Launcher
+title Agent 65 - Live Server ^& Public Tunnel Launcher
 color 0A
 
 echo =====================================================================
@@ -18,7 +18,7 @@ if not exist "%~dp0BACKEND\.venv\Scripts\python.exe" (
 
 :: 2. Check Ollama Status
 echo [*] Checking local Ollama AI daemon (agent65-8b:latest)...
-powershell -Command "try { $r = Invoke-RestMethod -Uri 'http://localhost:11434/api/tags' -TimeoutSec 2; Write-Host '    [OK] Ollama is active with models: ' ($r.models.name -join ', ') -ForegroundColor Green } catch { Write-Host '    [!] Notice: Local Ollama daemon not detected. Starting Ollama or falling back to Groq/Gemini cloud cascade...' -ForegroundColor Yellow }"
+"%~dp0BACKEND\.venv\Scripts\python.exe" -c "import sys; sys.path.insert(0, r'%~dp0BACKEND'); from app.agent.local_llm import LocalLLMClient; print('    [OK] Ollama is active with model:', LocalLLMClient.get_active_model()) if LocalLLMClient.is_available() else print('    [!] Notice: Ollama not running, falling back to cloud cascade.')"
 
 :: 3. Launch FastAPI Backend in a separate window
 echo.
@@ -26,11 +26,11 @@ echo [*] Starting FastAPI Backend on http://localhost:8000...
 start "Agent 65 Backend (FastAPI)" cmd /k "cd /d "%~dp0BACKEND" && "%~dp0BACKEND\.venv\Scripts\python.exe" -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
 :: Wait 3 seconds for backend to initialize
-timeout /t 3 /nobreak >nul
+ping 127.0.0.1 -n 4 >nul
 
 :: 4. Verify Backend Health
 echo [*] Verifying backend health...
-powershell -Command "try { $h = Invoke-RestMethod -Uri 'http://localhost:8000/health' -TimeoutSec 3; Write-Host '    [OK] Backend is healthy: ' $h.status -ForegroundColor Green } catch { Write-Host '    [!] Backend initializing...' -ForegroundColor Yellow }"
+"%~dp0BACKEND\.venv\Scripts\python.exe" -c "import requests; r = requests.get('http://localhost:8000/health', timeout=3); print('    [OK] Backend is healthy:', r.json().get('status'))" 2>nul || echo     [!] Backend initializing...
 
 echo.
 echo =====================================================================
@@ -46,22 +46,23 @@ if "%tunnel_choice%"=="2" (
 )
 
 :run_cloudflare
-where cloudflared >nul 2>nul
-if %errorlevel% neq 0 (
-    echo.
-    echo [*] cloudflared is not yet installed in PATH.
-    echo [*] Installing cloudflared via Windows Package Manager (winget)...
-    winget install --id Cloudflare.cloudflared --accept-source-agreements --accept-package-agreements
-    if !errorlevel! neq 0 (
-        echo [!] Winget install failed or cancelled. Switching to LocalTunnel fallback...
-        goto run_localtunnel
-    )
+set "CF_BIN="
+if exist "%~dp0cloudflared.exe" set "CF_BIN=%~dp0cloudflared.exe"
+if not defined CF_BIN (
+    where cloudflared >nul 2>nul
+    if not errorlevel 1 set "CF_BIN=cloudflared"
 )
+
+if not defined CF_BIN (
+    echo [!] cloudflared.exe was not found. Switching to LocalTunnel fallback...
+    goto run_localtunnel
+)
+
 echo.
 echo [*] Launching Cloudflare Tunnel on http://localhost:8000...
 echo [*] Look for the URL ending in .trycloudflare.com below:
 echo =====================================================================
-cloudflared tunnel --url http://localhost:8000
+"%CF_BIN%" tunnel --url http://localhost:8000
 goto done
 
 :run_localtunnel
