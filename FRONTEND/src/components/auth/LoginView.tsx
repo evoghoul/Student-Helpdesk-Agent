@@ -28,7 +28,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
   const { t } = useLanguage();
   const { loginAsStudent } = useStudent();
   const [studentId, setStudentId] = useState(CURRENT_STUDENT.id);
-  const [password, setPassword] = useState("••••••••");
+  const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,34 +39,40 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
       setError(t.enterStudentId || "Please enter your Student Roll Number.");
       return;
     }
+    if (!password.trim()) {
+      setError("Please enter your password in format: firstname@regdnumber (e.g. aman@251FA04E13)");
+      return;
+    }
     setError(null);
     setIsLoading(true);
     const regd = studentId.trim().toUpperCase();
-    const pwd = password && password !== "••••••••" ? password.trim() : regd;
+    const pwd = password.trim();
     try {
       await loginAsStudent(regd, pwd);
-    } catch (err) {
-      console.warn("Backend login error:", err);
-      setError("Authentication failed. Please check your credentials.");
       setIsLoading(false);
-      return;
+      onLogin();
+    } catch (err: any) {
+      console.warn("Login error:", err);
+      setError(err?.message || "Authentication failed. Please check your credentials.");
+      setIsLoading(false);
     }
-    setIsLoading(false);
-    onLogin();
   };
 
   const handleDemoLogin = async () => {
+    const demoPwd = "aman@" + CURRENT_STUDENT.id;
     setStudentId(CURRENT_STUDENT.id);
-    setPassword(CURRENT_STUDENT.id);
+    setPassword(demoPwd);
     setError(null);
     setIsLoading(true);
     try {
-      await loginAsStudent(CURRENT_STUDENT.id, CURRENT_STUDENT.id);
-    } catch (err) {
+      await loginAsStudent(CURRENT_STUDENT.id, demoPwd);
+      setIsLoading(false);
+      onLogin();
+    } catch (err: any) {
       console.warn("Backend demo login error:", err);
+      setError(err?.message || "Demo login failed.");
+      setIsLoading(false);
     }
-    setIsLoading(false);
-    onLogin();
   };
 
   return (
@@ -175,10 +181,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
 
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-muted-foreground flex items-center justify-between">
-                  <span>{t.loginPasswordPin || "Institutional Password / PIN"}</span>
-                  <button type="button" className="text-xs text-blue-600 hover:text-blue-700 transition-colors">
-                    {t.loginForgotPin || "Forgot PIN?"}
-                  </button>
+                  <span>{t.loginPasswordPin || "Institutional Password"}</span>
+                  <span className="text-xs text-blue-600 font-normal">
+                    Format: firstname@regdno
+                  </span>
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -186,11 +192,14 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
+                    placeholder="e.g. aman@251FA04E13"
                     className="w-full rounded-md border border-slate-200 bg-muted/50 py-2.5 pl-10 pr-4 text-sm text-foreground placeholder-slate-400 focus:border-blue-500 focus:bg-card focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
                     required
                   />
                 </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Password format: <span className="font-semibold text-foreground">firstname@regdnumber</span> (e.g. <span className="font-mono text-blue-600 font-semibold">aman@251FA04E13</span>)
+                </p>
               </div>
 
               <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">

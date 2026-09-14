@@ -37,7 +37,7 @@ def generate_frontend_students():
         batch = row['batch_label']
         sec = row['section_code']
         yr = row['current_year_of_study']
-        sem = row['semester']
+        sem = row['semester'] or 3
         cgpa = row['cgpa']
         sgpa = cgpa
         tot_att = row['overall_attendance_pct']

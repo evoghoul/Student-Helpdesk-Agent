@@ -8,12 +8,26 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 @router.post("/login", response_model=Token)
 async def login(req: LoginRequest):
     student = DataRepository.get_student_by_username(req.username)
-    p_clean = req.password.strip().lower().replace("-", "").replace(" ", "")
-    s_roll_clean = (student["roll_no"] if student else "").lower().replace("-", "").replace(" ", "")
-    if not student or (not verify_password(req.password, student["password_hash"]) and p_clean != s_roll_clean):
+    if not student:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid registration number or password. (Note: Student Regd. No, e.g. '251FA04E13', is their login password)",
+            detail="Student Registration Number not found. Please verify your Regd. Number.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Enforce password rule: firstname@regdnumber (case-insensitive)
+    full_name = student.get("full_name") or ""
+    first_name = full_name.strip().split()[0] if full_name.strip() else ""
+    roll_no = student.get("roll_no") or ""
+    expected_pwd = f"{first_name}@{roll_no}".lower()
+    
+    input_pwd_clean = req.password.strip().lower()
+    is_valid = (input_pwd_clean == expected_pwd) or verify_password(req.password, student.get("password_hash"))
+    
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid password. Password must be firstname@regdnumber (e.g. {first_name.lower()}@{roll_no}).",
             headers={"WWW-Authenticate": "Bearer"},
         )
     

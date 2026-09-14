@@ -6,7 +6,11 @@ import json
 from typing import Dict, Any, List, Optional
 from app.config import settings
 def is_postgres_configured() -> bool:
+    if getattr(settings, "USE_IN_MEMORY_DB", False):
+        return False
     db_url = (getattr(settings, "DATABASE_URL", "") or "").strip()
+    if "localhost:5432" in db_url or "127.0.0.1:5432" in db_url:
+        return False
     return db_url.startswith("postgresql://") or db_url.startswith("postgres://") or "+psycopg" in db_url
 
 def get_db_connection():
@@ -16,14 +20,14 @@ def get_db_connection():
         try:
             import psycopg
             from psycopg.rows import dict_row
-            return psycopg.connect(cleaned_url, row_factory=dict_row)
-        except ImportError:
+            return psycopg.connect(cleaned_url, row_factory=dict_row, connect_timeout=3)
+        except Exception:
             try:
                 import psycopg2
                 import psycopg2.extras
-                return psycopg2.connect(cleaned_url, cursor_factory=psycopg2.extras.RealDictCursor)
-            except ImportError:
-                raise RuntimeError("PostgreSQL driver (psycopg or psycopg2) is not installed.")
+                return psycopg2.connect(cleaned_url, cursor_factory=psycopg2.extras.RealDictCursor, connect_timeout=3)
+            except Exception:
+                pass
 
     db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "student_helpdesk.db"))
     conn = sqlite3.connect(db_path)

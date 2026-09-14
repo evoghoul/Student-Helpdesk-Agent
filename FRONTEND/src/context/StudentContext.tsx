@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { StudentFullData, ALL_STUDENTS_LIST, getStudentData } from "@/data/students-db";
+import { StudentFullData, ALL_STUDENTS_MAP, ALL_STUDENTS_LIST, getStudentData } from "@/data/students-db";
 import { apiClient } from "@/lib/api-client";
 
 interface StudentContextType {
@@ -71,30 +71,49 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const loginAsStudent = async (rollNo: string, password?: string): Promise<boolean> => {
     setIsLoading(true);
     const clean = rollNo.toUpperCase().trim();
-    const pwd = password || clean;
+    const pwd = (password || "").trim();
 
-    // Attempt live backend login
-    const loginResp = await apiClient.login(clean, pwd);
+    try {
+      // 1. Attempt live backend login
+      const loginResp = await apiClient.login(clean, pwd);
 
-    // Update active student
-    const actualRoll = loginResp?.roll_no || clean;
-    setActiveRoll(actualRoll);
-    let sData = getStudentData(actualRoll);
-    if (loginResp && loginResp.full_name) {
-      sData = {
-        ...sData,
-        profile: {
-          ...sData.profile,
-          name: loginResp.full_name,
-          rawName: loginResp.full_name.toUpperCase(),
-          id: actualRoll,
-          programme: loginResp.programme_code || sData.profile.programme,
-        },
-      };
+      // 2. If backend is in offline/local fallback mode, validate against local student dataset
+      if (!loginResp) {
+        const sRecord = ALL_STUDENTS_MAP[clean];
+        if (!sRecord) {
+          throw new Error(`Student Registration Number "${clean}" was not found.`);
+        }
+        const rawName = sRecord.profile.rawName || sRecord.profile.name;
+        const firstName = rawName.trim().split(/\s+/)[0];
+        const expectedPwd = `${firstName}@${clean}`.toLowerCase();
+        if (pwd.toLowerCase() !== expectedPwd) {
+          throw new Error(`Invalid password for ${clean}. Password format must be firstname@regdnumber (e.g. ${firstName.toLowerCase()}@${clean}).`);
+        }
+      }
+
+      // 3. Update active student
+      const actualRoll = loginResp?.roll_no || clean;
+      setActiveRoll(actualRoll);
+      let sData = getStudentData(actualRoll);
+      if (loginResp && loginResp.full_name) {
+        sData = {
+          ...sData,
+          profile: {
+            ...sData.profile,
+            name: loginResp.full_name,
+            rawName: loginResp.full_name.toUpperCase(),
+            id: actualRoll,
+            programme: loginResp.programme_code || sData.profile.programme,
+          },
+        };
+      }
+      setStudentData(sData);
+      setIsLoading(false);
+      return true;
+    } catch (err) {
+      setIsLoading(false);
+      throw err;
     }
-    setStudentData(sData);
-    setIsLoading(false);
-    return true;
   };
 
   const logout = () => {

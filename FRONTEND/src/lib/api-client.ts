@@ -85,14 +85,18 @@ class Agent65ApiClient {
     return this.token;
   }
 
-  async login(username: string = "251FA04E13", password: string = "251FA04E13"): Promise<BackendTokenResponse | null> {
+  async login(username: string = "251FA04E13", password: string = "aman@251FA04E13"): Promise<BackendTokenResponse | null> {
     try {
       const resp = await fetch(`${BACKEND_BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
-      if (!resp.ok) return null;
+      if (!resp.ok) {
+        const errJson = await resp.json().catch(() => null);
+        const detail = errJson?.detail || "Invalid credentials. Password format must be firstname@regdnumber.";
+        throw new Error(detail);
+      }
       const data: BackendTokenResponse = await resp.json();
       this.setToken(data.access_token);
       // Reset active conversation ID so the new student gets their own conversation
@@ -102,7 +106,10 @@ class Agent65ApiClient {
         localStorage.setItem("agent65_active_student", data.roll_no || username.toUpperCase().trim());
       }
       return data;
-    } catch (e) {
+    } catch (e: any) {
+      if (e?.message && !e.message.includes("fetch") && !e.message.includes("Failed to fetch") && !e.message.includes("NetworkError")) {
+        throw e;
+      }
       console.warn("Backend unavailable during login, falling back to local mode:", e);
       return null;
     }
