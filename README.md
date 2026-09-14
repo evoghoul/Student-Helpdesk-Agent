@@ -128,9 +128,9 @@ You can log in with any pre-seeded Section 7 student profile:
 
 | Field | Primary Demo Credential | Alternative Credential |
 | :--- | :--- | :--- |
-| **Roll Number / Username** | `251FA04E03` | `24CSE001` |
-| **Password** | `251FA04E03` (or `student123`) | `student123` |
-| **Student Name** | Akshat Raj | Asha Reddy |
+| **Roll Number / Username** | `251FA04E13` | `24CSE001` |
+| **Password** | `251FA04E13` (or `student123`) | `student123` |
+| **Student Name** | Aman Kumar | Asha Reddy |
 | **Branch & Section** | B.Tech CSE (Section 7) | B.Tech CSE (Section A) |
 
 ---

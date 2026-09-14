@@ -491,10 +491,6 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                   <Badge variant="primary" className="bg-blue-600 text-white font-semibold">
                     Agent 65
                   </Badge>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100/70 border border-blue-200/80 px-2.5 py-0.5 text-sm font-semibold text-blue-700">
-                    <span className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-pulse" />
-                    Agent 65 Core Active • Auto-Scaling
-                  </span>
                   <span className="hidden md:inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 text-sm font-medium text-emerald-700">
                     <ShieldCheck className="h-3 w-3 text-emerald-600" />
                     RLS Verified: {student.id}
@@ -614,17 +610,6 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                     : "bg-card border border-slate-200 text-foreground shadow-xs rounded-tl-sm"
                 )}
               >
-                {/* Assistant Metadata Header */}
-                {!isUser && turn.responseMeta && (
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-slate-100 pb-2 mb-2 text-sm">
-                    <Badge>{turn.responseMeta.category}</Badge>
-                    <span className="flex items-center gap-1 text-blue-600 font-medium truncate">
-                      <ShieldCheck className="h-3 w-3 shrink-0" />
-                      <span className="truncate">{turn.responseMeta.sourceAgent}</span>
-                    </span>
-                  </div>
-                )}
-
                 {/* Main Message Content */}
                 <MarkdownText
                   text={turn.content}
@@ -796,7 +781,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
         </form>
 
         {/* Quick Action Chips Bar & Contextual Actions */}
-        <QuickActionChips onSelectAction={(query) => handleSend(query)} />
+        <QuickActionChips onSelectAction={(query) => handleSend(query, "3B")} />
       </div>
     </div>
   );

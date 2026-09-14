@@ -47,6 +47,20 @@ def get_db_connection():
             created_at TEXT
         )
     """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS faculty (
+            faculty_id TEXT PRIMARY KEY,
+            employee_no TEXT UNIQUE,
+            name TEXT NOT NULL,
+            designation TEXT NOT NULL,
+            department TEXT NOT NULL,
+            email TEXT NOT NULL,
+            phone TEXT NOT NULL,
+            cabin TEXT NOT NULL,
+            role TEXT NOT NULL,
+            office_hours TEXT
+        )
+    """)
     conn.commit()
     return conn
 
@@ -79,6 +93,18 @@ class DataRepository:
             conn.commit()
 
     @staticmethod
+    def _resolve_student_id(session: DatabaseSession) -> Optional[str]:
+        if not session or not session.student_id:
+            return None
+        res = DataRepository._execute_query(
+            "SELECT student_id FROM students WHERE student_id = ? OR roll_no = ? LIMIT 1",
+            (session.student_id, session.student_id)
+        )
+        if res:
+            return res[0]["student_id"]
+        return session.student_id
+
+    @staticmethod
     def get_student_by_username(username: str) -> Optional[Dict[str, Any]]:
         clean_user = username.lower().replace("-", "").replace(" ", "")
         # Can't do easy replace in SQL across all formats, so fetch all and filter or do OR
@@ -88,15 +114,84 @@ class DataRepository:
 
     @staticmethod
     def get_student_profile(session: DatabaseSession) -> Optional[Dict[str, Any]]:
-        if not session.student_id:
+        sid = DataRepository._resolve_student_id(session)
+        if not sid:
             return None
-        res = DataRepository._execute_query("SELECT * FROM students WHERE student_id = ?", (session.student_id,))
+        res = DataRepository._execute_query("SELECT * FROM students WHERE student_id = ?", (sid,))
         return res[0] if res else None
 
     @staticmethod
+    def get_student_advisors(session: DatabaseSession) -> Optional[Dict[str, Any]]:
+        profile = DataRepository.get_student_profile(session)
+        if not profile:
+            return None
+        return {
+            "student_id": profile.get("student_id"),
+            "roll_no": profile.get("roll_no"),
+            "full_name": profile.get("full_name"),
+            "class_teacher": {
+                "name": profile.get("class_teacher_name") or "Mr. T. Latesh Babu",
+                "phone": profile.get("class_teacher_phone") or "+91 94901 23456",
+                "email": profile.get("class_teacher_email") or "latesh.babu@vignan.ac.in",
+                "cabin": profile.get("class_teacher_cabin") or "N-312 Faculty Staff Room / CSE Department"
+            },
+            "counsellor": {
+                "name": profile.get("counsellor_name") or "Dr. Radhika Sharma",
+                "phone": profile.get("counsellor_phone") or "+91 98480 12345",
+                "email": profile.get("counsellor_email") or "radhika.sharma@vignan.ac.in",
+                "cabin": profile.get("counsellor_cabin") or "C-402, Student Wellness Center & Counseling Cell"
+            },
+            "mentor": {
+                "name": profile.get("mentor_name") or profile.get("class_teacher_name") or "Mr. T. Latesh Babu",
+                "phone": profile.get("mentor_phone") or "+91 94901 23456",
+                "email": profile.get("mentor_email") or "latesh.babu@vignan.ac.in",
+                "cabin": profile.get("mentor_cabin") or "N-312 Faculty Staff Room / CSE Department"
+            },
+            "hod": {
+                "name": profile.get("hod_name") or "Dr. S. V. Phani Kumar",
+                "phone": profile.get("hod_phone") or "+91 94401 55678",
+                "email": profile.get("hod_email") or "hod_cse@vignan.ac.in"
+            }
+        }
+
+    @staticmethod
+    def get_faculty_directory(session: Optional[DatabaseSession] = None) -> List[Dict[str, Any]]:
+        return DataRepository._execute_query("SELECT * FROM faculty ORDER BY name ASC")
+
+    @staticmethod
+    def get_subject_faculty(session: DatabaseSession, subject_query: Optional[str] = None) -> List[Dict[str, Any]]:
+        att = DataRepository.get_attendance(session, subject_query)
+        res = []
+        seen = set()
+        for a in att:
+            c_code = a.get("course_code")
+            if c_code not in seen:
+                seen.add(c_code)
+                fac_name = a.get("faculty_name", "")
+                clean_name = fac_name.split("(")[0].strip()
+                fac_row = DataRepository._execute_query("SELECT * FROM faculty WHERE LOWER(name) LIKE ? OR LOWER(name) LIKE ?", (f"%{clean_name.lower()}%", f"%{clean_name.split()[-1].lower()}%"))
+                f_info = fac_row[0] if fac_row else {}
+                phone = f_info.get("phone")
+                if not phone and "(" in fac_name and any(c.isdigit() for c in fac_name):
+                    phone = "+91 " + fac_name.split("(")[1].split(")")[0]
+                cabin = f_info.get("cabin") or "N-312 Faculty Staff Room"
+                res.append({
+                    "course_code": c_code,
+                    "course_title": a.get("course_title"),
+                    "faculty_name": f_info.get("name") or clean_name,
+                    "phone": phone or "+91 94901 23456",
+                    "email": f_info.get("email") or "faculty@vignan.ac.in",
+                    "cabin": cabin,
+                    "cabin_location": cabin,
+                    "designation": f_info.get("designation") or "Faculty Member"
+                })
+        return res
+
+    @staticmethod
     def get_attendance(session: DatabaseSession, subject_query: Optional[str] = None) -> List[Dict[str, Any]]:
+        sid = DataRepository._resolve_student_id(session)
         query = "SELECT * FROM attendance WHERE student_id = ?"
-        params = [session.student_id]
+        params = [sid]
         if subject_query:
             query += " AND (LOWER(course_code) LIKE ? OR LOWER(course_title) LIKE ?)"
             like_val = f"%{subject_query.lower()}%"
@@ -105,8 +200,9 @@ class DataRepository:
 
     @staticmethod
     def get_timetable(session: DatabaseSession, day: Optional[str] = None) -> List[Dict[str, Any]]:
+        sid = DataRepository._resolve_student_id(session)
         query = "SELECT * FROM timetable WHERE student_id = ?"
-        params = [session.student_id]
+        params = [sid]
         if day:
             query += " AND LOWER(day_of_week) = ?"
             params.append(day.lower())
@@ -114,8 +210,9 @@ class DataRepository:
 
     @staticmethod
     def get_marks(session: DatabaseSession, subject_query: Optional[str] = None) -> List[Dict[str, Any]]:
+        sid = DataRepository._resolve_student_id(session)
         query = "SELECT * FROM marks WHERE student_id = ?"
-        params = [session.student_id]
+        params = [sid]
         if subject_query:
             query += " AND (LOWER(course_code) LIKE ? OR LOWER(course_title) LIKE ?)"
             like_val = f"%{subject_query.lower()}%"
@@ -124,11 +221,13 @@ class DataRepository:
 
     @staticmethod
     def get_exams(session: DatabaseSession) -> List[Dict[str, Any]]:
-        return DataRepository._execute_query("SELECT * FROM exams WHERE student_id = ?", (session.student_id,))
+        sid = DataRepository._resolve_student_id(session)
+        return DataRepository._execute_query("SELECT * FROM exams WHERE student_id = ?", (sid,))
 
     @staticmethod
     def get_fees(session: DatabaseSession) -> Optional[Dict[str, Any]]:
-        res = DataRepository._execute_query("SELECT * FROM fees WHERE student_id = ?", (session.student_id,))
+        sid = DataRepository._resolve_student_id(session)
+        res = DataRepository._execute_query("SELECT * FROM fees WHERE student_id = ?", (sid,))
         return res[0] if res else None
 
     @staticmethod

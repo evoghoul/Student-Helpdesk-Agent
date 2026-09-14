@@ -11,6 +11,7 @@ import json
 import os
 import sys
 import random
+import argparse
 
 # Ensure UTF-8 output on Windows console
 if sys.platform == "win32":
@@ -65,6 +66,13 @@ def standardize_dialogue(dialogue):
     return {"messages": valid_msgs}
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--include-general",
+        action="store_true",
+        help="Include optional general-chat examples; disabled by default for helpdesk training."
+    )
+    args = parser.parse_args()
     print("=" * 70)
     print("  AGENT 65: PREPARING THE HYBRID CONVERSATIONAL DATASET (THE BEST FOOD)")
     print("=" * 70)
@@ -73,9 +81,9 @@ def main():
     domain_data = load_jsonl(DOMAIN_TRAIN)
     print(f"[*] Loaded Domain University Dialogues: {len(domain_data)}")
 
-    # 2. Load open UltraChat general conversations
-    ultrachat_data = load_jsonl(ULTRACHAT_SAMPLE)
-    print(f"[*] Loaded UltraChat General Dialogues:  {len(ultrachat_data)}")
+    # 2. Load optional open general conversations
+    ultrachat_data = load_jsonl(ULTRACHAT_SAMPLE) if args.include_general else []
+    print(f"[*] Loaded Optional General Dialogues:  {len(ultrachat_data)}")
 
     combined = []
     # Add domain dialogues (oversampled 2x to prioritize university accuracy)

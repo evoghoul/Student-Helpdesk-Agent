@@ -77,7 +77,7 @@ export const EXAMINATIONS_DATA: {
       rawDate: "2026-11-21T10:00:00",
       time: "10:00 AM – 01:00 PM",
       venue: "Examination Hall A2, VFSTR",
-      seatRange: "Row D, Desk 42 (Hall Ticket #251FA04E03)",
+      seatRange: "Row D, Desk 42 (Hall Ticket #251FA04E13)",
       daysRemaining: 70,
       syllabusOverview: "Full Syllabus: Number Systems, Boolean Algebra, Karnaugh Maps, Combinational & Sequential Circuits, Counters, Registers",
       reportingTime: "09:30 AM (Mandatory biometric verification)",

@@ -300,3 +300,60 @@ INSERT INTO governance.policy_document (policy_id, institution_id, policy_number
 VALUES ('ffffffff-0000-0000-0000-000000000001','11111111-1111-1111-1111-111111111111','POL-ATT-2024','VFSTR Academic Regulations: Attendance Norms','ACADEMIC','2024-07-01','APPROVED','75% attendance mandatory. Condonation permitted between 65-74.9% on medical grounds with fee of Rs. 1000. Under 65% detained.') ON CONFLICT DO NOTHING;
 INSERT INTO governance.circular (circular_id, institution_id, circular_number, title, issued_date, category, status, summary)
 VALUES ('ffffffff-0000-0000-0000-000000000002','11111111-1111-1111-1111-111111111111','CIR-2026-088','Mid-Term 1 Examination Schedule - II B.Tech Sec 7','2026-09-05','EXAMINATION','ACTIVE','Mid-Term 1 examinations commence from 22nd September 2026. Hall tickets conditional on >= 75% attendance.') ON CONFLICT DO NOTHING;
+
+-- 6. Section 7 Faculty, Class Teacher, Counsellor, and Mentorship Seed Data
+-- Faculty Persons
+INSERT INTO people.person (person_id, institution_id, full_name, gender, primary_email, primary_phone) VALUES
+ ('10101010-0000-0000-0000-000000000001','11111111-1111-1111-1111-111111111111','Mr. T. Latesh Babu','M','latesh.babu@vignan.ac.in','+91 94901 23456'),
+ ('10101010-0000-0000-0000-000000000002','11111111-1111-1111-1111-111111111111','Dr. Radhika Sharma','F','radhika.sharma@vignan.ac.in','+91 98480 12345'),
+ ('10101010-0000-0000-0000-000000000003','11111111-1111-1111-1111-111111111111','Dr. R. Prathap Kumar','M','prathap.kumar@vignan.ac.in','+91 75698 88963'),
+ ('10101010-0000-0000-0000-000000000004','11111111-1111-1111-1111-111111111111','Dr. N. Santhosh','M','santhosh.n@vignan.ac.in','+91 94402 33456'),
+ ('10101010-0000-0000-0000-000000000005','11111111-1111-1111-1111-111111111111','Ms. Y. Sai Eswari','F','sai.eswari@vignan.ac.in','+91 80741 31669'),
+ ('10101010-0000-0000-0000-000000000006','11111111-1111-1111-1111-111111111111','Mrs. Archana','F','archana@vignan.ac.in','+91 89857 16984'),
+ ('10101010-0000-0000-0000-000000000007','11111111-1111-1111-1111-111111111111','Dr. M. Sunil Babu','M','sunil.babu@vignan.ac.in','+91 83330 01991'),
+ ('10101010-0000-0000-0000-000000000008','11111111-1111-1111-1111-111111111111','Dr. M. Raja Rao','M','raja.rao@vignan.ac.in','+91 89798 03148'),
+ ('10101010-0000-0000-0000-000000000009','11111111-1111-1111-1111-111111111111','Dr. S. V. Phani Kumar','M','hod_cse@vignan.ac.in','+91 94401 55678'),
+ ('10101010-0000-0000-0000-000000000010','11111111-1111-1111-1111-111111111111','Dr. Meera Iyer','F','meera@vignan.ac.in','+91 94400 11223')
+ON CONFLICT DO NOTHING;
+
+-- Faculty Identity & Records
+INSERT INTO people.faculty (faculty_id, person_id, employee_no, department_id, designation, date_of_joining, is_phd_holder) VALUES
+ ('20202020-0000-0000-0000-000000000001','10101010-0000-0000-0000-000000000001','EMP1001','22222222-2222-2222-2222-222222222222','Assistant Professor & Class Teacher','2020-07-01',false),
+ ('20202020-0000-0000-0000-000000000002','10101010-0000-0000-0000-000000000002','EMP1002','22222222-2222-2222-2222-222222222222','Associate Professor & Counsellor','2018-06-01',true),
+ ('20202020-0000-0000-0000-000000000003','10101010-0000-0000-0000-000000000003','EMP1003','22222222-2222-2222-2222-222222222222','Associate Professor','2019-07-01',true),
+ ('20202020-0000-0000-0000-000000000004','10101010-0000-0000-0000-000000000004','EMP1004','22222222-2222-2222-2222-222222222222','Associate Professor','2017-06-01',true),
+ ('20202020-0000-0000-0000-000000000005','10101010-0000-0000-0000-000000000005','EMP1005','22222222-2222-2222-2222-222222222222','Assistant Professor','2021-08-01',false),
+ ('20202020-0000-0000-0000-000000000006','10101010-0000-0000-0000-000000000006','EMP1006','22222222-2222-2222-2222-222222222222','Assistant Professor','2021-07-01',false),
+ ('20202020-0000-0000-0000-000000000007','10101010-0000-0000-0000-000000000007','EMP1007','22222222-2222-2222-2222-222222222222','Associate Professor','2016-06-01',true),
+ ('20202020-0000-0000-0000-000000000008','10101010-0000-0000-0000-000000000008','EMP1008','22222222-2222-2222-2222-222222222222','Associate Professor','2015-06-01',true),
+ ('20202020-0000-0000-0000-000000000009','10101010-0000-0000-0000-000000000009','EMP1000','22222222-2222-2222-2222-222222222222','Professor & Head of Department','2012-06-01',true),
+ ('20202020-0000-0000-0000-000000000010','10101010-0000-0000-0000-000000000010','EMP1009','22222222-2222-2222-2222-222222222222','Associate Professor','2018-06-01',true)
+ON CONFLICT DO NOTHING;
+
+-- Faculty App Users
+INSERT INTO identity.app_user (user_id, person_id, username, email) VALUES
+ ('30303030-0000-0000-0000-000000000001','10101010-0000-0000-0000-000000000001','latesh_babu','latesh.babu@vignan.ac.in'),
+ ('30303030-0000-0000-0000-000000000002','10101010-0000-0000-0000-000000000002','radhika_sharma','radhika.sharma@vignan.ac.in'),
+ ('30303030-0000-0000-0000-000000000003','10101010-0000-0000-0000-000000000003','prathap_kumar','prathap.kumar@vignan.ac.in'),
+ ('30303030-0000-0000-0000-000000000004','10101010-0000-0000-0000-000000000004','santhosh_n','santhosh.n@vignan.ac.in'),
+ ('30303030-0000-0000-0000-000000000005','10101010-0000-0000-0000-000000000005','sai_eswari','sai.eswari@vignan.ac.in'),
+ ('30303030-0000-0000-0000-000000000006','10101010-0000-0000-0000-000000000006','archana','archana@vignan.ac.in'),
+ ('30303030-0000-0000-0000-000000000007','10101010-0000-0000-0000-000000000007','sunil_babu','sunil.babu@vignan.ac.in'),
+ ('30303030-0000-0000-0000-000000000008','10101010-0000-0000-0000-000000000008','raja_rao','raja.rao@vignan.ac.in'),
+ ('30303030-0000-0000-0000-000000000009','10101010-0000-0000-0000-000000000009','hod_cse','hod_cse@vignan.ac.in'),
+ ('30303030-0000-0000-0000-000000000010','10101010-0000-0000-0000-000000000010','meera_iyer','meera@vignan.ac.in')
+ON CONFLICT DO NOTHING;
+
+-- Section 7 Mentorship Assignment (Mr. T. Latesh Babu for Section 7 students)
+INSERT INTO studentlife.mentorship (mentorship_id, student_id, mentor_faculty_id, from_date, is_current)
+SELECT gen_random_uuid(), s.student_id, '20202020-0000-0000-0000-000000000001'::uuid, '2024-08-01'::date, true
+FROM people.student s
+WHERE s.current_section_id = '88888888-8888-8888-8888-888888888888'::uuid
+ON CONFLICT DO NOTHING;
+
+-- Section 7 Counselling Assignment (Dr. Radhika Sharma for Section 7 students)
+INSERT INTO confidential.counselling_case (counselling_case_id, student_id, counsellor_user_id, referral_source, status)
+SELECT gen_random_uuid(), s.student_id, '30303030-0000-0000-0000-000000000002'::uuid, 'FACULTY_COUNSELLING', 'ACTIVE'
+FROM people.student s
+WHERE s.current_section_id = '88888888-8888-8888-8888-888888888888'::uuid
+ON CONFLICT DO NOTHING;

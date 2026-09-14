@@ -166,7 +166,7 @@ export const StudentSnapshot: React.FC<StudentSnapshotProps> = ({ onNavigateTab 
         <div>
           <h3 className="text-lg font-bold text-foreground">{t.snapshotTitle} (Section 7, N-312)</h3>
           <p className="text-xs text-muted-foreground">
-            {t.snapshotSubtitle} • {student?.id || "251FA04E03"} • Class Teacher: Mr. T. Latesh Babu
+            {t.snapshotSubtitle} • {student?.id || "251FA04E13"} • Class Teacher: Mr. T. Latesh Babu
           </p>
         </div>
         <span className="self-start sm:self-auto inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-medium text-emerald-700 border border-emerald-100">

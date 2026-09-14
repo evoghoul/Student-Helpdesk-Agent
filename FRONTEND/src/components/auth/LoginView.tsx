@@ -157,7 +157,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
                 <label className="text-xs font-semibold text-muted-foreground flex items-center justify-between">
                   <span>{t.rollNoLabel || "Student Roll Number"}</span>
                   <span className="text-xs text-blue-600 font-normal">
-                    {t.loginRollFormat || "Format: 251FA04E03"}
+                    {t.loginRollFormat || "Format: 251FA04E13"}
                   </span>
                 </label>
                 <div className="relative">

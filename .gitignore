@@ -58,8 +58,11 @@ Thumbs.db
 models/*.gguf
 models/*.bin
 models/*.safetensors
+models/blobs/
+models/manifests/
 BACKEND/models/*.gguf
 BACKEND/models/*.bin
+BACKEND/database/*.db
 
 # Keep database file so anyone cloning gets pre-seeded data out-of-the-box
 !database/student_helpdesk.db

@@ -124,7 +124,7 @@ export const CommandBarModal: React.FC<CommandBarModalProps> = ({
             </div>
           ) : (
             <div className="px-3 py-1.5 text-sm font-bold uppercase tracking-wider text-slate-400">
-              Popular Queries for {student?.name || "Akshat Raj"} ({student?.id || "251FA04E03"})
+              Popular Queries for {student?.name || "Aman Kumar"} ({student?.id || "251FA04E13"})
             </div>
           )}
 

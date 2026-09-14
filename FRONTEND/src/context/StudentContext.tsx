@@ -10,6 +10,7 @@ interface StudentContextType {
   isLoading: boolean;
   switchStudent: (rollNo: string) => void;
   loginAsStudent: (rollNo: string, password?: string) => Promise<boolean>;
+  logout: () => void;
 }
 
 const StudentContext = createContext<StudentContextType | undefined>(undefined);
@@ -17,15 +18,9 @@ const StudentContext = createContext<StudentContextType | undefined>(undefined);
 export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeRoll, setActiveRoll] = useState<string>(() => {
     if (typeof window !== "undefined") {
-      const fixed = localStorage.getItem("agent65_regd_fixed_v1");
-      if (!fixed) {
-        localStorage.setItem("agent65_regd_fixed_v1", "true");
-        localStorage.setItem("agent65_active_student", "251FA04E03");
-        return "251FA04E03";
-      }
-      return localStorage.getItem("agent65_active_student") || "251FA04E03";
+      return localStorage.getItem("agent65_active_student") || "251FA04E13";
     }
-    return "251FA04E03";
+    return "251FA04E13";
   });
 
   const [studentData, setStudentData] = useState<StudentFullData>(() => getStudentData(activeRoll));
@@ -79,13 +74,33 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const pwd = password || clean;
 
     // Attempt live backend login
-    await apiClient.login(clean, pwd);
+    const loginResp = await apiClient.login(clean, pwd);
 
     // Update active student
-    setActiveRoll(clean);
-    setStudentData(getStudentData(clean));
+    const actualRoll = loginResp?.roll_no || clean;
+    setActiveRoll(actualRoll);
+    let sData = getStudentData(actualRoll);
+    if (loginResp && loginResp.full_name) {
+      sData = {
+        ...sData,
+        profile: {
+          ...sData.profile,
+          name: loginResp.full_name,
+          rawName: loginResp.full_name.toUpperCase(),
+          id: actualRoll,
+          programme: loginResp.programme_code || sData.profile.programme,
+        },
+      };
+    }
+    setStudentData(sData);
     setIsLoading(false);
     return true;
+  };
+
+  const logout = () => {
+    apiClient.logout();
+    setActiveRoll("251FA04E13");
+    setStudentData(getStudentData("251FA04E13"));
   };
 
   return (
@@ -96,6 +111,7 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isLoading,
         switchStudent,
         loginAsStudent,
+        logout,
       }}
     >
       {children}

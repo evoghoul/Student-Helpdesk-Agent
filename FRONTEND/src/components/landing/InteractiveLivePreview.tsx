@@ -34,7 +34,7 @@ export const InteractiveLivePreview: React.FC<InteractiveLivePreviewProps> = ({
   const { t } = useLanguage();
 
   const [studentData] = useState<StudentFullData>(() =>
-    getStudentData("251FA04E03")
+    getStudentData("251FA04E13")
   );
   const [messages, setMessages] = useState<ConversationTurn[]>([]);
   const [inputQuery, setInputQuery] = useState("");

@@ -4,6 +4,7 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
+from typing import List, Dict, Any, Optional
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
@@ -68,14 +69,36 @@ async def get_student_dashboard(current_student: dict = Depends(get_current_stud
     fees = DataRepository.get_fees(session)
     timetable = DataRepository.get_timetable(session)
     exams = DataRepository.get_exams(session)
+    advisors = DataRepository.get_student_advisors(session)
+    subject_faculty = DataRepository.get_subject_faculty(session)
     return {
         "profile": profile,
+        "advisors": advisors,
+        "faculty": subject_faculty,
         "attendance": attendance,
         "marks": marks,
         "fees": fees,
         "timetable": timetable,
         "exams": exams
     }
+
+@app.get("/api/v1/student/faculty", response_model=dict, tags=["Student"])
+async def get_my_faculty(current_student: dict = Depends(get_current_student)):
+    session = DatabaseSession(student_id=current_student["student_id"], user_id=current_student["user_id"])
+    advisors = DataRepository.get_student_advisors(session)
+    if not advisors:
+        raise HTTPException(status_code=404, detail="Student record not found")
+    subject_faculty = DataRepository.get_subject_faculty(session)
+    return {
+        "student_id": current_student["student_id"],
+        "roll_no": current_student.get("roll_no"),
+        "advisors": advisors,
+        "subject_faculty": subject_faculty
+    }
+
+@app.get("/api/v1/faculty", response_model=List[dict], tags=["Faculty Directory"])
+async def list_faculty_directory():
+    return DataRepository.get_faculty_directory()
 
 @app.get("/api/v1/students", tags=["Student"])
 async def list_students():

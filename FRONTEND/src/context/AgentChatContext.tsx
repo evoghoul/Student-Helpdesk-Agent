@@ -46,7 +46,7 @@ interface AgentChatContextType {
   isMaximized: boolean;
   setIsMaximized: (val: boolean) => void;
   activeContextSubject: string | undefined;
-  handleSend: (textToSend?: string) => void;
+  handleSend: (textToSend?: string, model?: "3B" | "8B") => void;
   handleResetChat: () => void;
   handleSpeechToggle: () => void;
   registerDistressCallback: (cb: () => void) => void;
@@ -164,7 +164,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     distressCallbackRef.current = cb;
   };
 
-  const handleSend = async (textToSend?: string) => {
+  const handleSend = async (textToSend?: string, model: "3B" | "8B" = "8B") => {
     const query = (textToSend || inputQuery).trim();
     if (!query || isTyping) return;
 
@@ -176,7 +176,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     try {
       // 1. Try Live FastAPI Backend Call
-      const backendResp = await apiClient.sendMessage(query, language);
+      const backendResp = await apiClient.sendMessage(query, language, model);
       if (backendResp) {
         setMessages((prev) => [
           ...prev,
@@ -193,6 +193,9 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
               isDistress: backendResp.is_distress,
               structuredCard: backendResp.structured_card as StructuredCardData,
               suggestedFollowUps: backendResp.suggested_follow_ups,
+              llm_provider: backendResp.llm_provider || "local",
+              model_used: backendResp.model_used || (backendResp.used_fallback ? "deterministic-fallback" : "agent65-8b:latest"),
+              used_fallback: backendResp.used_fallback ?? false,
             },
           },
         ]);
@@ -219,7 +222,13 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         {
           role: "assistant",
           content: response.text,
-          responseMeta: response,
+          responseMeta: {
+            ...response,
+            sourceAgent: "Agent 65 [BROWSER MOCK: Offline Client Engine]",
+            llm_provider: "mock",
+            model_used: "browser-client-mock",
+            used_fallback: true,
+          },
         },
       ]);
       setIsTyping(false);
@@ -362,24 +371,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const handleResetChat = () => {
-    setMessages([
-      {
-        role: "assistant",
-        content: `Session refreshed. Authenticated student: **${student.name} (${student.id})**. How can I help you?`,
-        responseMeta: {
-          text: "",
-          category: "PERSONAL_DATA",
-          sourceAgent: "Agent 65 (Student Helpdesk)",
-          authorizedFor: student.id,
-          isDistress: false,
-          suggestedFollowUps: [
-            "What is my attendance in Digital Logic design?",
-            "When is my next exam?",
-            "What is my fee status?",
-          ],
-        },
-      },
-    ]);
+    setMessages([buildInitialGreeting(student, language)]);
   };
 
   // Keyboard shortcut listener for ESC to close maximize mode

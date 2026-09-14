@@ -70,7 +70,8 @@ async def send_message(
         session=session,
         conversation_id=conversation_id,
         user_message=msg.content,
-        language=msg.language or "en"
+        language=msg.language or "en",
+        selected_model=msg.selected_model or "8B"
     )
     return MessageResponse(**agent_response)
 
@@ -140,29 +141,45 @@ async def submit_message_feedback(
                 if not prompt_msgs or prompt_msgs[-1].get("role") != "assistant":
                     prompt_msgs.append({"role": "assistant", "content": assistant_response})
 
-                training_entry = {
-                    "messages": prompt_msgs,
+                import hashlib
+                import re
+
+                raw_sid = current_student.get("student_id") or "anonymous"
+                anonymized_sid = "stu_" + hashlib.sha256(raw_sid.encode()).hexdigest()[:10]
+
+                # Automated PII Scrubbing (Emails, Phones, Identity tokens)
+                scrubbed_msgs = []
+                for m in prompt_msgs:
+                    role = m.get("role", "user")
+                    txt = m.get("content", "")
+                    txt = re.sub(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', '[REDACTED_EMAIL]', txt)
+                    txt = re.sub(r'(\+?91[-\s]?)?[6-9]\d{9}', '[REDACTED_PHONE]', txt)
+                    scrubbed_msgs.append({"role": role, "content": txt})
+
+                quarantine_entry = {
+                    "messages": scrubbed_msgs,
                     "model_response": assistant_response,
-                    "gemini_response": assistant_response,
                     "rating": "thumbs_up",
-                    "student_id": current_student.get("student_id"),
+                    "anonymized_id": anonymized_sid,
+                    "status": "pending_curation",
+                    "pii_scrubbed": True,
                     "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
                 }
 
-                training_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "training_data.jsonl"))
-                with open(training_file, "a", encoding="utf-8") as f:
-                    f.write(json.dumps(training_entry, ensure_ascii=False) + "\n")
+                quarantine_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "feedback_quarantine.jsonl"))
+                with open(quarantine_file, "a", encoding="utf-8") as f:
+                    f.write(json.dumps(quarantine_entry, ensure_ascii=False) + "\n")
                 saved_for_training = True
-                logger.info(f"Appended approved thumbs_up conversation turn {message_id} to training_data.jsonl")
+                logger.info(f"Appended approved thumbs_up conversation turn {message_id} to feedback_quarantine.jsonl (PII scrubbed)")
         except Exception as err:
-            logger.error(f"Failed to append to training_data.jsonl: {err}")
+            logger.error(f"Failed to append to feedback_quarantine.jsonl: {err}")
 
     if saved_for_training:
         return MessageFeedbackResponse(
             status="success",
             saved_for_training=True,
             rating=fb.rating,
-            message="Conversation turn saved to training dataset for 8B local model."
+            message="Conversation turn quarantined and queued for active-learning review."
         )
     else:
         return MessageFeedbackResponse(

@@ -17,23 +17,27 @@ if sys.platform == "win32":
     sys.stdout.reconfigure(encoding='utf-8')
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Fine-tune Llama 3.2 3B for Agent 65")
+    parser = argparse.ArgumentParser(description="Fine-tune Llama 3.1 8B / 3.2 3B for Agent 65")
     parser.add_argument(
         "--model_name",
         type=str,
-        default="meta-llama/Llama-3.2-3B-Instruct",
-        help="Base model to fine-tune (e.g. meta-llama/Llama-3.2-3B-Instruct or mistralai/Mistral-7B-Instruct-v0.3)"
+        default="meta-llama/Meta-Llama-3.1-8B-Instruct",
+        help="Base model to fine-tune (e.g. meta-llama/Meta-Llama-3.1-8B-Instruct or meta-llama/Llama-3.2-3B-Instruct)"
     )
+    clean_dir = os.path.join(os.path.dirname(__file__), "..", "data", "clean_agent65")
+    default_train = os.path.join(clean_dir, "train_data.jsonl") if os.path.exists(clean_dir) else os.path.join(os.path.dirname(__file__), "..", "data", "train_data.jsonl")
+    default_val = os.path.join(clean_dir, "val_data.jsonl") if os.path.exists(clean_dir) else os.path.join(os.path.dirname(__file__), "..", "data", "val_data.jsonl")
+
     parser.add_argument(
         "--data_path",
         type=str,
-        default=os.path.join(os.path.dirname(__file__), "..", "data", "train_data.jsonl"),
+        default=default_train,
         help="Path to training data in JSONL format"
     )
     parser.add_argument(
         "--val_path",
         type=str,
-        default=os.path.join(os.path.dirname(__file__), "..", "data", "val_data.jsonl"),
+        default=default_val,
         help="Path to validation data in JSONL format"
     )
     parser.add_argument(
@@ -133,34 +137,65 @@ def main():
     model.print_trainable_parameters()
 
     # 4. Ingest Dataset
-    print(f"\n[*] Ingesting training dataset from {args.data_path}...")
-    dataset = load_dataset("json", data_files={"train": args.data_path})
+    print(f"\n[*] Ingesting datasets...")
+    print(f"    Train: {args.data_path}")
+    print(f"    Val:   {args.val_path}")
+    data_files = {
+        "train": args.data_path,
+        "validation": args.val_path,
+    }
+    dataset = load_dataset("json", data_files=data_files)
+
+    def format_conversation(example):
+        messages = example.get("messages", [])
+        return {
+            "text": tokenizer.apply_chat_template(
+                messages,
+                tokenize=False,
+                add_generation_prompt=False
+            )
+        }
+
+    dataset = dataset.map(format_conversation)
 
     # 5. Training Arguments
-    training_args = TrainingArguments(
-        output_dir=args.output_dir,
-        num_train_epochs=args.epochs,
-        per_device_train_batch_size=args.batch_size,
-        gradient_accumulation_steps=args.grad_accum,
-        optim="paged_adamw_8bit" if torch.cuda.is_available() else "adamw_torch",
-        save_strategy="epoch",
-        logging_steps=10,
-        learning_rate=args.learning_rate,
-        weight_decay=0.01,
-        fp16=(compute_dtype == torch.float16 and torch.cuda.is_available()),
-        bf16=(compute_dtype == torch.bfloat16 and torch.cuda.is_available()),
-        max_grad_norm=0.3,
-        warmup_ratio=0.05,
-        lr_scheduler_type="cosine",
-        report_to="none"
-    )
+    training_kwargs = {
+        "output_dir": args.output_dir,
+        "num_train_epochs": args.epochs,
+        "per_device_train_batch_size": args.batch_size,
+        "gradient_accumulation_steps": args.grad_accum,
+        "optim": "paged_adamw_8bit" if torch.cuda.is_available() else "adamw_torch",
+        "save_strategy": "epoch",
+        "load_best_model_at_end": True,
+        "metric_for_best_model": "eval_loss",
+        "logging_steps": 10,
+        "learning_rate": args.learning_rate,
+        "weight_decay": 0.01,
+        "fp16": (compute_dtype == torch.float16 and torch.cuda.is_available()),
+        "bf16": (compute_dtype == torch.bfloat16 and torch.cuda.is_available()),
+        "max_grad_norm": 0.3,
+        "warmup_ratio": 0.05,
+        "lr_scheduler_type": "cosine",
+        "report_to": "none"
+    }
 
-    # 6. SFTTrainer
+    # Handle evaluation_strategy vs eval_strategy for transformers version compatibility
+    import inspect
+    sig = inspect.signature(TrainingArguments.__init__)
+    if "eval_strategy" in sig.parameters:
+        training_kwargs["eval_strategy"] = "epoch"
+    else:
+        training_kwargs["evaluation_strategy"] = "epoch"
+
+    training_args = TrainingArguments(**training_kwargs)
+
+    # 6. SFTTrainer (model is already wrapped via get_peft_model, so peft_config is omitted here)
     trainer = SFTTrainer(
         model=model,
         train_dataset=dataset["train"],
-        peft_config=peft_config,
-        dataset_text_field="messages",
+        eval_dataset=dataset["validation"],
+        peft_config=None,
+        dataset_text_field="text",
         max_seq_length=args.max_seq_length,
         tokenizer=tokenizer,
         args=training_args

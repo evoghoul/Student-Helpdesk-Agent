@@ -14,6 +14,7 @@ def is_server_online():
     except Exception:
         return False
 
+@pytest.mark.live
 @pytest.mark.skipif(not is_server_online(), reason="Requires live server running at http://localhost:8000")
 def test_live_llm():
     # 1. Login as Asha Reddy

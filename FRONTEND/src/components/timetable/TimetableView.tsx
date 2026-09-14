@@ -141,7 +141,7 @@ export const TimetableView: React.FC<TimetableViewProps> = () => {
             )}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Official department routine for student {student?.id || "251FA04E03"} • {t.classTeacher}: {SECTION_METADATA.classTeacher}
+            Official department routine for student {student?.id || "251FA04E13"} • {t.classTeacher}: {SECTION_METADATA.classTeacher}
           </p>
         </div>
 

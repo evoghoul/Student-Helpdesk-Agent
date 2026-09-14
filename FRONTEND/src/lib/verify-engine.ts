@@ -6,7 +6,7 @@ console.log("=== RUNNING VERIFICATION FOR AGENT 65 ===");
 
 // 1. Check Student Auth & RLS
 console.log("1. Authenticated Student:", CURRENT_STUDENT.name, CURRENT_STUDENT.id);
-if (CURRENT_STUDENT.id !== "251FA04E03") throw new Error("Incorrect student ID");
+if (CURRENT_STUDENT.id !== "251FA04E13") throw new Error("Incorrect student ID");
 
 // 2. Test Attendance Calculation
 const needed70 = calculateConsecutiveClassesNeeded(34, 50, 70);

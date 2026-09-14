@@ -153,7 +153,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       </span>
                       <span className="font-medium text-foreground">{t.verifyIdentity || "Verify Identity"}</span>
                     </div>
-                    <span className="font-mono text-sm text-emerald-600 font-semibold">251FA04E03 âœ“</span>
+                    <span className="font-mono text-sm text-emerald-600 font-semibold">251FA04E13 ✓</span>
                   </div>
 
                   <div className="flex items-center justify-between rounded-lg bg-muted/50/80 p-2.5 border border-slate-100">

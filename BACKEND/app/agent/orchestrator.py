@@ -26,7 +26,8 @@ class Agent65Orchestrator:
         session: DatabaseSession,
         conversation_id: str,
         user_message: str,
-        language: str = "en"
+        language: str = "en",
+        selected_model: str = "8B"
     ) -> Dict[str, Any]:
         query = user_message.strip()
 
@@ -93,7 +94,8 @@ class Agent65Orchestrator:
             query=query,
             conversation_history=history,
             context_data=context_data,
-            language=language
+            language=language,
+            selected_model=selected_model
         )
 
         # Update conversational memory context
@@ -131,5 +133,8 @@ class Agent65Orchestrator:
             "structured_card": nlu_result.get("structured_card"),
             "is_distress": False,
             "suggested_follow_ups": nlu_result.get("suggested_follow_ups", []),
+            "llm_provider": nlu_result.get("llm_provider", "local"),
+            "model_used": nlu_result.get("model_used", "unknown"),
+            "used_fallback": nlu_result.get("used_fallback", False),
             "created_at": agent_msg["created_at"]
         }

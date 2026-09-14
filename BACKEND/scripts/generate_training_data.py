@@ -11,9 +11,11 @@ in standard ChatML / Llama 3 format:
 """
 
 import json
+import math
 import os
 import sys
 import random
+import argparse
 from typing import List, Dict, Any
 
 # Ensure UTF-8 output on Windows console
@@ -45,9 +47,8 @@ DIALOGUE_CORPUS: List[List[Dict[str, str]]] = [
             "### 2. Your Mathematical Recovery Plan\n"
             "Assuming your class has held 50 lectures so far, a 62% attendance means you have attended 31 classes.\n"
             "- **Target (75%) Formula**: To cross 75%, every future class you attend adds 1 to both your attended count and the total held count.\n"
-            "- If there are 26 classes remaining in the semester, attending **14 consecutive classes** without a single absence "
-            "will elevate your percentage to **(31 + 14) / (50 + 14) = 45 / 64 ≈ 70.3%**, and attending **17 consecutive classes** "
-            "brings you to **48 / 67 ≈ 71.6%**.\n\n"
+            "- If there are 26 classes remaining in the semester, attending **26 consecutive classes** will raise your percentage to "
+            "**57 / 76 = 75.0%**. Attending fewer than 26 remaining classes cannot reach the 75% cutoff from this starting point.\n\n"
             "### 3. Medical & Co-Curricular Condonation (Clause 4.2.b)\n"
             "If you missed classes due to a genuine medical illness or representing the university in sports/cultural events, "
             "the Dean of Academic Affairs has discretionary authority to condone attendance **down to 65%** upon submission of verified medical documentation "
@@ -95,9 +96,9 @@ DIALOGUE_CORPUS: List[List[Dict[str, str]]] = [
             "When someone takes a plate, they take it from the **top**.\n"
             "- The *last* plate placed on the stack is the *first* one removed.\n"
             "- **Primary Operations**:\n"
-            "  - `push(x)`: Add an element to the top ($O(1)$).\n"
-            "  - `pop()`: Remove the top element ($O(1)$).\n"
-            "  - `peek()`: View the top element without removing it ($O(1)$).\n"
+            "  - `push(x)`: Add an element to the top (constant time).\n"
+            "  - `pop()`: Remove the top element (constant time).\n"
+            "  - `peek()`: View the top element without removing it (constant time).\n"
             "- **Classic Use Cases**: The Browser 'Back' button, Undo/Redo in text editors, Function Call Stack (recursion).\n\n"
             "### 2. Queue: FIFO (First In, First Out)\n"
             "- **Real-World Analogy**: Think of a ticket counter line at a movie theater. The first person to arrive in line is the **first person served**.\n"
@@ -226,21 +227,22 @@ def augment_dialogues(base_dialogues: List[List[Dict[str, str]]], target_count: 
         for att_pct in [54, 58, 62, 66, 71, 74]:
             classes_held = random.choice([40, 48, 52, 60])
             classes_attended = int((att_pct / 100.0) * classes_held)
-            needed = max(1, int((0.75 * classes_held - classes_attended) / 0.25) + 1)
+            actual_pct = (classes_attended / classes_held) * 100
+            needed = max(0, math.ceil((0.75 * classes_held - classes_attended) / 0.25))
             
             expanded.append({
                 "messages": [
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {
                         "role": "user",
-                        "content": f"Can you check my attendance in {subj} ({code})? It shows {att_pct}%. How many classes do I need to attend to cross 75%?"
+                        "content": f"Can you check my attendance in {subj} ({code})? It shows {actual_pct:.1f}%. How many classes do I need to attend to cross 75%?"
                     },
                     {
                         "role": "assistant",
                         "content": (
                             f"Certainly! Here is your verified attendance diagnostic for **{subj} ({code})** taught by {faculty}:\n\n"
                             f"- **Classes Attended**: {classes_attended} / {classes_held} classes held\n"
-                            f"- **Current Attendance**: **{att_pct:.1f}%** (Mandatory cutoff: 75.0% under University Regulation Clause 4.2)\n"
+                            f"- **Current Attendance**: **{actual_pct:.1f}%** (Mandatory cutoff: 75.0% under University Regulation Clause 4.2)\n"
                             f"- **Shortage**: You are currently short of the required threshold.\n\n"
                             f"### 📈 Your Recovery Roadmap:\n"
                             f"To bring your overall attendance to **75% or higher**, you must attend **{needed} consecutive lectures** "
@@ -303,9 +305,18 @@ def augment_dialogues(base_dialogues: List[List[Dict[str, str]]], target_count: 
     return expanded
 
 def main():
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    train_path = os.path.join(OUTPUT_DIR, "train_data.jsonl")
-    val_path = os.path.join(OUTPUT_DIR, "val_data.jsonl")
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--output-dir",
+        default=OUTPUT_DIR,
+        help="Directory for generated files; defaults to backend/data."
+    )
+    args = parser.parse_args()
+
+    output_dir = os.path.abspath(args.output_dir)
+    os.makedirs(output_dir, exist_ok=True)
+    train_path = os.path.join(output_dir, "train_data.jsonl")
+    val_path = os.path.join(output_dir, "val_data.jsonl")
 
     print("🚀 Generating Agent 65 High-Quality Conversational Training Dataset...")
     all_data = augment_dialogues(DIALOGUE_CORPUS)

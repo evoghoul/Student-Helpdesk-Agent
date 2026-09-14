@@ -54,6 +54,9 @@ export interface BackendMessageResponse {
   structured_card?: unknown;
   is_distress: boolean;
   suggested_follow_ups?: string[];
+  llm_provider?: string;
+  model_used?: string;
+  used_fallback?: boolean;
   created_at: string;
 }
 
@@ -82,7 +85,7 @@ class Agent65ApiClient {
     return this.token;
   }
 
-  async login(username: string = "251FA04E03", password: string = "251FA04E03"): Promise<BackendTokenResponse | null> {
+  async login(username: string = "251FA04E13", password: string = "251FA04E13"): Promise<BackendTokenResponse | null> {
     try {
       const resp = await fetch(`${BACKEND_BASE_URL}/auth/login`, {
         method: "POST",
@@ -90,8 +93,14 @@ class Agent65ApiClient {
         body: JSON.stringify({ username, password }),
       });
       if (!resp.ok) return null;
-      const data = await resp.json();
+      const data: BackendTokenResponse = await resp.json();
       this.setToken(data.access_token);
+      // Reset active conversation ID so the new student gets their own conversation
+      this.activeConversationId = null;
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("agent65_conv_id");
+        localStorage.setItem("agent65_active_student", data.roll_no || username.toUpperCase().trim());
+      }
       return data;
     } catch (e) {
       console.warn("Backend unavailable during login, falling back to local mode:", e);
@@ -99,14 +108,25 @@ class Agent65ApiClient {
     }
   }
 
+  logout() {
+    this.token = null;
+    this.activeConversationId = null;
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("agent65_token");
+      localStorage.removeItem("agent65_conv_id");
+      localStorage.removeItem("agent65_active_student");
+    }
+  }
+
   async ensureAuthenticated(): Promise<string | null> {
     let token = this.getToken();
     if (!token) {
       const savedRoll = typeof window !== "undefined" ? localStorage.getItem("agent65_active_student") : null;
-      const rollToUse = savedRoll || "251FA04E03";
-      const loginData = await this.login(rollToUse, rollToUse);
-      if (loginData) {
-        token = loginData.access_token;
+      if (savedRoll) {
+        const loginData = await this.login(savedRoll, savedRoll);
+        if (loginData) {
+          token = loginData.access_token;
+        }
       }
     }
     return token;
@@ -171,16 +191,18 @@ class Agent65ApiClient {
 
   async sendMessage(
     content: string,
-    language: string = "en"
+    language: string = "en",
+    selectedModel: "3B" | "8B" = "8B"
   ): Promise<BackendMessageResponse | null> {
     let token = await this.ensureAuthenticated();
     let convId = await this.getOrCreateConversation();
 
     if (!token || convId === "local-conversation-session") {
       const savedRoll = typeof window !== "undefined" ? localStorage.getItem("agent65_active_student") : null;
-      const rollToUse = savedRoll || "251FA04E03";
-      token = await this.login(rollToUse, rollToUse).then((t) => t?.access_token || null);
-      convId = await this.getOrCreateConversation(true);
+      if (savedRoll) {
+        token = await this.login(savedRoll, savedRoll).then((t) => t?.access_token || null);
+        convId = await this.getOrCreateConversation(true);
+      }
       if (!token || convId === "local-conversation-session") {
         return null;
       }
@@ -195,7 +217,7 @@ class Agent65ApiClient {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ content, language }),
+            body: JSON.stringify({ content, language, selected_model: selectedModel }),
         }
       );
 
@@ -203,6 +225,7 @@ class Agent65ApiClient {
       if (resp.status === 404 || resp.status === 401) {
         console.info("[Agent65] Stale conversation or token detected, auto-healing with fresh session...");
         this.activeConversationId = null;
+        if (resp.status === 401) this.token = null;
         if (typeof window !== "undefined") {
           localStorage.removeItem("agent65_conv_id");
           if (resp.status === 401) localStorage.removeItem("agent65_token");
@@ -218,7 +241,7 @@ class Agent65ApiClient {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({ content, language }),
+            body: JSON.stringify({ content, language, selected_model: selectedModel }),
           }
         );
       }

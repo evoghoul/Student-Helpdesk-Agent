@@ -15,7 +15,7 @@ export const INITIAL_SECURITY_LOGS: SecurityLogItem[] = [
     event: "Student identity authenticated",
     agent: "Agent 44 (Profile)",
     status: "SUCCESS",
-    scope: "UID: 251FA04E03",
+    scope: "UID: 251FA04E13",
     details: "Biometric SSO token validated. Row-Level Security policy enforced.",
   },
   {
@@ -24,7 +24,7 @@ export const INITIAL_SECURITY_LOGS: SecurityLogItem[] = [
     event: "Attendance records queried",
     agent: "Agent 11 (Attendance)",
     status: "SUCCESS",
-    scope: "UID: 251FA04E03 (Own Record Only)",
+    scope: "UID: 251FA04E13 (Own Record Only)",
     details: "Queried 4 subjects. Authorization check passed. Cross-tenant reads rejected.",
   },
   {
@@ -33,7 +33,7 @@ export const INITIAL_SECURITY_LOGS: SecurityLogItem[] = [
     event: "Examination schedule retrieved",
     agent: "Agent 30 (Exams)",
     status: "SUCCESS",
-    scope: "UID: 251FA04E03",
+    scope: "UID: 251FA04E13",
     details: "Seating roll #42 in Hall A2 retrieved securely.",
   },
   {
@@ -42,7 +42,7 @@ export const INITIAL_SECURITY_LOGS: SecurityLogItem[] = [
     event: "Student fee ledger retrieved",
     agent: "Agent 40 (Fee Status)",
     status: "SUCCESS",
-    scope: "UID: 251FA04E03",
+    scope: "UID: 251FA04E13",
     details: "Outstanding balance ₹28,000 fetched over encrypted mTLS channel.",
   },
   {
@@ -51,7 +51,7 @@ export const INITIAL_SECURITY_LOGS: SecurityLogItem[] = [
     event: "Service request routed",
     agent: "Agent 46 (Services)",
     status: "FORWARDED",
-    scope: "UID: 251FA04E03",
+    scope: "UID: 251FA04E13",
     details: "Ticket #SR-8921 generated and enqueued with priority Medium.",
   },
   {
@@ -61,6 +61,6 @@ export const INITIAL_SECURITY_LOGS: SecurityLogItem[] = [
     agent: "Agent 65 (Guardrail)",
     status: "BLOCKED",
     scope: "Foreign UID query attempt",
-    details: "Row-Level Security rule dropped unauthorized foreign parameter. Only 251FA04E03 permissible.",
+    details: "Row-Level Security rule dropped unauthorized foreign parameter. Only 251FA04E13 permissible.",
   },
 ];

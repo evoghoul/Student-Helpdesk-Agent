@@ -21,6 +21,48 @@ class TokenData(BaseModel):
     student_id: Optional[str] = None
     roll_no: Optional[str] = None
 
+# ---------------- Faculty & Advisor Schemas ----------------
+class FacultyContact(BaseModel):
+    name: str
+    phone: str
+    email: str
+    cabin: Optional[str] = None
+    designation: Optional[str] = None
+
+class StudentAdvisors(BaseModel):
+    class_teacher: FacultyContact
+    counsellor: FacultyContact
+    mentor: FacultyContact
+    hod: Optional[FacultyContact] = None
+
+class FacultyMember(BaseModel):
+    faculty_id: str
+    employee_no: str
+    name: str
+    designation: str
+    department: str
+    email: str
+    phone: str
+    cabin: str
+    role: str
+    office_hours: Optional[str] = None
+
+class SubjectFacultyInfo(BaseModel):
+    course_code: str
+    course_title: str
+    faculty_name: str
+    phone: str
+    email: str
+    cabin: str
+    designation: Optional[str] = None
+
+class StudentFacultyResponse(BaseModel):
+    student_id: str
+    roll_no: str
+    full_name: str
+    advisors: StudentAdvisors
+    subject_faculty: List[SubjectFacultyInfo]
+
 # ---------------- Profile Schema ----------------
 class StudentProfile(BaseModel):
     student_id: str
@@ -36,6 +78,22 @@ class StudentProfile(BaseModel):
     overall_attendance_pct: float
     fee_outstanding: float
     status: str
+    # Faculty & Advisor Grounding
+    class_teacher_name: Optional[str] = None
+    class_teacher_phone: Optional[str] = None
+    class_teacher_email: Optional[str] = None
+    class_teacher_cabin: Optional[str] = None
+    counsellor_name: Optional[str] = None
+    counsellor_phone: Optional[str] = None
+    counsellor_email: Optional[str] = None
+    counsellor_cabin: Optional[str] = None
+    mentor_name: Optional[str] = None
+    mentor_phone: Optional[str] = None
+    mentor_email: Optional[str] = None
+    mentor_cabin: Optional[str] = None
+    hod_name: Optional[str] = None
+    hod_phone: Optional[str] = None
+    hod_email: Optional[str] = None
 
 # ---------------- Structured Card Schemas ----------------
 class StructuredCard(BaseModel):
@@ -52,6 +110,7 @@ class StructuredCard(BaseModel):
 class MessageCreate(BaseModel):
     content: str
     language: Optional[str] = "en"
+    selected_model: Optional[str] = "8B"
 
 class Citation(BaseModel):
     title: str
@@ -70,6 +129,9 @@ class MessageResponse(BaseModel):
     structured_card: Optional[StructuredCard] = None
     is_distress: bool = False
     suggested_follow_ups: List[str] = Field(default_factory=list)
+    llm_provider: Optional[str] = "local"
+    model_used: Optional[str] = None
+    used_fallback: bool = False
     created_at: datetime
 
 class ConversationCreate(BaseModel):

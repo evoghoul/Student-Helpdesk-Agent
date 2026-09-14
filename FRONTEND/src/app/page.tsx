@@ -44,7 +44,7 @@ import {
 } from "lucide-react";
 
 function StudentHelpdeskContent() {
-  const { studentData } = useStudent();
+  const { studentData, logout } = useStudent();
   const student = studentData?.profile || CURRENT_STUDENT;
   const attendance = studentData?.attendance || ATTENDANCE_DATA;
 
@@ -79,7 +79,14 @@ function StudentHelpdeskContent() {
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   // Shared Agent 65 Chat Context
-  const { isMaximized, setIsMaximized, handleSend } = useAgentChat();
+  const { isMaximized, setIsMaximized, handleSend, handleResetChat } = useAgentChat();
+
+  const handlePerformLogout = () => {
+    logout();
+    handleResetChat();
+    setIsAuthenticated(false);
+    setActiveTab("home");
+  };
 
   const handleAskHelpdesk = (query: string) => {
     if (activeTab === "home") {
@@ -161,10 +168,7 @@ function StudentHelpdeskContent() {
         }}
         isOpenMobile={isMobileSidebarOpen}
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
-        onLogout={() => {
-          setIsAuthenticated(false);
-          setActiveTab("home");
-        }}
+        onLogout={handlePerformLogout}
         onOpenProfile={() => setIsProfileOpen(true)}
         onOpenSecurityDrawer={() => setIsSecurityDrawerOpen(true)}
         currentLang={currentLang}
@@ -184,10 +188,7 @@ function StudentHelpdeskContent() {
           onOpenSecurityDrawer={() => setIsSecurityDrawerOpen(true)}
           onOpenCommandBar={() => setIsCommandBarOpen(true)}
           onToggleMobileMenu={() => setIsMobileSidebarOpen(true)}
-          onLogout={() => {
-            setIsAuthenticated(false);
-            setActiveTab("home");
-          }}
+          onLogout={handlePerformLogout}
         />
 
         {/* Dynamic Page Content */}

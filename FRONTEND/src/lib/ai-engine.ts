@@ -38,6 +38,9 @@ export interface AiResponse {
   isDistress: boolean;
   suggestedFollowUps?: string[];
   contextSubject?: string;
+  llm_provider?: string;
+  model_used?: string;
+  used_fallback?: boolean;
 }
 
 export interface ConversationTurn {
@@ -101,6 +104,7 @@ export function processQuery(
   const curStudent = studentData ? studentData.profile : CURRENT_STUDENT;
   const curMarks = studentData ? studentData.marks : MARKS_DATA;
   const curFees = studentData ? studentData.fees : FEES_DATA;
+  const curAttendance = studentData ? studentData.attendance : ATTENDANCE_DATA;
   const studentId = curStudent.id;
 
   // 1. MANDATORY DISTRESS DETECTION FIRST (Agent 66)
@@ -296,6 +300,88 @@ export function processQuery(
         "Open escalation modal",
         `Book a meeting with ${curStudent.mentor.name}`,
         "Return to automated helpdesk",
+      ],
+    };
+  }
+
+  // 2b. PROCEDURAL GUIDANCE & PEER BOUNDARY (Step 2, 3, 4, 7)
+  const isPeerComparison =
+    query.includes("other student") ||
+    query.includes("other students") ||
+    query.includes("classmates") ||
+    query.includes("classmate") ||
+    query.includes("topper") ||
+    query.includes("toppers") ||
+    query.includes("rank") ||
+    query.includes("ranking") ||
+    query.includes("compare") ||
+    query.includes("comparison") ||
+    query.includes("highest marks") ||
+    query.includes("highest cgpa") ||
+    query.includes("batch average");
+
+  const isAcademicImprovement =
+    query.includes("perform better") ||
+    query.includes("perform well") ||
+    query.includes("how can i perform") ||
+    query.includes("how do i perform") ||
+    query.includes("improve my cgpa") ||
+    query.includes("improve cgpa") ||
+    query.includes("increase cgpa") ||
+    query.includes("boost cgpa") ||
+    query.includes("improve grade") ||
+    query.includes("improve grades") ||
+    query.includes("improve marks") ||
+    query.includes("study plan") ||
+    query.includes("study strategy") ||
+    query.includes("academic roadmap") ||
+    query.includes("how to top") ||
+    query.includes("top the class") ||
+    query.includes("academic guidance");
+
+  if (isPeerComparison || isAcademicImprovement) {
+    const studentCgpa = curStudent.cgpa ?? 8.09;
+    const studentAtt = Math.round(curAttendance?.overallPercentage ?? 76);
+    const counselorName = curStudent.counsellor?.name || "Dr. Radhika Sharma";
+
+    let text = "";
+    if (isPeerComparison) {
+      text += "Under our privacy and data protection policies, I cannot retrieve or compare individual academic records of other students.\n\n";
+    }
+    text += `However, looking at your current profile, you are maintaining a solid **${studentCgpa.toFixed(2)} CGPA** with **${studentAtt}% attendance**. To elevate your performance:\n\n`;
+    text += `1. **Target S-Grades in Formative Assessments:** Your upcoming CIE exams begin on **October 6**. Focusing on your core theory credits will provide the highest weight toward pushing your CGPA above 8.5.\n`;
+    text += `2. **Attendance Safety Buffer:** At ${studentAtt}%, you are right on the borderline of the 75% mandatory cutoff. Attending your next 5 consecutive lectures will secure your exam eligibility without condonation risk.\n`;
+    text += `3. **Academic Guidance:** Would you like me to schedule a 1-on-1 counseling session with your counselor, **${counselorName}**, or raise an academic support request through Agent 46?`;
+
+    return {
+      text,
+      category: "PROCEDURAL_GUIDANCE",
+      sourceAgent: "Agent 65 (Academic Advisory & RLS Guardrail)",
+      authorizedFor: studentId,
+      isDistress: false,
+      structuredCard: {
+        type: "curriculum",
+        title: "Academic Roadmap & Performance Plan",
+        subtitle: `Personalized Strategy for ${curStudent.name} (Current CGPA: ${studentCgpa.toFixed(2)})`,
+        badge: "Academic Advisory",
+        badgeVariant: "green",
+        data: {
+          studentName: curStudent.name,
+          currentCgpa: studentCgpa.toFixed(2),
+          targetCgpa: "8.50 - 9.00+",
+          attendance: `${studentAtt}%`,
+          attendanceBuffer: "Attend next 5 consecutive lectures without absence",
+          nextMilestone: "CIE-1 Assessments starting October 6, 2026",
+          priorityFocus: "Target S-Grades in Core Theory Credits",
+          counselor: counselorName,
+        },
+        actionLabel: `Book Session with ${counselorName}`,
+        actionIntent: "Book mentor meeting",
+      },
+      suggestedFollowUps: [
+        `Book mentor meeting with ${counselorName}`,
+        "What are the grade point boundaries for S and A grades?",
+        "When is my next CIE exam?",
       ],
     };
   }
@@ -801,6 +887,26 @@ export function processQuery(
   }
 
   // Default intelligent fallback with actionable guidance
+  if (query.includes("how") || query.includes("what") || query.includes("can i") || query.includes("why") || query.includes("guide") || query.includes("advice") || query.includes("help")) {
+    const studentCgpa = curStudent.cgpa ?? 8.09;
+    const studentAtt = Math.round(curAttendance?.overallPercentage ?? 76);
+    const counselorName = curStudent.counsellor?.name || "Dr. Radhika Sharma";
+    const classTeacherName = curStudent.classTeacher?.name || "Mr. T. Latesh Babu";
+
+    return {
+      text: `Hello ${curStudent.name.split(" ")[0]}, based on your verified university records (Current CGPA: **${studentCgpa.toFixed(2)}**, Attendance: **${studentAtt}%**):\n\n• **Academic Standing:** You are currently in good academic standing with no active backlogs. Your upcoming CIE examinations commence on **October 6**.\n• **Attendance Status:** At **${studentAtt}%**, you are on the borderline of the mandatory 75% cutoff. Attending your next 5 consecutive lectures will secure your exam eligibility without condonation risk.\n• **Advisory Support:** For specific academic planning or guidance, your counselor **${counselorName}** and class teacher **${classTeacherName}** are available. Would you like me to book a mentor meeting via Agent 46?`,
+      category: "PROCEDURAL_GUIDANCE",
+      sourceAgent: "Agent 65 (Academic Advisory)",
+      authorizedFor: studentId,
+      isDistress: false,
+      suggestedFollowUps: [
+        `Book mentor meeting with ${counselorName}`,
+        "When is my next exam?",
+        "What is my attendance in Digital Logic design?",
+      ],
+    };
+  }
+
   const fallbackOutstanding = "outstandingBalance" in curFees ? curFees.outstandingBalance : (curFees as typeof FEES_DATA).outstanding ?? 28000;
   return {
     text: `I understand you are asking about: "${userInput}".\n\nAs **Agent 65 (Student Helpdesk)**, I am securely connected to your verified student records (#${curStudent.id}). I can give you personalized facts, interpretation, and action steps regarding:\n\n• **Attendance**: Your current percentage, attended vs missed counts, and consecutive classes needed.\n• **Examinations**: Timetable, hall ticket details, and 7-day countdown.\n• **Marks & CIE**: Formative assessments, mid-sem scores, and GPA.\n• **Timetable**: Today's live timeline and classroom locations.\n• **Fees**: Outstanding balance (${formatCurrency(fallbackOutstanding)}) and due date.\n• **Curriculum**: Degree audit (72/120 credits) and remaining graduation courses.\n• **Services & Help**: Certificates, grievances, mentor bookings, or human escalation.\n\nTry selecting one of the quick enquiry chips below or asking a specific question!`,

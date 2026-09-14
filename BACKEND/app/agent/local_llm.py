@@ -2,15 +2,22 @@ import requests
 import json
 import logging
 import re
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
-OLLAMA_BASE_URL = "http://localhost:11434"
+from app.config import settings
+
+def get_ollama_base_url() -> str:
+    """Derives base Ollama URL from settings.LOCAL_MODEL_URL, stripping endpoint suffixes."""
+    raw = getattr(settings, "LOCAL_MODEL_URL", "http://localhost:11434")
+    for suffix in ["/api/chat", "/api/generate", "/api/tags"]:
+        if raw.endswith(suffix):
+            raw = raw[:-len(suffix)]
+    return raw.rstrip("/")
+
 DEFAULT_MODEL = "agent65-8b:latest"
 FALLBACK_MODELS = ["agent65-8b:latest", "agent65-8b", "agent65:latest", "agent65", "llama3.2:3b", "llama3.1:8b"]
-
-from app.config import settings
 
 class LocalLLMClient:
     """
@@ -20,41 +27,70 @@ class LocalLLMClient:
     """
 
     _available: Optional[bool] = None
-    _active_model: Optional[str] = "agent65-8b:latest"
+    _active_model: Optional[str] = None
+    _last_check_time: float = 0.0
+    _check_ttl: float = 5.0
 
     @classmethod
-    def is_available(cls, timeout: float = 2.0) -> bool:
-        """Check if local Ollama daemon is active and running agent65-8b."""
+    def is_available(cls, timeout: float = 1.0) -> bool:
+        """Check if local Ollama daemon is active and running agent65-8b, caching result for 5s."""
+        import time
+        now = time.time()
+        if cls._available is not None and (now - cls._last_check_time) < cls._check_ttl:
+            return cls._available
+
+        cls._last_check_time = now
         provider = getattr(settings, "LLM_PROVIDER", "local")
+        if provider == "mock":
+            cls._available = False
+            return False
+
+        configured_model = getattr(settings, "LOCAL_MODEL_NAME", "")
+        candidates = [configured_model, *FALLBACK_MODELS]
+        candidates = [candidate for candidate in candidates if candidate]
         # 1. First priority: Check local Ollama daemon
         try:
-            resp = requests.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=timeout)
+            resp = requests.get(f"{get_ollama_base_url()}/api/tags", timeout=timeout)
             if resp.status_code == 200:
                 models = resp.json().get("models", [])
                 if models:
                     model_names = [m.get("name", "") for m in models]
-                    for candidate in FALLBACK_MODELS:
+                    cls._active_model = None
+                    for candidate in candidates:
                         for m in model_names:
                             if candidate == m or candidate.split(":")[0] == m.split(":")[0]:
                                 cls._active_model = m
                                 break
                         if cls._active_model:
                             break
-                    if not cls._active_model and model_names:
-                        cls._active_model = model_names[0]
+                    if not cls._active_model:
+                        logger.warning(
+                            f"None of candidate models {candidates} are installed in Ollama. "
+                            f"Available models: {model_names}. Please install or create one."
+                        )
+                        cls._available = False
+                        return False
+                else:
+                    logger.warning("Ollama daemon responded, but no models are installed.")
+                    cls._available = False
+                    return False
                 cls._available = True
                 return True
         except Exception:
             pass
 
-        if provider == "local":
-            return cls._available is True
-
-        # Fallback to cloud only if explicitly configured as cloud and local is down
+        # Fallback to cloud if keys are present (True Tier 2 Cascade)
         gemini_key = getattr(settings, "GEMINI_API_KEY", "")
         groq_key = getattr(settings, "GROQ_API_KEY", "") or getattr(settings, "CLOUD_API_KEY", "")
-        if provider == "cloud" and (gemini_key or groq_key):
+        if gemini_key or groq_key:
+            cls._available = True
             return True
+
+        if provider == "local":
+            cls._available = False
+            return False
+
+        cls._available = False
         return False
 
     @classmethod
@@ -62,15 +98,26 @@ class LocalLLMClient:
         return cls._active_model or DEFAULT_MODEL
 
     @classmethod
+    def resolve_model_name(cls, model: Optional[str] = None) -> str:
+        """Map UI complexity labels to real Ollama model names."""
+        requested = (model or "").strip()
+        if requested.upper() == "3B":
+            return getattr(settings, "LOCAL_FAST_MODEL_NAME", "agent65:latest")
+        if requested.upper() == "8B":
+            return getattr(settings, "LOCAL_MODEL_NAME", DEFAULT_MODEL)
+        return requested or cls.get_active_model()
+
+    @classmethod
     def generate(
         cls,
         system_prompt: str,
         user_prompt: str,
         model: Optional[str] = None,
-        timeout: float = 75.0
-    ) -> Optional[str]:
+        timeout: float = 30.0
+    ) -> Tuple[Optional[str], str, str]:
         """
-        Generate a single-turn response from the local LLM.
+        Generate a single-turn response from the hybrid LLM cascade.
+        Returns: (content, provider_type, model_name)
         """
         messages = [
             {"role": "system", "content": system_prompt},
@@ -86,11 +133,12 @@ class LocalLLMClient:
         user_prompt: str,
         model: Optional[str] = None,
         max_history_turns: int = 4,
-        timeout: float = 75.0
-    ) -> Optional[str]:
+        timeout: float = 30.0
+    ) -> Tuple[Optional[str], str, str]:
         """
-        Generate a multi-turn contextual response from the local LLM.
+        Generate a multi-turn contextual response from the hybrid LLM cascade.
         Appends recent conversational history so the model maintains memory.
+        Returns: (content, provider_type, model_name)
         """
         messages: List[Dict[str, str]] = [
             {"role": "system", "content": system_prompt}
@@ -102,8 +150,8 @@ class LocalLLMClient:
             role = "user" if turn.get("sender_role") == "STUDENT" else "assistant"
             content = turn.get("content", "")
             # Truncate very long past turns to save context window
-            if len(content) > 300:
-                content = content[:300] + "..."
+            if len(content) > 800:
+                content = content[:800] + "..."
             if content:
                 messages.append({"role": role, "content": content})
 
@@ -115,63 +163,69 @@ class LocalLLMClient:
         cls,
         messages: List[Dict[str, str]],
         model: Optional[str] = None,
-        timeout: float = 90.0
-    ) -> Optional[str]:
+        timeout: float = 30.0
+    ) -> Tuple[Optional[str], str, str]:
+        """
+        3-Tier Hybrid Cascade:
+        Tier 1: Local Ollama (agent65-8b:latest) with 20.0s timeout.
+        Tier 2: Cloud Accelerated (Groq Qwen-27B / Gemini 2.5 Flash) if local fails or times out.
+        Tier 3: Returns (None, "mock", "deterministic-fallback") to trigger offline deterministic rules.
+        """
         provider = getattr(settings, "LLM_PROVIDER", "local")
+        target_model = cls.resolve_model_name(model)
 
-        # 1. When provider is local, ALWAYS use the local Ollama 8B foundation model
-        target_model = "agent65-8b:latest"
-        if cls._active_model:
-            target_model = cls._active_model
-
-        url = f"{OLLAMA_BASE_URL}/api/chat"
-        payload = {
-            "model": target_model,
-            "messages": messages,
-            "stream": False,
-            "options": {
-                "temperature": 0.3,
-                "top_p": 0.9,
-                "num_predict": 300
+        # ---------------- TIER 1: LOCAL OLLAMA INFERENCE ----------------
+        if provider != "cloud":
+            url = f"{get_ollama_base_url()}/api/chat"
+            payload = {
+                "model": target_model,
+                "messages": messages,
+                "stream": False,
+                "options": {
+                    "temperature": 0.3,
+                    "top_p": 0.9,
+                    "num_predict": 750,
+                    "num_ctx": 4096
+                }
             }
-        }
-        try:
-            resp = requests.post(url, json=payload, timeout=timeout)
-            if resp.status_code == 200:
-                data = resp.json()
-                msg = data.get("message", {}).get("content", "").strip()
-                if msg:
-                    logger.info(f"Successfully generated response from local 8B model ({target_model})")
-                    return cls.clean_latex_formatting(msg)
-        except Exception as e:
-            logger.warning(f"Local Ollama 8B chat failed ({target_model}): {e}")
+            try:
+                resp = requests.post(url, json=payload, timeout=timeout)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    msg = data.get("message", {}).get("content", "").strip()
+                    if msg:
+                        logger.info(f"Successfully generated response from local 8B model ({target_model})")
+                        return cls.clean_latex_formatting(msg), "local", target_model
+            except Exception as e:
+                logger.warning(f"Local Ollama 8B chat failed/timed out ({target_model}): {e}. Shifting to Tier 2 Cloud Acceleration.")
 
-        # 2. Only if provider is explicitly set to 'cloud' does it fallback to external APIs
-        if provider == "cloud":
-            gemini_key = getattr(settings, "GEMINI_API_KEY", "")
-            groq_key = getattr(settings, "GROQ_API_KEY", "") or getattr(settings, "CLOUD_API_KEY", "")
-            if gemini_key:
-                res = cls._send_gemini_chat(messages, timeout=timeout)
-                if res:
-                    return res
-            if groq_key:
-                res = cls._send_groq_chat(messages, timeout=timeout)
-                if res:
-                    return res
+        # ---------------- TIER 2: CLOUD ACCELERATED FALLBACK ----------------
+        groq_key = getattr(settings, "GROQ_API_KEY", "") or getattr(settings, "CLOUD_API_KEY", "")
+        if groq_key:
+            res = cls._send_groq_chat(messages, timeout=12.0)
+            if res:
+                return res, "cloud", "Groq Qwen-27B"
 
-        return None
+        gemini_key = getattr(settings, "GEMINI_API_KEY", "")
+        if gemini_key:
+            res = cls._send_gemini_chat(messages, timeout=12.0)
+            if res:
+                return res, "cloud", "Gemini 2.5 Flash"
+
+        # ---------------- TIER 3: DETERMINISTIC OFFLINE RULES ----------------
+        return None, "mock", "deterministic-fallback"
 
     @classmethod
     def _send_gemini_chat(
         cls,
         messages: List[Dict[str, str]],
-        timeout: float = 75.0
+        timeout: float = 15.0
     ) -> Optional[str]:
         api_key = getattr(settings, "GEMINI_API_KEY", "")
         if not api_key:
             return None
         
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={api_key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
         headers = {
             "Content-Type": "application/json"
         }
@@ -193,7 +247,7 @@ class LocalLLMClient:
         payload = {
             "contents": contents,
             "generationConfig": {
-                "temperature": 0.5,
+                "temperature": 0.4,
                 "maxOutputTokens": 4096
             }
         }
@@ -201,7 +255,7 @@ class LocalLLMClient:
             payload["systemInstruction"] = system_instruction
             
         import time
-        for attempt in range(5):
+        for attempt in range(2):
             try:
                 resp = requests.post(url, headers=headers, json=payload, timeout=timeout)
                 if resp.status_code == 200:
@@ -213,8 +267,7 @@ class LocalLLMClient:
                             cleaned_msg = cls.clean_latex_formatting(msg)
                             return cleaned_msg
                 elif resp.status_code == 429:
-                    logger.warning(f"Gemini API returned 429, sleeping {5 * (attempt+1)}s")
-                    time.sleep(5 * (attempt + 1))
+                    time.sleep(2.0)
                     continue
                 else:
                     logger.warning(f"Gemini API returned {resp.status_code}: {resp.text}")
@@ -228,7 +281,7 @@ class LocalLLMClient:
     def _send_groq_chat(
         cls,
         messages: List[Dict[str, str]],
-        timeout: float = 75.0
+        timeout: float = 15.0
     ) -> Optional[str]:
         api_key = getattr(settings, "GROQ_API_KEY", "") or getattr(settings, "CLOUD_API_KEY", "")
         if not api_key:
@@ -238,44 +291,30 @@ class LocalLLMClient:
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
-        candidate_models = ["openai/gpt-oss-20b", "qwen/qwen3.8-27b", "openai/gpt-oss-120b"]
+        candidate_models = ["qwen/qwen3.8-27b", "openai/gpt-oss-20b"]
         import time
         for candidate_model in candidate_models:
             payload = {
                 "model": candidate_model,
                 "messages": messages,
-                "temperature": 0.5,
+                "temperature": 0.4,
                 "max_tokens": 4096
             }
-            for attempt in range(3):
-                try:
-                    resp = requests.post(url, headers=headers, json=payload, timeout=timeout)
-                    if resp.status_code == 200:
-                        data = resp.json()
-                        msg = data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
-                        if msg:
-                            cleaned_msg = cls.clean_latex_formatting(msg)
-                            return cleaned_msg
-                    elif resp.status_code == 429:
-                        retry_sec = 3.5
-                        try:
-                            hdr = resp.headers.get("Retry-After")
-                            if hdr:
-                                retry_sec = max(float(hdr), 3.0)
-                        except Exception:
-                            retry_sec = 3.5
-                        if retry_sec > 15.0:
-                            logger.warning(f"Groq API model {candidate_model} rate limited for {retry_sec:.1f}s. Skipping to next model to avoid freezing.")
-                            break
-                        logger.warning(f"Groq API model {candidate_model} rate limited (429), waiting {retry_sec:.1f}s for attempt {attempt+1}/3...")
-                        time.sleep(retry_sec)
-                        continue
-                    else:
-                        logger.warning(f"Groq API model {candidate_model} returned {resp.status_code}: {resp.text}")
-                        break
-                except Exception as e:
-                    logger.warning(f"Groq API model {candidate_model} request failed: {e}")
-                    break
+            try:
+                resp = requests.post(url, headers=headers, json=payload, timeout=timeout)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    msg = data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+                    if msg:
+                        cleaned_msg = cls.clean_latex_formatting(msg)
+                        return cleaned_msg
+                elif resp.status_code == 429:
+                    time.sleep(2.0)
+                    continue
+                else:
+                    logger.warning(f"Groq API model {candidate_model} returned {resp.status_code}: {resp.text}")
+            except Exception as e:
+                logger.warning(f"Groq API model {candidate_model} request failed: {e}")
         return None
 
     @staticmethod
