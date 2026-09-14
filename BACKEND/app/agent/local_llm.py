@@ -185,19 +185,23 @@ class LocalLLMClient:
         gemini_key = getattr(settings, "GEMINI_API_KEY", "")
         groq_key = getattr(settings, "GROQ_API_KEY", "") or getattr(settings, "CLOUD_API_KEY", "")
 
-        # ---------------- PRIORITY FOR INDIC LANGUAGES (Hindi / Hinglish / Telugu) ----------------
-        # Cloud LLMs (Gemini / Groq) possess vast native multilingual vocabularies & zero script drift
-        if is_indic and (gemini_key or groq_key):
+        # ---------------- PRIORITY FOR LONG PROMPTS & INDIC LANGUAGES ----------------
+        # Cloud LLMs (Gemini / Groq) handle long reasoning better and possess vast native multilingual vocabularies
+        user_msg = next((m.get("content", "") for m in reversed(messages) if m.get("role") == "user"), "")
+        is_long_prompt = len(user_msg.split()) > 30
+
+        if (is_indic or is_long_prompt) and (gemini_key or groq_key):
+            routing_reason = "Indic language" if is_indic else f"Long prompt ({len(user_msg.split())} words)"
             if gemini_key:
                 res = cls._send_gemini_chat(messages, timeout=14.0)
                 if res:
-                    logger.info("Successfully generated Indic language response via Gemini Cloud API")
-                    return res, "cloud", "Gemini 3.6 Flash (Indic)"
+                    logger.info(f"Successfully generated response via Gemini Cloud API (Reason: {routing_reason})")
+                    return res, "cloud", "Gemini 3.6 Flash"
             if groq_key:
                 res = cls._send_groq_chat(messages, timeout=14.0)
                 if res:
-                    logger.info("Successfully generated Indic language response via Groq Cloud API")
-                    return res, "cloud", "Groq Cloud (Indic)"
+                    logger.info(f"Successfully generated response via Groq Cloud API (Reason: {routing_reason})")
+                    return res, "cloud", "Groq Cloud"
 
         # ---------------- TIER 1: LOCAL OLLAMA INFERENCE ----------------
         if provider != "cloud":
