@@ -5,8 +5,26 @@ import sqlite3
 import json
 from typing import Dict, Any, List, Optional
 from app.config import settings
+def is_postgres_configured() -> bool:
+    db_url = (getattr(settings, "DATABASE_URL", "") or "").strip()
+    return db_url.startswith("postgresql://") or db_url.startswith("postgres://") or "+psycopg" in db_url
 
 def get_db_connection():
+    if is_postgres_configured():
+        db_url = getattr(settings, "DATABASE_URL", "")
+        cleaned_url = db_url.replace("postgresql+psycopg://", "postgresql://")
+        try:
+            import psycopg
+            from psycopg.rows import dict_row
+            return psycopg.connect(cleaned_url, row_factory=dict_row)
+        except ImportError:
+            try:
+                import psycopg2
+                import psycopg2.extras
+                return psycopg2.connect(cleaned_url, cursor_factory=psycopg2.extras.RealDictCursor)
+            except ImportError:
+                raise RuntimeError("PostgreSQL driver (psycopg or psycopg2) is not installed.")
+
     db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "student_helpdesk.db"))
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
@@ -77,20 +95,36 @@ class DatabaseSession:
 class DataRepository:
     """
     Data repository providing strictly row-level secured access to all student records
-    using SQLite database directly.
+    using SQLite or PostgreSQL database directly.
     """
     
     @staticmethod
     def _execute_query(query: str, params: tuple = ()) -> List[Dict[str, Any]]:
+        use_pg = is_postgres_configured()
+        if use_pg:
+            query = query.replace("?", "%s")
         with get_db_connection() as conn:
-            cur = conn.execute(query, params)
-            return [dict(row) for row in cur.fetchall()]
+            if use_pg:
+                with conn.cursor() as cur:
+                    cur.execute(query, params)
+                    return [dict(row) for row in cur.fetchall()]
+            else:
+                cur = conn.execute(query, params)
+                return [dict(row) for row in cur.fetchall()]
 
     @staticmethod
     def _execute_insert(query: str, params: tuple = ()):
+        use_pg = is_postgres_configured()
+        if use_pg:
+            query = query.replace("?", "%s")
         with get_db_connection() as conn:
-            conn.execute(query, params)
-            conn.commit()
+            if use_pg:
+                with conn.cursor() as cur:
+                    cur.execute(query, params)
+                conn.commit()
+            else:
+                conn.execute(query, params)
+                conn.commit()
 
     @staticmethod
     def _resolve_student_id(session: DatabaseSession) -> Optional[str]:

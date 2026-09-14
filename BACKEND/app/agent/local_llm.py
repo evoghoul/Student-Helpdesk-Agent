@@ -189,7 +189,8 @@ class LocalLLMClient:
                 }
             }
             try:
-                resp = requests.post(url, json=payload, timeout=timeout)
+                # Fast 4.0s connection timeout so that if the laptop is off, it quickly cascades to cloud
+                resp = requests.post(url, json=payload, timeout=(4.0, timeout))
                 if resp.status_code == 200:
                     data = resp.json()
                     msg = data.get("message", {}).get("content", "").strip()
@@ -204,7 +205,7 @@ class LocalLLMClient:
         if groq_key:
             res = cls._send_groq_chat(messages, timeout=12.0)
             if res:
-                return res, "cloud", "Groq Qwen-27B"
+                return res, "cloud", "Groq Llama-3.3-70B / 3.1-8B"
 
         gemini_key = getattr(settings, "GEMINI_API_KEY", "")
         if gemini_key:

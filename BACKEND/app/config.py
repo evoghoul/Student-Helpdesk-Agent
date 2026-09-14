@@ -15,8 +15,8 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
     
-    # Database: Default to false (persistent SQLite database at database/student_helpdesk.db)
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/student_helpdesk")
+    # Database: Default to persistent SQLite database at database/student_helpdesk.db
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///database/student_helpdesk.db")
     USE_IN_MEMORY_DB: bool = os.getenv("USE_IN_MEMORY_DB", "false").lower() in ("true", "1", "yes")
     
     # LLM Provider: 'local' (default, Ollama), 'mock' (deterministic templates), 'cloud' (OpenAI/Gemini)
