@@ -1,4 +1,5 @@
 import re
+import os
 from typing import Dict, Any, List, Optional, Tuple
 from app.database import DataRepository, DatabaseSession
 from app.tools.attendance_tool import get_attendance_summary, calculate_consecutive_needed
@@ -534,9 +535,10 @@ class NLUEngine:
 
             is_peer_query = cls.has_any_word(query.lower(), ["other student", "another student", "other students", "classmates", "classmate", "peers", "peer", "topper", "toppers", "compare", "comparison", "highest marks", "highest cgpa", "batch average"])
             if is_peer_query:
+                privacy_policy = os.environ.get("PRIVACY_POLICY_MESSAGE", "I cannot share other student records under university policies")
                 procedural_directive = (
                     "11. PEER PRIVACY BOUNDARY: The student is asking about other students or comparing themselves to peers.\n"
-                    "   a) Politely explain that under university regulations, you cannot share details or records of other students.\n"
+                    f"   a) Politely explain: {privacy_policy}\n"
                     "   b) Then, optionally offer to show the logged-in student their own related data (e.g., 'However, if you want to check your own attendance or performance, I can help you with that!').\n"
                     "   c) Do not automatically dump their metrics in the same breath. Rephrase the sentences to sound natural, helpful, and beautifully formatted."
                 )
@@ -704,8 +706,9 @@ class NLUEngine:
             is_peer_query = cls.has_any_word(q_lower, ["other student", "another student", "other students", "classmates", "classmate", "peers", "peer", "topper", "toppers", "compare", "comparison", "highest marks", "highest cgpa", "batch average"])
             
             if is_peer_query:
+                privacy_policy = os.environ.get("PRIVACY_POLICY_MESSAGE", "I cannot share other student records under university policies")
                 return (
-                    "Under university regulations, I cannot share details or records of other students. "
+                    f"{privacy_policy} "
                     "However, if you'd like to check your own attendance or performance, I'm here to help!"
                 )
 
