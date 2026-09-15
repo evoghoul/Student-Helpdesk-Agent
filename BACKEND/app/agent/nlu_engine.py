@@ -57,6 +57,8 @@ class NLUEngine:
             return cls.generate_proactive_briefing(session, effective_lang)
 
         # ---------------- 2. DETECT BACKGROUND ACTIONS & STRUCTURED CARDS ----------------
+        is_peer_query = cls.has_any_word(q_lower, ["other student", "another student", "other students", "classmates", "classmate", "peers", "peer", "topper", "toppers", "compare", "comparison", "highest marks", "highest cgpa", "batch average"])
+
         # In modern LLM architecture, we identify if a transactional action/card should accompany the conversational response
         card_data: Optional[Dict[str, Any]] = None
         citations: List[Dict[str, Any]] = []
@@ -186,7 +188,7 @@ class NLUEngine:
             ]
 
         # C1. Procedural Academic Guidance & Peer Boundary Analysis (Step 2, 3, 4, 7)
-        elif cls.is_peer_or_procedural_guidance(q_lower):
+        elif cls.is_peer_or_procedural_guidance(q_lower) and not is_peer_query:
             profile = DataRepository.get_student_profile(session)
             name = profile.get("full_name", "Student") if profile else "Student"
             first_name = name.split()[0] if name else "Student"
@@ -235,7 +237,7 @@ class NLUEngine:
             ]
 
         # D. Attendance Card (Non-destructive widget attachment)
-        elif cls.has_any_word(q_lower, ["attendance", "classes held", "classes attended", "attendance shortage", "bunk", "bunked", "75%"]) and not cls.has_any_word(q_lower, ["policy", "policies", "regulation", "regulations", "condonation", "hall ticket", "admit card", "hold"]):
+        elif cls.has_any_word(q_lower, ["attendance", "classes held", "classes attended", "attendance shortage", "bunk", "bunked", "75%"]) and not cls.has_any_word(q_lower, ["policy", "policies", "regulation", "regulations", "condonation", "hall ticket", "admit card", "hold"]) and not is_peer_query:
             att_res = get_attendance_summary(session, active_subject)
             direct_response_text = att_res.get("text", "")
             card_data = att_res.get("structured_card")
@@ -254,7 +256,7 @@ class NLUEngine:
             source_agent = "Agent 11 (Attendance System)"
 
         # D. Exam Card
-        elif cls.has_any_word(q_lower, ["exam", "exams", "assessment", "assessments", "cie", "cie-1", "cie-2", "cie 2", "second formative", "formative assessment", "hall ticket", "examination schedule", "exam date"]):
+        elif cls.has_any_word(q_lower, ["exam", "exams", "assessment", "assessments", "cie", "cie-1", "cie-2", "cie 2", "second formative", "formative assessment", "hall ticket", "examination schedule", "exam date"]) and not is_peer_query:
             exam_res = get_exams_summary(session)
             direct_response_text = exam_res.get("text", "")
             card_data = exam_res.get("structured_card")
@@ -271,7 +273,7 @@ class NLUEngine:
             source_agent = "Agent 30 & Agent 34 (Examination Hub)"
 
         # E. Fee Card (CRITICAL: Whole-word boundary ensures 'feeling' never triggers this)
-        elif cls.has_any_word(q_lower, ["fee", "fees", "dues", "tuition", "payment", "installment", "pay fee", "balance due", "pending fees", "fee demand", "fee receipt"]):
+        elif cls.has_any_word(q_lower, ["fee", "fees", "dues", "tuition", "payment", "installment", "pay fee", "balance due", "pending fees", "fee demand", "fee receipt"]) and not is_peer_query:
             fee_res = get_fees_summary(session)
             direct_response_text = fee_res.get("text", "")
             card_data = fee_res.get("structured_card")
@@ -288,7 +290,7 @@ class NLUEngine:
             source_agent = "Agent 40 (Finance Engine)"
 
         # F. Timetable Card
-        elif cls.has_any_word(q_lower, ["timetable", "class schedule", "schedule today", "classes today", "class today", "next class", "room no", "lecture time"]):
+        elif cls.has_any_word(q_lower, ["timetable", "class schedule", "schedule today", "classes today", "class today", "next class", "room no", "lecture time"]) and not is_peer_query:
             tt_res = get_timetable_summary(session)
             direct_response_text = tt_res.get("text", "")
             card_data = tt_res.get("structured_card")
@@ -297,7 +299,7 @@ class NLUEngine:
             source_agent = "Agent 10 (Scheduling Service)"
 
         # G. Marks & Grades Card
-        elif cls.has_any_word(q_lower, ["mark", "marks", "score", "scores", "grade", "grades", "gpa", "sgpa", "cgpa", "backlog", "backlogs", "internal mark", "internal marks"]):
+        elif cls.has_any_word(q_lower, ["mark", "marks", "score", "scores", "grade", "grades", "gpa", "sgpa", "cgpa", "backlog", "backlogs", "internal mark", "internal marks"]) and not is_peer_query:
             marks_res = get_marks_summary(session)
             direct_response_text = marks_res.get("text", "")
             card_data = marks_res.get("structured_card")
@@ -314,7 +316,7 @@ class NLUEngine:
             source_agent = "Agent 30 (Assessment Engine)"
 
         # H. Curriculum & Degree Card
-        elif cls.has_any_word(q_lower, ["curriculum", "credit", "credits", "graduate", "graduation", "next semester", "prerequisite", "degree audit", "subject", "subjects", "semester"]):
+        elif cls.has_any_word(q_lower, ["curriculum", "credit", "credits", "graduate", "graduation", "next semester", "prerequisite", "degree audit", "subject", "subjects", "semester"]) and not is_peer_query:
             curr_res = get_curriculum_summary(session)
             if cls.has_any_word(q_lower, ["subject", "subjects"]):
                 enrolled_subjects = DataRepository.get_attendance(session)
@@ -530,6 +532,25 @@ class NLUEngine:
             coun_name = advisors.get("counsellor", {}).get("name", "Dr. Radhika Sharma")
             ct_name = advisors.get("class_teacher", {}).get("name", "Mr. T. Latesh Babu")
 
+            is_peer_query = cls.has_any_word(query.lower(), ["other student", "another student", "other students", "classmates", "classmate", "peers", "peer", "topper", "toppers", "compare", "comparison", "highest marks", "highest cgpa", "batch average"])
+            if is_peer_query:
+                procedural_directive = (
+                    "11. PEER PRIVACY BOUNDARY: The student is asking about other students or comparing themselves to peers.\n"
+                    "   a) Politely explain that under university regulations, you cannot share details or records of other students.\n"
+                    "   b) Then, optionally offer to show the logged-in student their own related data (e.g., 'However, if you want to check your own attendance or performance, I can help you with that!').\n"
+                    "   c) Do not automatically dump their metrics in the same breath. Rephrase the sentences to sound natural, helpful, and beautifully formatted."
+                )
+            else:
+                procedural_directive = (
+                    "11. PROCEDURAL GUIDANCE: If the student asks how to perform better, improve CGPA/grades, top the class, or study effectively:\n"
+                    f"   a) Ground your advice directly in their actual profile metrics (Current CGPA: {cgpa_val:.2f}, Overall Attendance: {att_val:.0f}%).\n"
+                    "   b) Provide a structured, numbered 3-part academic improvement roadmap:\n"
+                    "      1. Target S-Grades in Formative Assessments: Upcoming CIE exams begin on October 6. Focusing on core theory credits will provide the highest weight toward pushing CGPA above 8.5/9.0 under the 10-point relative grading scale.\n"
+                    f"      2. Attendance Safety Buffer: At {att_val:.0f}%, attendance is right on the borderline of the 75% mandatory cutoff. Attending the next 5 consecutive lectures will secure exam eligibility without condonation risk.\n"
+                    f"      3. Academic Guidance: Proactively offer to schedule a 1-on-1 counseling session with counselor {coun_name} (or class teacher {ct_name}) or raise an academic support request through Agent 46.\n"
+                    "   c) NEVER dump an introductory capabilities menu or say 'You can ask me about...' when asked for academic or procedural guidance."
+                )
+
             system_prompt = (
                 "You are Agent 65, an intelligent university student helpdesk AI running locally with genuine reasoning grounded in verified university records.\n\n"
                 f"{grounded_context}\n"
@@ -545,14 +566,7 @@ class NLUEngine:
                 "8. If the student expresses physical strain, headache, fatigue, or stress, be empathetic and supportive.\n"
                 "9. Never hallucinate fake grades or dates not present in the verified records.\n"
                 "10. Be concise, clear, and articulate. Express all formatting using clean Markdown bullets and bold text. NEVER use LaTeX tags or raw HTML tags.\n"
-                "11. PROCEDURAL GUIDANCE & PEER PRIVACY BOUNDARY: If the student asks how to perform better, improve CGPA/grades, top the class, study effectively, or asks to compare with other students / classmates / toppers:\n"
-                "   a) Enforce the privacy & Row-Level Access Control (RLAC) boundary FIRST: Explicitly state that under institutional privacy and data protection policies, you cannot retrieve or compare individual academic records of other students.\n"
-                f"   b) Ground your advice directly in their actual profile metrics (Current CGPA: {cgpa_val:.2f}, Overall Attendance: {att_val:.0f}%).\n"
-                "   c) Provide a structured, numbered 3-part academic improvement roadmap:\n"
-                "      1. Target S-Grades in Formative Assessments: Upcoming CIE exams begin on October 6. Focusing on core theory credits will provide the highest weight toward pushing CGPA above 8.5/9.0 under the 10-point relative grading scale.\n"
-                f"      2. Attendance Safety Buffer: At {att_val:.0f}%, attendance is right on the borderline of the 75% mandatory cutoff. Attending the next 5 consecutive lectures will secure exam eligibility without condonation risk.\n"
-                f"      3. Academic Guidance: Proactively offer to schedule a 1-on-1 counseling session with counselor {coun_name} (or class teacher {ct_name}) or raise an academic support request through Agent 46.\n"
-                "   d) NEVER dump an introductory capabilities menu or say 'You can ask me about...' when asked for academic or procedural guidance.\n"
+                f"{procedural_directive}\n"
                 "12. When asked for student identity, registration number, or roll number, ALWAYS state their verified Roll Number and Name from the Authenticated Student Verified Records."
             )
             llm_reply, provider_used, model_used = LocalLLMClient.chat_with_history(
@@ -687,14 +701,16 @@ class NLUEngine:
             coun = advisors.get("counsellor", {}) if advisors else {}
             coun_name = coun.get("name", "Dr. Radhika Sharma")
 
-            is_peer_query = cls.has_any_word(q_lower, ["other student", "other students", "classmates", "peers", "topper", "toppers", "rank", "ranking", "compare", "comparison", "highest marks", "highest cgpa", "batch average"])
-            boundary_statement = ""
+            is_peer_query = cls.has_any_word(q_lower, ["other student", "another student", "other students", "classmates", "classmate", "peers", "peer", "topper", "toppers", "compare", "comparison", "highest marks", "highest cgpa", "batch average"])
+            
             if is_peer_query:
-                boundary_statement = "Under our privacy and data protection policies, I cannot retrieve or compare individual academic records of other students.\n\n"
+                return (
+                    "Under university regulations, I cannot share details or records of other students. "
+                    "However, if you'd like to check your own attendance or performance, I'm here to help!"
+                )
 
             return (
-                f"{boundary_statement}"
-                f"However, looking at your current profile, you are maintaining a solid **{cgpa:.2f} CGPA** with **{overall_att:.0f}% attendance**. To elevate your performance:\n\n"
+                f"Looking at your current profile, you are maintaining a solid **{cgpa:.2f} CGPA** with **{overall_att:.0f}% attendance**. To elevate your performance:\n\n"
                 f"1. **Target S-Grades in Formative Assessments:** Your upcoming CIE exams begin on **October 6**. Focusing on your core theory credits will provide the highest weight toward pushing your CGPA above 8.5.\n"
                 f"2. **Attendance Safety Buffer:** At {overall_att:.0f}%, you are right on the borderline of the 75% mandatory cutoff. Attending your next 5 consecutive lectures will secure your exam eligibility without condonation risk.\n"
                 f"3. **Academic Guidance:** Would you like me to schedule a 1-on-1 counseling session with your counselor, **{coun_name}**, or raise an academic support request through Agent 46?"
