@@ -174,10 +174,10 @@ class DataRepository:
                 "cabin": profile.get("class_teacher_cabin") or "N-312 Faculty Staff Room / CSE Department"
             },
             "counsellor": {
-                "name": profile.get("counsellor_name") or "Dr. Radhika Sharma",
-                "phone": profile.get("counsellor_phone") or "+91 98480 12345",
-                "email": profile.get("counsellor_email") or "radhika.sharma@vignan.ac.in",
-                "cabin": profile.get("counsellor_cabin") or "C-402, Student Wellness Center & Counseling Cell"
+                "name": profile.get("counsellor_name") or "Mr. T. Latesh Babu",
+                "phone": profile.get("counsellor_phone") or "+91 94901 23456",
+                "email": profile.get("counsellor_email") or "latesh.babu@vignan.ac.in",
+                "cabin": profile.get("counsellor_cabin") or "N-312 Faculty Staff Room / CSE Department"
             },
             "mentor": {
                 "name": profile.get("mentor_name") or profile.get("class_teacher_name") or "Mr. T. Latesh Babu",

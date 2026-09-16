@@ -19,7 +19,7 @@ export type QueryCategory =
   | "DISTRESS_SUPPORT";
 
 export interface StructuredCardData {
-  type: "attendance" | "exam" | "fee" | "curriculum" | "timetable" | "service" | "distress";
+  type: "attendance" | "exam" | "fee" | "curriculum" | "timetable" | "service" | "distress" | "ACADEMIC_ROADMAP" | "ACADEMIC_ADVISING_PLAN" | "FACULTY_CONTACT";
   title: string;
   subtitle?: string;
   badge?: string;

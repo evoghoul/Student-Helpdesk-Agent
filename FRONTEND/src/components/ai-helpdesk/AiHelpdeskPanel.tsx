@@ -32,6 +32,8 @@ import {
   Check,
   Cpu,
   Cloud,
+  FileText,
+  SlidersHorizontal,
 } from "lucide-react";
 import {
   StructuredCardData,
@@ -46,6 +48,103 @@ import { cn } from "@/lib/utils";
 import { useAgentChat } from "@/context/AgentChatContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useStudent } from "@/context/StudentContext";
+
+const InteractiveAttendanceCard = ({ card, tone, onOpenServiceModal, onNavigateTab }: any) => {
+  const [simulatedClasses, setSimulatedClasses] = React.useState(0);
+  const data = card.data || {};
+  
+  const calculateSimulatedPct = () => {
+    let held = Number(data.classesHeld || 40);
+    let attended = Number(data.classesAttended || 29);
+    
+    if (data.current_attendance) {
+      const current = parseFloat(data.current_attendance.replace('%', ''));
+      held = 100;
+      attended = current;
+    }
+    
+    const newHeld = held + simulatedClasses;
+    const newAtt = attended + simulatedClasses;
+    return Math.min(100, Math.round((newAtt / newHeld) * 100));
+  };
+  
+  const currentPct = parseFloat(String(data.currentPct || data.current_attendance || "75").replace('%', ''));
+  const targetPct = 75;
+
+  return (
+    <div className={cn("mt-3 rounded-lg border p-4 shadow-xs", tone.border, tone.bg)}>
+      <div className="flex flex-wrap items-center gap-2 mb-2">
+        <Badge variant={tone.badge} className="whitespace-normal text-left">{card.badge}</Badge>
+        <span className="text-xs font-bold text-slate-900">{card.title}</span>
+      </div>
+      <p className="text-xs text-slate-700 mb-3 font-medium">{card.subtitle}</p>
+      
+      <div className="grid grid-cols-2 gap-2 mb-4">
+        <div className="rounded-lg bg-card p-2.5 border border-slate-200">
+          <div className="text-xs text-muted-foreground">{data.current_cgpa ? "Current CGPA" : "Current Pct"}</div>
+          <div className="font-bold text-slate-800">{data.current_cgpa || `${currentPct.toFixed(1)}%`}</div>
+        </div>
+        <div className="rounded-lg bg-card p-2.5 border border-slate-200">
+          <div className="text-xs text-muted-foreground">{data.attendance_buffer ? "Buffer" : "Needed"}</div>
+          <div className="font-bold text-slate-800 text-[11px] leading-tight mt-1">{data.attendance_buffer || `Next ${data.classesNeeded || 0} classes`}</div>
+        </div>
+      </div>
+
+      <div className="mb-4 bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+             <SlidersHorizontal className="w-3 h-3 text-slate-500" />
+             Attendance Recovery Simulator
+          </span>
+          <span className="text-[10px] font-mono text-slate-600 font-bold">Target: {targetPct}%</span>
+        </div>
+        
+        <input
+          type="range"
+          min="0"
+          max="15"
+          value={simulatedClasses}
+          onChange={(e) => setSimulatedClasses(parseInt(e.target.value))}
+          className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-600 mb-2"
+        />
+        
+        <div className="flex justify-between items-center bg-slate-50 rounded p-1.5 border border-slate-100">
+          <span className="text-[11px] text-slate-600">+ {simulatedClasses} classes</span>
+          <span className="text-xs font-bold text-slate-900">{calculateSimulatedPct()}%</span>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {card.actionLabel && (
+          <button
+            onClick={() => {
+              if (card.actionIntent?.startsWith("view:")) onNavigateTab(card.actionIntent.split(":")[1]);
+              else onOpenServiceModal(card.actionIntent);
+            }}
+            className={cn("flex items-center gap-1 rounded-lg text-white px-3 py-1.5 text-xs font-semibold transition-colors shadow-xs cursor-pointer", tone.button)}
+          >
+            <span>{card.actionLabel}</span>
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </button>
+        )}
+        <button
+          onClick={() => onOpenServiceModal("GRIEVANCE")}
+          className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 transition-colors shadow-xs cursor-pointer hover:bg-slate-50"
+        >
+          <span>Create Grievance</span>
+          <FileText className="h-3.5 w-3.5 text-rose-500" />
+        </button>
+        <button
+          onClick={() => onOpenServiceModal("BONAFIDE_CERTIFICATE")}
+          className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 transition-colors shadow-xs cursor-pointer hover:bg-slate-50"
+        >
+          <span>Request Document</span>
+          <FileText className="h-3.5 w-3.5 text-emerald-500" />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export interface AiHelpdeskPanelProps {
   onNavigateTab: (tab: string) => void;
@@ -186,6 +285,13 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
       button: "bg-indigo-600 hover:bg-indigo-700",
       tile: "border-indigo-100",
     },
+    academicRoadmap: {
+      border: "border-emerald-200",
+      bg: "bg-emerald-50/50",
+      badge: "success" as const,
+      button: "bg-emerald-600 hover:bg-emerald-700",
+      tile: "border-emerald-100",
+    }
   };
 
   // Render structured interactive card
@@ -232,44 +338,40 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
       );
     }
 
-    if (card.type === "attendance") {
-      const data = card.data as Record<string, unknown>;
-      const tone = cardTone.attendance;
+    if (card.type === "attendance" || card.type === "ACADEMIC_ROADMAP" || card.type === "ACADEMIC_ADVISING_PLAN") {
+      const tone = card.type === "attendance" ? cardTone.attendance : cardTone.academicRoadmap;
+      return <InteractiveAttendanceCard key={card.title} card={card} tone={tone} onOpenServiceModal={onOpenServiceModal} onNavigateTab={onNavigateTab} />;
+    }
+
+    if (card.type === "FACULTY_CONTACT") {
+      const tone = cardTone.curriculum;
+      const data = card.data as Record<string, any>;
       return (
         <div className={cn("mt-3 rounded-lg border p-4 shadow-xs", tone.border, tone.bg)}>
-          <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
-            <div className="flex flex-wrap items-center gap-2 min-w-0">
-              <Badge variant={tone.badge} className="whitespace-normal text-left">{card.badge}</Badge>
-              <span className="text-xs font-bold text-foreground">{card.title}</span>
-            </div>
-            <span className="text-xs font-bold text-amber-900 shrink-0">{String(data.currentAttendance || "68%")}</span>
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <Badge variant={tone.badge} className="whitespace-normal text-left">{card.badge}</Badge>
+            <span className="text-xs font-bold text-cyan-950">{card.title}</span>
           </div>
-
-          <div className="grid grid-cols-2 gap-2 my-2 text-xs">
-            <div className={cn("rounded-lg bg-card p-2.5 border", tone.tile)}>
-              <div className="text-sm text-muted-foreground">{t.classesAttended}</div>
-              <div className="font-bold text-foreground">{String(data.attendedRatio || "34 / 50")}</div>
-            </div>
-            <div className={cn("rounded-lg bg-card p-2.5 border", tone.tile)}>
-              <div className="text-sm text-muted-foreground">Target for 70%</div>
-              <div className="font-bold text-amber-700">
-                {data.consecutiveNeeded70 ? `${String(data.consecutiveNeeded70)} classes consecutive` : "Requirement met"}
+          <p className="text-xs text-cyan-900/90 mb-3 font-medium">{card.subtitle}</p>
+          
+          <div className="space-y-2 mb-4">
+            {Object.entries(data).map(([role, info]: [string, any]) => (
+              <div key={role} className="flex justify-between items-center rounded-lg bg-card p-2 border border-cyan-100 shadow-sm text-xs">
+                <span className="font-semibold text-cyan-800 capitalize">{role.replace('_', ' ')}</span>
+                <span className="text-slate-600">{info?.name}</span>
               </div>
-            </div>
+            ))}
           </div>
 
-          <div className="flex items-start gap-1.5 text-sm text-amber-900/90 font-medium mb-3">
-            <Lightbulb className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-600" />
-            <p><strong>Actionable Guidance:</strong> Attend the next 4 classes consecutively to reach 70% threshold, assuming no additional absences are incurred.</p>
-          </div>
-
-          <button
-            onClick={() => onNavigateTab("attendance")}
-            className={cn("flex items-center gap-1 rounded-lg text-white px-3 py-1.5 text-xs font-semibold transition-colors shadow-xs cursor-pointer", tone.button)}
-          >
-            <span>{tr.openAttendanceDrawer}</span>
-            <ArrowUpRight className="h-3.5 w-3.5" />
-          </button>
+          {card.actionLabel && (
+            <button
+              onClick={() => onOpenServiceModal(card.actionIntent)}
+              className={cn("flex items-center gap-1 rounded-lg text-white px-3 py-1.5 text-xs font-semibold transition-colors shadow-xs cursor-pointer", tone.button)}
+            >
+              <span>{card.actionLabel}</span>
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       );
     }

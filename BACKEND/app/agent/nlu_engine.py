@@ -196,7 +196,8 @@ class NLUEngine:
             cgpa = profile.get("cgpa", 8.09) or 8.09
             overall_att = profile.get("overall_attendance_pct", 76.0) or 76.0
             advisors = DataRepository.get_student_advisors(session)
-            coun_name = advisors.get("counsellor", {}).get("name", "Dr. Radhika Sharma") if advisors else "Dr. Radhika Sharma"
+            coun_name = advisors.get("counsellor", {}).get("name", "Mr. T. Latesh Babu") if advisors else "Mr. T. Latesh Babu"
+            coun_phone = advisors.get("counsellor", {}).get("phone", "+91 94901 23456") if advisors else "+91 94901 23456"
             ct_name = advisors.get("class_teacher", {}).get("name", "Mr. T. Latesh Babu") if advisors else "Mr. T. Latesh Babu"
 
             card_data = {
@@ -213,7 +214,7 @@ class NLUEngine:
                     "attendance_buffer": "Attend next 5 consecutive lectures without absence",
                     "key_milestone": "CIE-1 Assessments starting October 6, 2026",
                     "priority_focus": "Target S-Grades in Core Theory Credits",
-                    "assigned_counsellor": coun_name,
+                    "assigned_counsellor": f"{coun_name} (Ph: {coun_phone})",
                     "class_teacher": ct_name
                 },
                 "actionLabel": f"Book Session with {coun_name}",
@@ -530,7 +531,7 @@ class NLUEngine:
             if att_val is None:
                 att_val = 76.0
             advisors = DataRepository.get_student_advisors(session) or {}
-            coun_name = advisors.get("counsellor", {}).get("name", "Dr. Radhika Sharma")
+            coun_name = advisors.get("counsellor", {}).get("name", "Mr. T. Latesh Babu")
             ct_name = advisors.get("class_teacher", {}).get("name", "Mr. T. Latesh Babu")
 
             is_peer_query = cls.has_any_word(query.lower(), ["other student", "another student", "other students", "classmates", "classmate", "peers", "peer", "topper", "toppers", "compare", "comparison", "highest marks", "highest cgpa", "batch average"])
@@ -701,7 +702,9 @@ class NLUEngine:
             overall_att = profile.get("overall_attendance_pct", 76.0) or 76.0
             advisors = DataRepository.get_student_advisors(session)
             coun = advisors.get("counsellor", {}) if advisors else {}
-            coun_name = coun.get("name", "Dr. Radhika Sharma")
+            coun_name = coun.get("name", "Mr. T. Latesh Babu")
+            coun_phone = coun.get("phone", "+91 94901 23456")
+            coun_email = coun.get("email", "latesh.babu@vignan.ac.in")
 
             is_peer_query = cls.has_any_word(q_lower, ["other student", "another student", "other students", "classmates", "classmate", "peers", "peer", "topper", "toppers", "compare", "comparison", "highest marks", "highest cgpa", "batch average"])
             
@@ -716,7 +719,7 @@ class NLUEngine:
                 f"Looking at your current profile, you are maintaining a solid **{cgpa:.2f} CGPA** with **{overall_att:.0f}% attendance**. To elevate your performance:\n\n"
                 f"1. **Target S-Grades in Formative Assessments:** Your upcoming CIE exams begin on **October 6**. Focusing on your core theory credits will provide the highest weight toward pushing your CGPA above 8.5.\n"
                 f"2. **Attendance Safety Buffer:** At {overall_att:.0f}%, you are right on the borderline of the 75% mandatory cutoff. Attending your next 5 consecutive lectures will secure your exam eligibility without condonation risk.\n"
-                f"3. **Academic Guidance:** Would you like me to schedule a 1-on-1 counseling session with your counselor, **{coun_name}**, or raise an academic support request through Agent 46?"
+                f"3. **Academic Guidance:** Would you like me to schedule a 1-on-1 counseling session with your counselor, **{coun_name}** (Ph: {coun_phone}, Email: {coun_email}), or raise an academic support request through Agent 46?"
             )
 
         # 4. Service Request triggers in prompt
@@ -953,7 +956,7 @@ class NLUEngine:
         # 12. Universal Fallback (Guarantees no None return)
         advisors = DataRepository.get_student_advisors(session)
         ct_name = advisors.get("class_teacher", {}).get("name", "Mr. T. Latesh Babu") if advisors else "Mr. T. Latesh Babu"
-        coun_name = advisors.get("counsellor", {}).get("name", "Dr. Radhika Sharma") if advisors else "Dr. Radhika Sharma"
+        coun_name = advisors.get("counsellor", {}).get("name", "Mr. T. Latesh Babu") if advisors else "Mr. T. Latesh Babu"
         cgpa = profile.get("cgpa", 8.09) or 8.09
         overall_att = profile.get("overall_attendance_pct", 76.0) or 76.0
 
@@ -1318,7 +1321,7 @@ class NLUEngine:
         q_lower = query.lower()
         if cls.is_peer_or_procedural_guidance(q_lower):
             return [
-                "Book mentor meeting with Dr. Radhika Sharma",
+                "Book mentor meeting with Mr. T. Latesh Babu",
                 "What are the grade point boundaries for S and A grades?",
                 "When is my next CIE exam?"
             ]
