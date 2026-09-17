@@ -22,6 +22,7 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  Users,
 } from "lucide-react";
 import { CURRENT_STUDENT } from "@/data/student";
 import { ATTENDANCE_DATA } from "@/data/attendance";
@@ -134,6 +135,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       title: t.sectionSystem || "University Info",
       items: [
+        {
+          id: "clubs",
+          label: "Clubs & Communities",
+          icon: Users,
+        },
         {
           id: "policies",
           label: t.navPolicies || "Policies & Regulations",

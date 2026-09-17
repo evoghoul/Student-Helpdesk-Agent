@@ -16,6 +16,7 @@ import { CurriculumView } from "@/components/curriculum/CurriculumView";
 import { PoliciesView } from "@/components/policies/PoliciesView";
 import { CircularsView } from "@/components/circulars/CircularsView";
 import { CalendarView } from "@/components/calendar/CalendarView";
+import { ClubsView } from "@/components/clubs/ClubsView";
 import { StudentServicesView } from "@/components/services/StudentServicesView";
 import { ServiceRequestModal } from "@/components/services/ServiceRequestModal";
 import { HumanEscalationModal } from "@/components/escalation/HumanEscalationModal";
@@ -326,6 +327,11 @@ function StudentHelpdeskContent() {
           {/* Tab: Circulars */}
           {activeTab === "circulars" && (
             <CircularsView onAskHelpdesk={handleAskHelpdesk} />
+          )}
+
+          {/* Tab: Clubs & Communities */}
+          {activeTab === "clubs" && (
+            <ClubsView />
           )}
 
           {/* Tab: Calendar */}
