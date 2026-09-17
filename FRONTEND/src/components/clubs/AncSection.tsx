@@ -1,6 +1,9 @@
+"use client";
+
 import React, { useState } from 'react';
-import { AlertTriangle, ShieldCheck, Send } from 'lucide-react';
+import { AlertTriangle, ShieldCheck, Send, Search, Loader2 } from 'lucide-react';
 import { Club } from '@/data/clubs';
+import { submitAncComplaint, trackComplaint } from '@/actions/db';
 
 interface AncSectionProps {
   club: Club;
@@ -9,21 +12,58 @@ interface AncSectionProps {
 export function AncSection({ club }: AncSectionProps) {
   const [showComplaintForm, setShowComplaintForm] = useState(false);
   const [complaintText, setComplaintText] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  
+  // Progress tracker state
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [progressStep, setProgressStep] = useState(0);
+  const [trackingId, setTrackingId] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Tracking state
+  const [searchId, setSearchId] = useState('');
+  const [trackResult, setTrackResult] = useState<any>(null);
+  const [isTracking, setIsTracking] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!complaintText.trim()) return;
     
-    // In a real app, this would POST to a secure backend endpoint
-    console.log("Complaint registered securely:", complaintText);
+    setIsSubmitting(true);
+    setProgressStep(1); // Encrypting...
     
-    setSubmitted(true);
-    setComplaintText('');
+    setTimeout(() => setProgressStep(2), 1200); // Bypassing channels...
+    setTimeout(() => setProgressStep(3), 2400); // Securing...
+    
+    // Actually call the DB
+    const res = await submitAncComplaint(complaintText);
+    
     setTimeout(() => {
-      setShowComplaintForm(false);
-      setSubmitted(false);
-    }, 5000);
+      setIsSubmitting(false);
+      setProgressStep(4);
+      if (res.success && res.trackingId) {
+        setTrackingId(res.trackingId);
+      }
+    }, 3600);
+  };
+
+  const handleTrack = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchId.trim()) return;
+    
+    setIsTracking(true);
+    const res = await trackComplaint(searchId);
+    if (res.success) {
+      setTrackResult(res.data);
+    } else {
+      setTrackResult({ error: res.error });
+    }
+    setIsTracking(false);
+  };
+
+  const resetForm = () => {
+    setShowComplaintForm(false);
+    setProgressStep(0);
+    setTrackingId(null);
+    setComplaintText('');
   };
 
   return (
@@ -45,50 +85,106 @@ export function AncSection({ club }: AncSectionProps) {
         </p>
       </div>
 
-      <div className="mb-6">
-        <h4 className="font-semibold text-gray-900 mb-3">Key Contacts:</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {club.members.map((member) => (
-            <div key={member.id} className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm flex flex-col">
-              <span className="font-medium text-gray-900">{member.name}</span>
-              <span className="text-sm font-semibold text-rose-600 mb-1">{member.role}</span>
-              <span className="text-sm text-gray-500">{member.details}</span>
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm flex flex-col">
+          <span className="font-bold text-gray-900 mb-2">Track Existing Complaint</span>
+          <form onSubmit={handleTrack} className="flex gap-2">
+            <input 
+              type="text" 
+              placeholder="e.g. ANC-1234"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500"
+              value={searchId}
+              onChange={(e) => setSearchId(e.target.value)}
+            />
+            <button 
+              type="submit"
+              disabled={isTracking}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg font-medium text-sm flex items-center"
+            >
+              {isTracking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+            </button>
+          </form>
+          {trackResult && !trackResult.error && (
+            <div className="mt-3 p-3 bg-emerald-50 border border-emerald-100 rounded text-sm">
+              <div className="font-bold text-emerald-800">Status: {trackResult.status}</div>
+              <div className="text-emerald-700 text-xs mt-1">Logged: {new Date(trackResult.timestamp).toLocaleString()}</div>
             </div>
-          ))}
+          )}
+          {trackResult && trackResult.error && (
+            <div className="mt-3 text-sm text-red-600 font-medium">{trackResult.error}</div>
+          )}
+        </div>
+
+        <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm flex flex-col justify-center">
+           {!showComplaintForm && progressStep === 0 && (
+             <div className="text-center">
+               <h4 className="font-bold text-gray-900 mb-2">Need to report an incident?</h4>
+               <button 
+                 onClick={() => setShowComplaintForm(true)}
+                 className="w-full py-2 bg-rose-600 hover:bg-rose-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center"
+               >
+                 Register Confidential Complaint
+               </button>
+             </div>
+           )}
         </div>
       </div>
 
-      {!showComplaintForm ? (
-        <div className="bg-white p-5 rounded-lg border border-rose-100 flex flex-col sm:flex-row items-center justify-between">
-          <div>
-            <h4 className="font-bold text-gray-900">Have you been ragged?</h4>
-            <p className="text-sm text-gray-500 mt-1">
-              Your identity will be kept strictly confidential. No middleman involved.
-            </p>
-          </div>
-          <button 
-            onClick={() => setShowComplaintForm(true)}
-            className="mt-4 sm:mt-0 px-6 py-2 bg-rose-600 hover:bg-rose-700 text-white font-medium rounded-lg transition-colors flex items-center"
-          >
-            Complain Here
-          </button>
-        </div>
-      ) : (
+      {showComplaintForm && (
         <div className="bg-white p-5 rounded-lg border border-rose-200 shadow-sm transition-all duration-300">
-          {submitted ? (
+          {progressStep === 4 ? (
             <div className="text-center py-8">
               <ShieldCheck className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
               <h4 className="text-xl font-bold text-gray-900 mb-2">Complaint Registered Successfully</h4>
-              <p className="text-gray-600">
+              <p className="text-gray-600 mb-4">
                 Your incident has been securely recorded. The Nodal Officer has been notified. 
-                Your secure Tracking ID is: <span className="font-mono bg-gray-100 px-2 py-1 rounded text-gray-800">ANC-{Math.floor(Math.random() * 10000)}</span>
+                Your secure Tracking ID is: <span className="font-mono bg-gray-100 px-2 py-1 rounded text-gray-800 font-bold">{trackingId}</span>
               </p>
+              <button onClick={resetForm} className="text-sm font-medium text-rose-600 hover:underline">
+                Close
+              </button>
+            </div>
+          ) : isSubmitting ? (
+            <div className="py-8 px-4">
+              <h4 className="font-bold text-gray-900 mb-6 text-center">Securing your report...</h4>
+              <div className="max-w-md mx-auto space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-300 before:to-transparent">
+                
+                <div className={`relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group ${progressStep >= 1 ? 'opacity-100' : 'opacity-30'}`}>
+                  <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 border-white bg-slate-300 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow transition-colors ${progressStep >= 1 ? 'bg-rose-500' : ''}`}>
+                    {progressStep === 1 && <Loader2 className="w-5 h-5 text-white animate-spin" />}
+                    {progressStep > 1 && <ShieldCheck className="w-5 h-5 text-white" />}
+                  </div>
+                  <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border border-slate-200 bg-white shadow-sm">
+                    <p className="font-bold text-slate-900 text-sm">Encrypting payload</p>
+                  </div>
+                </div>
+
+                <div className={`relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group ${progressStep >= 2 ? 'opacity-100' : 'opacity-30'}`}>
+                  <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 border-white bg-slate-300 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow transition-colors ${progressStep >= 2 ? 'bg-rose-500' : ''}`}>
+                    {progressStep === 2 && <Loader2 className="w-5 h-5 text-white animate-spin" />}
+                    {progressStep > 2 && <ShieldCheck className="w-5 h-5 text-white" />}
+                  </div>
+                  <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border border-slate-200 bg-white shadow-sm">
+                    <p className="font-bold text-slate-900 text-sm">Bypassing local faculty channels</p>
+                  </div>
+                </div>
+
+                <div className={`relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group ${progressStep >= 3 ? 'opacity-100' : 'opacity-30'}`}>
+                  <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 border-white bg-slate-300 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow transition-colors ${progressStep >= 3 ? 'bg-rose-500' : ''}`}>
+                    {progressStep === 3 && <Loader2 className="w-5 h-5 text-white animate-spin" />}
+                    {progressStep > 3 && <ShieldCheck className="w-5 h-5 text-white" />}
+                  </div>
+                  <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border border-slate-200 bg-white shadow-sm">
+                    <p className="font-bold text-slate-900 text-sm">Pinging Chief Nodal Officer</p>
+                  </div>
+                </div>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
               <h4 className="font-bold text-gray-900 mb-4 flex items-center">
                 <AlertTriangle className="w-5 h-5 text-rose-500 mr-2" />
-                Register Confidential Complaint
+                Incident Report Form
               </h4>
               <textarea
                 value={complaintText}

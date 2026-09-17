@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   LifeBuoy,
   FileCheck2,
@@ -12,11 +12,14 @@ import {
   ShieldCheck,
   CheckCircle2,
   Clock,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { ServiceRequest } from "@/data/services";
 import { CURRENT_STUDENT } from "@/data/student";
 import { useStudent } from "@/context/StudentContext";
 import { useLanguage } from "@/context/LanguageContext";
+import { fetchStudentDbActivity } from "@/actions/db";
 
 interface StudentServicesViewProps {
   services: ServiceRequest[];
@@ -32,6 +35,23 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
   const { studentData } = useStudent();
   const { t, tDynamic } = useLanguage();
   const student = studentData?.profile || CURRENT_STUDENT;
+  
+  const [dbComplaints, setDbComplaints] = useState<any[]>([]);
+  const [dbClubApps, setDbClubApps] = useState<any[]>([]);
+  
+  const [expandedReq, setExpandedReq] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadDbActivity() {
+      const res = await fetchStudentDbActivity();
+      if (res.success) {
+        setDbComplaints(res.complaints || []);
+        setDbClubApps(res.clubApps || []);
+      }
+    }
+    loadDbActivity();
+  }, []);
+
   const serviceCards = [
     {
       category: "Certificate",
@@ -62,6 +82,10 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
       color: "text-emerald-600 bg-emerald-50 border-emerald-200",
     },
   ];
+
+  const toggleExpand = (id: string) => {
+    setExpandedReq(expandedReq === id ? null : id);
+  };
 
   return (
     <div className="@container space-y-6">
@@ -122,13 +146,131 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
             Active Requests & Tickets for {student.id}
           </h3>
           <span className="text-xs text-muted-foreground font-medium">
-            {services.length} Submitted Tickets
+            {services.length + dbComplaints.length + dbClubApps.length} Submitted Tickets
           </span>
         </div>
 
         <div className="divide-y divide-slate-100">
+          {/* DB Club Applications */}
+          {dbClubApps.map((app) => (
+            <div 
+              key={`club-${app.id}`} 
+              className="p-4 hover:bg-muted/50/60 transition-colors cursor-pointer"
+              onClick={() => toggleExpand(`club-${app.id}`)}
+            >
+              <div className="flex flex-col @lg:flex-row @lg:items-center justify-between gap-2">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-bold text-purple-600">CLUB-{app.id}</span>
+                    <span className="rounded-md bg-muted px-2 py-0.5 text-sm font-bold text-foreground">
+                      Club Enrollment
+                    </span>
+                    <span className="text-xs font-bold text-foreground">Application to {app.club_id}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">Student: {student.name} ({student.id})</p>
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground pt-0.5">
+                    <span>Submitted: {new Date(app.timestamp).toLocaleString()}</span>
+                    <span>•</span>
+                    <span>Department: <strong>Student Life</strong></span>
+                  </div>
+                </div>
+
+                <div className="flex items-center @lg:flex-col @lg:items-end gap-2 shrink-0">
+                  <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-sm font-bold text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                    <span>{app.status}</span>
+                  </span>
+                  <span className="text-sm font-medium text-slate-400">Priority: Normal</span>
+                </div>
+              </div>
+              
+              {/* Expanded Status View */}
+              {expandedReq === `club-${app.id}` && (
+                <div className="mt-4 pt-4 border-t border-slate-100 animate-fade-in pl-2">
+                  <h4 className="text-sm font-bold text-foreground mb-3">Live Tracking Status</h4>
+                  <div className="flex items-center text-sm">
+                    <div className="flex flex-col items-center">
+                      <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white"><CheckCircle2 className="w-4 h-4"/></div>
+                      <div className="h-6 w-0.5 bg-emerald-500 my-1"></div>
+                      <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white"><CheckCircle2 className="w-4 h-4"/></div>
+                      <div className="h-6 w-0.5 bg-slate-200 my-1"></div>
+                      <div className="w-6 h-6 rounded-full bg-slate-200 border-2 border-slate-300"></div>
+                    </div>
+                    <div className="ml-4 flex flex-col justify-between h-32 py-0.5 text-slate-600 font-medium">
+                      <div><span className="text-slate-900">Application Submitted</span> <span className="text-xs font-normal ml-2">({new Date(app.timestamp).toLocaleString()})</span></div>
+                      <div><span className="text-slate-900">Forwarded via WhatsApp</span> <span className="text-xs font-normal ml-2">Notification sent to Club Head</span></div>
+                      <div>Pending Review</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* DB Complaints */}
+          {dbComplaints.map((comp) => (
+            <div 
+              key={comp.id} 
+              className="p-4 hover:bg-muted/50/60 transition-colors cursor-pointer"
+              onClick={() => toggleExpand(comp.id)}
+            >
+              <div className="flex flex-col @lg:flex-row @lg:items-center justify-between gap-2">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-bold text-rose-600">{comp.id}</span>
+                    <span className="rounded-md bg-muted px-2 py-0.5 text-sm font-bold text-foreground">
+                      ANC Grievance
+                    </span>
+                    <span className="text-xs font-bold text-foreground">Confidential Report</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">Student: {student.name} ({student.id})</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed italic border-l-2 border-rose-200 pl-2 mt-1">"{comp.description}"</p>
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground pt-0.5">
+                    <span>Submitted: {new Date(comp.timestamp).toLocaleString()}</span>
+                    <span>•</span>
+                    <span>Department: <strong>Nodal Officer</strong></span>
+                  </div>
+                </div>
+
+                <div className="flex items-center @lg:flex-col @lg:items-end gap-2 shrink-0">
+                  <span className="rounded-full bg-rose-50 px-2.5 py-0.5 text-sm font-bold text-rose-800 border border-rose-200 flex items-center gap-1">
+                    <ShieldCheck className="h-3 w-3 text-rose-600" />
+                    <span>{comp.status}</span>
+                  </span>
+                  <span className="text-sm font-medium text-rose-500">Priority: High</span>
+                </div>
+              </div>
+              
+              {/* Expanded Status View */}
+              {expandedReq === comp.id && (
+                <div className="mt-4 pt-4 border-t border-slate-100 animate-fade-in pl-2">
+                  <h4 className="text-sm font-bold text-foreground mb-3">Live Tracking Status</h4>
+                  <div className="flex items-center text-sm">
+                    <div className="flex flex-col items-center">
+                      <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white"><CheckCircle2 className="w-4 h-4"/></div>
+                      <div className="h-6 w-0.5 bg-emerald-500 my-1"></div>
+                      <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white"><CheckCircle2 className="w-4 h-4"/></div>
+                      <div className="h-6 w-0.5 bg-slate-200 my-1"></div>
+                      <div className="w-6 h-6 rounded-full bg-slate-200 border-2 border-slate-300"></div>
+                    </div>
+                    <div className="ml-4 flex flex-col justify-between h-32 py-0.5 text-slate-600 font-medium">
+                      <div><span className="text-slate-900">Incident Reported</span> <span className="text-xs font-normal ml-2">({new Date(comp.timestamp).toLocaleString()})</span></div>
+                      <div><span className="text-slate-900">Received & Secured</span> <span className="text-xs font-normal ml-2">Assigned to Nodal Officer</span></div>
+                      <div>Under Investigation</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Static Mock Services */}
           {services.map((req) => (
-            <div key={req.id} className="p-4 hover:bg-muted/50/60 transition-colors">
+            <div 
+              key={req.id} 
+              className="p-4 hover:bg-muted/50/60 transition-colors cursor-pointer"
+              onClick={() => toggleExpand(req.id)}
+            >
               <div className="flex flex-col @lg:flex-row @lg:items-center justify-between gap-2">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
@@ -158,6 +300,27 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
                   </span>
                 </div>
               </div>
+              
+              {/* Expanded Status View */}
+              {expandedReq === req.id && (
+                <div className="mt-4 pt-4 border-t border-slate-100 animate-fade-in pl-2">
+                  <h4 className="text-sm font-bold text-foreground mb-3">Tracking History</h4>
+                  <div className="flex items-center text-sm">
+                    <div className="flex flex-col items-center">
+                      <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white"><CheckCircle2 className="w-4 h-4"/></div>
+                      <div className="h-6 w-0.5 bg-emerald-500 my-1"></div>
+                      <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white"><CheckCircle2 className="w-4 h-4"/></div>
+                      <div className="h-6 w-0.5 bg-emerald-500 my-1"></div>
+                      <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white"><Clock className="w-3 h-3"/></div>
+                    </div>
+                    <div className="ml-4 flex flex-col justify-between h-32 py-0.5 text-slate-600 font-medium">
+                      <div><span className="text-slate-900">Request Submitted</span></div>
+                      <div><span className="text-slate-900">Forwarded to Department</span></div>
+                      <div><span className="text-slate-900">{tDynamic(req.status)}</span> <span className="text-xs font-normal ml-2">Expected Completion: 3 Days</span></div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
