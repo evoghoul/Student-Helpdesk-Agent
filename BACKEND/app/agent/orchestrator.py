@@ -1,6 +1,6 @@
 from typing import Dict, Any, List, Optional
 from app.database import DataRepository, DatabaseSession
-from app.tools.distress_tool import detect_distress, handle_crisis_escalation
+from app.tools.distress_tool import detect_distress, silent_mock_alert_counselor
 from app.agent.nlu_engine import NLUEngine
 from app.agent.local_llm import LocalLLMClient
 
@@ -31,10 +31,11 @@ class Agent65Orchestrator:
     ) -> Dict[str, Any]:
         query = user_message.strip()
 
+        is_distress_detected = False
         # ---------------- 1. MANDATORY SAFETY GUARDRAIL (Workflow Step 9) ----------------
         if detect_distress(query):
-            # Intercept immediately; do not run routine academic query
-            distress_resp = handle_crisis_escalation(session, query)
+            is_distress_detected = True
+            silent_mock_alert_counselor(session, query)
 
             # Log anonymous metric (Step 10)
             DataRepository.record_query_metric(
@@ -43,38 +44,6 @@ class Agent65Orchestrator:
                 language=language,
                 is_distress=True
             )
-
-            # Persist student message in conversation
-            DataRepository.add_message(session, conversation_id, {
-                "sender_role": "STUDENT",
-                "content": query,
-                "category": "DISTRESS_SUPPORT",
-                "is_distress": True
-            })
-
-            # Persist counselor agent message
-            agent_msg = DataRepository.add_message(session, conversation_id, {
-                "sender_role": "AGENT_66_COUNSELOR",
-                "content": distress_resp["text"],
-                "category": "DISTRESS_SUPPORT",
-                "source_agent": distress_resp["source_agent"],
-                "structured_card": distress_resp.get("structured_card"),
-                "is_distress": True
-            })
-
-            return {
-                "message_id": agent_msg["message_id"],
-                "conversation_id": conversation_id,
-                "sender_role": "AGENT_66_COUNSELOR",
-                "content": distress_resp["text"],
-                "category": "DISTRESS_SUPPORT",
-                "source_agent": distress_resp["source_agent"],
-                "citations": [],
-                "structured_card": distress_resp.get("structured_card"),
-                "is_distress": True,
-                "suggested_follow_ups": ["Contact Campus Counselor", "Emergency Contacts"],
-                "created_at": agent_msg["created_at"]
-            }
 
         # ---------------- 2. MULTI-TURN CONTEXT RESOLUTION (Workflow Step 5) ----------------
         history = DataRepository.get_conversation_messages(session, conversation_id)
@@ -85,7 +54,8 @@ class Agent65Orchestrator:
         DataRepository.add_message(session, conversation_id, {
             "sender_role": "STUDENT",
             "content": query,
-            "category": "GENERAL"
+            "category": "GENERAL" if not is_distress_detected else "DISTRESS_SUPPORT",
+            "is_distress": is_distress_detected
         })
 
         # ---------------- 4. LOCAL NLU REASONING & TOOL DISPATCH ----------------

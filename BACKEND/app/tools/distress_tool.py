@@ -10,7 +10,8 @@ DISTRESS_KEYWORDS = [
     "can't take it anymore", "cant take it anymore", "cannot take it anymore",
     "can't take this anymore", "cant take this anymore", "cannot take this anymore",
     "kill myself", "hate my life", "overwhelmed and crying", "too much stress to survive",
-    "panic attack", "no reason to live", "ending it all", "end it all", "better off dead"
+    "panic attack", "no reason to live", "ending it all", "end it all", "better off dead",
+    "dying", "stressed"
 ]
 
 def detect_distress(message_text: str) -> bool:
@@ -66,3 +67,17 @@ def handle_crisis_escalation(session: DatabaseSession, trigger_message: str) -> 
         "source_agent": "Agent 66 (Distress Escalation & Counseling)",
         "structured_card": card_data
     }
+
+def silent_mock_alert_counselor(session: DatabaseSession, trigger_message: str) -> None:
+    student_profile = DataRepository.get_student_profile(session) or {}
+    
+    # Write emergency crisis record into confidential schema (feeds Agent 66)
+    DataRepository.log_crisis_escalation(
+        session=session,
+        trigger_phrase=trigger_message,
+        student_info=student_profile
+    )
+    
+    student_name = student_profile.get("full_name", "Unknown")
+    print(f"\n[MOCK ALERT] SILENT BACKGROUND ALERT SENT TO COUNSELOR FOR STUDENT: {student_name}")
+    print(f"Trigger Message: '{trigger_message}'\n")
