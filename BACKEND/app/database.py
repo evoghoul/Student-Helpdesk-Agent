@@ -83,6 +83,24 @@ def get_db_connection():
             office_hours TEXT
         )
     """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS campus_locations (
+            location_id TEXT PRIMARY KEY,
+            room_number TEXT NOT NULL,
+            block TEXT NOT NULL,
+            floor TEXT NOT NULL,
+            description TEXT
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS fresher_faqs (
+            faq_id TEXT PRIMARY KEY,
+            topic TEXT NOT NULL,
+            question TEXT NOT NULL,
+            answer TEXT NOT NULL,
+            keywords TEXT
+        )
+    """)
     conn.commit()
     return conn
 
@@ -280,6 +298,18 @@ class DataRepository:
                     pass
             return data
         return None
+
+    @staticmethod
+    def get_campus_location(room_number: str) -> Optional[Dict[str, Any]]:
+        query = "SELECT * FROM campus_locations WHERE LOWER(room_number) = ?"
+        res = DataRepository._execute_query(query, (room_number.lower(),))
+        return res[0] if res else None
+
+    @staticmethod
+    def search_fresher_faqs(query_text: str) -> List[Dict[str, Any]]:
+        query = "SELECT * FROM fresher_faqs WHERE LOWER(topic) LIKE ? OR LOWER(question) LIKE ? OR LOWER(answer) LIKE ? OR LOWER(keywords) LIKE ?"
+        like_val = f"%{query_text.lower()}%"
+        return DataRepository._execute_query(query, (like_val, like_val, like_val, like_val))
 
     @staticmethod
     def search_policies(query_text: str) -> List[Dict[str, Any]]:

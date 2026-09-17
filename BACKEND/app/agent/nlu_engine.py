@@ -401,6 +401,51 @@ class NLUEngine:
                 topic = "Faculty & Advisor Directory"
                 source_agent = "Agent 44 (Faculty & Identity System)"
 
+        # K. Campus Location & Navigation
+        elif cls.has_any_word(q_lower, ["where is", "navigate to", "direction to", "directions to", "room", "cabin", "block"]):
+            # Extract room number, e.g. "room 309", "A-309", "H-102"
+            room_match = re.search(r'(?:room|cabin)?\s*([A-Za-z]?-?\d{2,3})', q_lower)
+            if room_match:
+                room_no = room_match.group(1).replace(" ", "").upper()
+                loc_data = DataRepository.get_campus_location(room_no)
+                if loc_data:
+                    card_data = {
+                        "type": "CAMPUS_NAVIGATION",
+                        "title": f"Navigation: {loc_data['block']} - {loc_data['room_number']}",
+                        "subtitle": loc_data['description'],
+                        "badge": "Campus Map",
+                        "badgeVariant": "green",
+                        "data": {
+                            "Room": loc_data['room_number'],
+                            "Block": loc_data['block'],
+                            "Floor": loc_data['floor']
+                        }
+                    }
+                    direct_response_text = f"To get to {loc_data['description']} (Room {loc_data['room_number']}), please go to the {loc_data['floor']} of {loc_data['block']}."
+                    category = "INSTITUTIONAL_INFO"
+                    topic = "Campus Navigation"
+                    source_agent = "Agent 70 (Campus Nav System)"
+
+        # L. Fresher FAQs
+        elif cls.has_any_word(q_lower, ["fresher", "anti-ragging", "ragging", "hostel", "food court", "canteen", "library", "id card", "club", "sac"]):
+            faq_res = DataRepository.search_fresher_faqs(q_lower)
+            if faq_res:
+                faq = faq_res[0]
+                card_data = {
+                    "type": "FRESHER_FAQ",
+                    "title": faq['topic'],
+                    "subtitle": faq['question'],
+                    "badge": "Fresher Guide",
+                    "badgeVariant": "purple",
+                    "data": {
+                        "Topic": faq['topic']
+                    }
+                }
+                direct_response_text = faq['answer']
+                category = "INSTITUTIONAL_INFO"
+                topic = "Fresher Guide & FAQs"
+                source_agent = "Agent 71 (Fresher Onboarding)"
+
         # Quick actions use 3B as a fast database formatter. Skip model inference
         # when a verified database/tool response is already available.
         if selected_model == "3B" and direct_response_text:

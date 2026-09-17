@@ -16,6 +16,7 @@ import os
 import sys
 import random
 import argparse
+import sqlite3
 from typing import List, Dict, Any
 
 # Ensure UTF-8 output on Windows console
@@ -195,8 +196,61 @@ DIALOGUE_CORPUS: List[List[Dict[str, str]]] = [
             "I have alerted our Student Welfare Counselor on duty. Please talk to a trusted friend, family member, or campus counselor right now. "
             "Please stay safe—there is always a way forward."
         )}
+    ],
+    # ---------------- 7. Campus Location & Navigation ----------------
+    [
+        {"role": "user", "content": "Where is the CSE HOD cabin? I need to get my leave form signed."},
+        {"role": "assistant", "content": (
+            "To get to the CSE Department Head Office (Room A-309), please go to the 3rd Floor of A-Block (Admin).\n\n"
+            "The HOD for CSE is **Dr. S. V. Phani Kumar**. His official office hours are Mon-Fri 2PM-4PM. "
+            "Would you like me to book an appointment with him through Agent 46, or do you just need directions?"
+        )},
+        {"role": "user", "content": "How do I reach room H-102?"},
+        {"role": "assistant", "content": (
+            "Room H-102 is the EEE Department Head Office. To get there, please go to the Ground Floor of H-Block.\n\n"
+            "The HOD for EEE is **Dr. G. Srinivasa Rao**. Let me know if you need any further assistance navigating the campus!"
+        )}
+    ],
+    # ---------------- 8. Fresher Onboarding & FAQs ----------------
+    [
+        {"role": "user", "content": "I am a fresher. Where is the boys hostel located?"},
+        {"role": "assistant", "content": (
+            "Welcome to VFSTR! The boys hostels (like Priyadarshini) are located on the eastern side of the campus near the sports complex. "
+            "The campus is very secure and has 24/7 wardens available.\n\n"
+            "Do you need information on the hostel mess menu or curfew timings?"
+        )},
+        {"role": "user", "content": "What should I do if I face ragging?"},
+        {"role": "assistant", "content": (
+            "VFSTR has a strict zero-tolerance policy against ragging. If you face any harassment, immediately contact the Anti-Ragging Helpline at 1800-425-XXXX or reach out to your faculty mentor or the Chief Warden. You can also report via the university portal anonymously.\n\n"
+            "Your safety is our absolute priority. If you feel unsafe right now, please let me know and I will instantly escalate this to the Chief Security Officer."
+        )}
     ]
 ]
+
+def fetch_faqs_from_db() -> List[List[Dict[str, str]]]:
+    """Fetches seeded FAQs from the database to include in training data."""
+    db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "student_helpdesk.db"))
+    if not os.path.exists(db_path):
+        return []
+        
+    try:
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT question, answer FROM fresher_faqs")
+        rows = cursor.fetchall()
+        conn.close()
+        
+        dialogues = []
+        for row in rows:
+            dialogues.append([
+                {"role": "user", "content": row["question"]},
+                {"role": "assistant", "content": row["answer"]}
+            ])
+        return dialogues
+    except Exception as e:
+        print(f"Warning: Could not fetch FAQs from DB for training data: {e}")
+        return []
 
 def augment_dialogues(base_dialogues: List[List[Dict[str, str]]], target_count: int = 500) -> List[Dict[str, Any]]:
     """
@@ -319,7 +373,10 @@ def main():
     val_path = os.path.join(output_dir, "val_data.jsonl")
 
     print("🚀 Generating Agent 65 High-Quality Conversational Training Dataset...")
-    all_data = augment_dialogues(DIALOGUE_CORPUS)
+    db_faqs = fetch_faqs_from_db()
+    print(f"📥 Fetched {len(db_faqs)} FAQs from the database.")
+    
+    all_data = augment_dialogues(DIALOGUE_CORPUS + db_faqs)
     
     # 90/10 train-val split
     split_idx = int(len(all_data) * 0.9)
