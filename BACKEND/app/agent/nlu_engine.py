@@ -58,6 +58,34 @@ class NLUEngine:
         if q_lower in ["start", "menu"] or cls.is_greeting_or_open_help(q_lower):
             return cls.generate_proactive_briefing(session, effective_lang)
 
+        # Simple read-only record lookups should not spend time on intent
+        # classification and LLM rewriting. Transactional requests continue
+        # through the action handlers below.
+        if (
+            cls.is_fast_record_query(q_lower)
+            and not cls.is_stress_or_concern(q_lower)
+            and not cls.has_any_word(
+            q_lower, ["apply", "book", "request", "complaint", "grievance", "escalate", "join"]
+            )
+        ):
+            fast_reply = cls.generate_deterministic_fallback(
+                session, q, active_subject, effective_lang
+            )
+            return {
+                "category": "PERSONAL_DATA",
+                "topic": "Verified Student Records",
+                "source_agent": "Agent 65 (Fast Verified Records)",
+                "content": fast_reply,
+                "citations": [],
+                "structured_card": None,
+                "suggested_follow_ups": cls.generate_dynamic_followups(q, active_subject),
+                "active_subject": active_subject,
+                "language": effective_lang,
+                "llm_provider": "local",
+                "model_used": "verified-records",
+                "used_fallback": False
+            }
+
         # ---------------- 2. DETECT BACKGROUND ACTIONS & STRUCTURED CARDS ----------------
         is_peer_query = cls.has_any_word(q_lower, ["other student", "another student", "other students", "classmates", "classmate", "peers", "peer", "topper", "toppers", "compare", "comparison", "highest marks", "highest cgpa", "batch average"])
 
@@ -149,6 +177,34 @@ class NLUEngine:
                 f"for '{title}'. Assigned Office: {sr_res['record']['assigned_office']}, Status: {sr_res['record']['status']}, "
                 f"SLA Due Date: {sr_res['record']['sla_due_date']}. Inform the student warmly of this tracking number.]"
             )
+
+        # A2. Club Application (Agent 46 / Extracurriculars)
+        elif cls.has_any_word(q_lower, ["join club", "apply for club", "register club", "join the club", "join a club", "join", "apply"]) and cls.has_any_word(q_lower, ["club", "music", "drama", "ai", "sports", "code", "theatrix"]):
+            clubs = DataRepository.get_clubs()
+            target_club_id = "CLUB_AI"
+            target_club_name = "AI Innovation Club"
+            for c in clubs:
+                if c["name"].lower() in q_lower or (c["category"] and c["category"].lower() in q_lower):
+                    target_club_id = c["club_id"]
+                    target_club_name = c["name"]
+                    break
+            
+            profile = DataRepository.get_student_profile(session)
+            student_name = profile.get("full_name", "Student") if profile else "Student"
+            first_name = student_name.split()[0] if student_name else "Student"
+            
+            app = DataRepository.create_club_application(session, target_club_id, student_name)
+            
+            category = "SERVICE_REQUEST"
+            topic = f"Club Application: {target_club_name}"
+            source_agent = "Agent 46 (Extracurriculars)"
+            direct_response_text = (
+                f"Hello {first_name}, your application to join **{target_club_name}** has been submitted.\n\n"
+                f"• **Club:** {target_club_name}\n"
+                f"• **Status:** Pending Review\n"
+                f"• **Next Steps:** The club leads will review your application. Check your notifications for audition/orientation details."
+            )
+            action_note = f"[SYSTEM ACTION EXECUTED: Created club application for {target_club_name} (ID: {target_club_id})]"
 
         # B. Human Escalation (Step 8)
         elif cls.has_any_word(q_lower, ["talk to human", "escalate", "human officer", "dean", "hod", "exception", "discretion"]):
@@ -371,6 +427,29 @@ class NLUEngine:
 
 
         # ---------------- 3. COGNITIVE LLM GENERATION (ChatGPT/Gemini Quality) ----------------
+        # Verified record lookups, transactional actions, and static institutional lookups
+        # do not need an external generation round-trip. We bypass the LLM for these.
+        is_transactional_or_static = bool(action_note) or (bool(direct_response_text) and topic != "Knowledge Base")
+        
+        if (cls.is_fast_record_query(q_lower) or is_transactional_or_static) and not cls.is_stress_or_concern(q_lower):
+            fast_reply = direct_response_text if direct_response_text else cls.generate_deterministic_fallback(
+                session, query, active_subject, effective_lang, action_note
+            )
+            return {
+                "category": category,
+                "topic": topic,
+                "source_agent": f"{source_agent} [FAST VERIFIED RECORDS]",
+                "content": fast_reply,
+                "citations": citations,
+                "structured_card": card_data,
+                "suggested_follow_ups": cls.generate_dynamic_followups(query, active_subject),
+                "active_subject": active_subject,
+                "language": effective_lang,
+                "llm_provider": "local",
+                "model_used": "verified-records",
+                "used_fallback": False
+            }
+
         # The fine-tuned LLM is ALWAYS the conversational voice! We NEVER replace it with a canned string.
         llm_reply, used_fallback, model_used, provider_used = cls.generate_llm_reasoning_response(
             session=session,
@@ -417,6 +496,19 @@ class NLUEngine:
         Runs 100% offline with zero external API calls.
         """
         return "8B"
+
+    @classmethod
+    def is_fast_record_query(cls, query: str) -> bool:
+        """Identify simple read-only record lookups that can skip LLM latency."""
+        record_terms = [
+            "attendance", "bunk", "classes held", "exam", "assessment", "cie",
+            "fee", "fees", "balance", "tuition", "timetable", "schedule",
+            "class today", "registration", "roll number", "student id", "my id",
+            "marks", "grades", "cgpa", "faculty", "class teacher", "counsellor",
+            "counselor", "mentor", "advisor", "hod", "curriculum", "credits",
+            "graduation", "policy", "condonation", "regulation", "library"
+        ]
+        return cls.has_any_word(query, record_terms)
 
     @classmethod
     def generate_llm_reasoning_response(
@@ -702,25 +794,7 @@ class NLUEngine:
                 f"Your certificate request has been successfully routed to Agent 46."
             )
 
-        # 4b. Club Application triggers
-        if cls.has_any_word(q_lower, ["join club", "apply for club", "register club", "join the club", "join a club", "join", "apply"]) and cls.has_any_word(q_lower, ["club", "music", "drama", "ai", "sports", "code", "theatrix"]):
-            # Quick extract club name
-            clubs = DataRepository.get_clubs()
-            target_club_id = "CLUB_AI"
-            target_club_name = "AI Innovation Club"
-            for c in clubs:
-                if c["name"].lower() in q_lower or (c["category"] and c["category"].lower() in q_lower):
-                    target_club_id = c["club_id"]
-                    target_club_name = c["name"]
-                    break
-            
-            app = DataRepository.create_club_application(session, target_club_id, name)
-            return (
-                f"Hello {first_name}, your application to join **{target_club_name}** has been submitted.\n\n"
-                f"• **Club:** {target_club_name}\n"
-                f"• **Status:** Pending Review\n"
-                f"• **Next Steps:** The club leads will review your application. Check your notifications for audition/orientation details."
-            )
+        # 4b. Club Application triggers (Moved to Section 2)
 
 
         # 5. Attendance
