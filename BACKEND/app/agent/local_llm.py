@@ -237,7 +237,7 @@ class LocalLLMClient:
                     return res, "cloud", getattr(settings, "GEMINI_MODEL", "gemini-3.6-flash")
 
         # ---------------- TIER 1: LOCAL OLLAMA INFERENCE ----------------
-        if provider != "cloud":
+        if provider != "mock":
             url = f"{get_ollama_base_url()}/api/chat"
             payload = {
                 "model": target_model,
@@ -419,10 +419,10 @@ class LocalLLMClient:
             "Content-Type": "application/json"
         }
         candidate_models = [
-            "llama3-8b-8192",
-            "llama3-70b-8192",
-            "mixtral-8x7b-32768",
-            "gemma-7b-it"
+            "llama-3.3-70b-versatile",
+            "llama-3.1-8b-instant",
+            "openai/gpt-oss-20b",
+            "qwen/qwen3-32b"
         ]
         import time
         for candidate_model in candidate_models:

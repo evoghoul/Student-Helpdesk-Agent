@@ -110,8 +110,9 @@ class Agent65ApiClient {
         localStorage.setItem("agent65_active_student", data.roll_no || username.toUpperCase().trim());
       }
       return data;
-    } catch (e: any) {
-      if (e?.message && !e.message.includes("fetch") && !e.message.includes("Failed to fetch") && !e.message.includes("NetworkError")) {
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : "";
+      if (errorMessage && !errorMessage.includes("fetch") && !errorMessage.includes("Failed to fetch") && !errorMessage.includes("NetworkError")) {
         throw e;
       }
       console.warn("Backend unavailable during login, falling back to local mode:", e);
@@ -270,7 +271,8 @@ class Agent65ApiClient {
       }
 
       if (!resp.ok) {
-        console.warn(`[Agent65] Backend returned HTTP ${resp.status}`);
+        const errorBody = await resp.text().catch(() => "");
+        console.error(`[Agent65] Backend returned HTTP ${resp.status}`, errorBody);
         return null;
       }
       return await resp.json();

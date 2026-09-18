@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // Synchronized Dataset of all 70 Authenticated Students of VFSTR CSE Section 7 (Room N-312)
 // University: Vignan Foundation for Science, Technology and Research
 // Academic Year: 2025-26, Semester: 3 (Section 7)

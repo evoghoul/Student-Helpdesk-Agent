@@ -65,14 +65,17 @@ async def send_message(
     if not conv:
         raise HTTPException(status_code=404, detail="Conversation not found or access denied.")
 
-    # Process through Agent 65 Orchestrator
-    agent_response = Agent65Orchestrator.process_message(
-        session=session,
-        conversation_id=conversation_id,
-        user_message=msg.content,
-        language=msg.language or "en",
-        selected_model=msg.selected_model or "8B"
-    )
+    try:
+        agent_response = Agent65Orchestrator.process_message(
+            session=session,
+            conversation_id=conversation_id,
+            user_message=msg.content,
+            language=msg.language or "en",
+            selected_model=msg.selected_model or "8B"
+        )
+    except Exception:
+        logger.exception("Agent 65 message processing failed for conversation %s", conversation_id)
+        raise
     return MessageResponse(**agent_response)
 
 @router.post("/{conversation_id}/messages/{message_id}/feedback", response_model=MessageFeedbackResponse)
