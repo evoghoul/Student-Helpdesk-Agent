@@ -11,6 +11,7 @@ import {
   CreditCard,
   BookOpen,
   FileText,
+  CalendarPlus,
   Bell,
   CalendarDays,
   Layers,
@@ -23,6 +24,17 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Users,
+  TrendingUp,
+  MapPin,
+  Ticket,
+  BedDouble,
+  Store,
+  Briefcase,
+  Trophy,
+  Book,
+  Bus,
+  HeartPulse,
+  BarChart3,
 } from "lucide-react";
 import { CURRENT_STUDENT } from "@/data/student";
 import { ATTENDANCE_DATA } from "@/data/attendance";
@@ -92,6 +104,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
           badgeColor: "bg-emerald-100 text-emerald-800",
         },
         {
+          id: "grades",
+          label: "Academic Progress",
+          icon: TrendingUp,
+        },
+        {
+          id: "gamification",
+          label: "Rewards & Badges",
+          icon: Trophy,
+          badge: "New",
+          badgeColor: "bg-yellow-100 text-yellow-800",
+        },
+        {
+          id: "library",
+          label: "Digital Library",
+          icon: Book,
+        },
+        {
           id: "timetable",
           label: t.navTimetable || "Timetable",
           icon: Clock,
@@ -126,6 +155,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
           icon: Layers,
         },
         {
+          id: "hostel",
+          label: "Hostel & Mess",
+          icon: BedDouble,
+        },
+        {
+          id: "career",
+          label: "Career Hub",
+          icon: Briefcase,
+          badge: "AI",
+          badgeColor: "bg-indigo-100 text-indigo-700",
+        },
+        {
+          id: "wellness",
+          label: "Wellness Hub",
+          icon: HeartPulse,
+        },
+        {
           id: "calendar",
           label: t.navCalendar || "Academic Calendar",
           icon: CalendarDays,
@@ -139,6 +185,48 @@ export const Sidebar: React.FC<SidebarProps> = ({
           id: "clubs",
           label: "Clubs & Communities",
           icon: Users,
+        },
+        {
+          id: "events",
+          label: "Event Registration",
+          icon: Ticket,
+        },
+        {
+          id: "marketplace",
+          label: "Marketplace",
+          icon: Store,
+        },
+        {
+          id: "map",
+          label: "Campus Map",
+          icon: MapPin,
+        },
+        {
+          id: "lost-and-found",
+          label: "Lost & Found",
+          icon: FileText,
+          badge: "New",
+          badgeColor: "bg-emerald-100 text-emerald-800",
+        },
+        {
+          id: "bookings",
+          label: "Facility Booking",
+          icon: CalendarPlus,
+        },
+        {
+          id: "transport",
+          label: "Transport (Live)",
+          icon: Bus,
+        },
+        {
+          id: "alumni",
+          label: "Alumni Network",
+          icon: Users,
+        },
+        {
+          id: "polling",
+          label: "Campus Polling",
+          icon: BarChart3,
         },
         {
           id: "policies",

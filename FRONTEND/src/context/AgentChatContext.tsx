@@ -11,6 +11,7 @@ import { CURRENT_STUDENT } from "@/data/student";
 import { apiClient } from "@/lib/api-client";
 import { useStudent } from "@/context/StudentContext";
 import { useLanguage } from "@/context/LanguageContext";
+import { askAiKnowledgeBase } from "@/actions/ai-search";
 
 // Define a minimal interface for SpeechRecognition since it's a web API that might not be in standard DOM lib yet
 interface SpeechRecognitionEvent extends Event {
@@ -219,8 +220,34 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       console.warn("Backend connection error, falling back to local engine:", err);
     }
 
-    // 2. Fallback to local institutional engine if backend offline
-    setTimeout(() => {
+    // 2. Fallback to local institutional engine and Database Knowledge Base if backend offline
+    setTimeout(async () => {
+      // First, check the Database Knowledge Base (seeded records)
+      const dbSearch = await askAiKnowledgeBase(query);
+      
+      if (dbSearch && dbSearch.success && dbSearch.answer) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: dbSearch.answer as string,
+            responseMeta: {
+              text: dbSearch.answer as string,
+              category: (dbSearch.category as QueryCategory) || "INSTITUTIONAL_INFO",
+              sourceAgent: dbSearch.source as string || "Agent 65 (Knowledge Base)",
+              authorizedFor: student.id,
+              isDistress: false,
+              llm_provider: "local",
+              model_used: "Database Knowledge Base",
+              used_fallback: true,
+            },
+          },
+        ]);
+        setIsTyping(false);
+        return;
+      }
+
+      // If not in DB, fallback to hardcoded deterministic rules
       const response = processQuery(query, newHistory, activeContextSubject, studentData);
       if (response.contextSubject) {
         setActiveContextSubject(response.contextSubject);

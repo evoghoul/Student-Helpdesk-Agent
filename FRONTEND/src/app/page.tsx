@@ -17,7 +17,21 @@ import { PoliciesView } from "@/components/policies/PoliciesView";
 import { CircularsView } from "@/components/circulars/CircularsView";
 import { CalendarView } from "@/components/calendar/CalendarView";
 import { ClubsView } from "@/components/clubs/ClubsView";
+import { LostAndFoundView } from "@/components/lost-and-found/LostAndFoundView";
+import { BookingsView } from "@/components/bookings/BookingsView";
 import { StudentServicesView } from "@/components/services/StudentServicesView";
+import { GradesView } from "@/components/grades/GradesView";
+import { CampusMapView } from "@/components/map/CampusMapView";
+import { EventRegistrationView } from "@/components/events/EventRegistrationView";
+import { HostelManagementView } from "@/components/hostel/HostelManagementView";
+import { MarketplaceView } from "@/components/marketplace/MarketplaceView";
+import { CareerView } from "@/components/career/CareerView";
+import { GamificationView } from "@/components/gamification/GamificationView";
+import { LibraryView } from "@/components/library/LibraryView";
+import { TransportView } from "@/components/transport/TransportView";
+import { AlumniView } from "@/components/alumni/AlumniView";
+import { WellnessView } from "@/components/wellness/WellnessView";
+import { PollingView } from "@/components/polling/PollingView";
 import { ServiceRequestModal } from "@/components/services/ServiceRequestModal";
 import { HumanEscalationModal } from "@/components/escalation/HumanEscalationModal";
 import { DistressSupportOverlay } from "@/components/distress/DistressSupportOverlay";
@@ -299,6 +313,15 @@ function StudentHelpdeskContent() {
             <MarksView onAskHelpdesk={handleAskHelpdesk} />
           )}
 
+          {/* Tab: Gamification */}
+          {activeTab === "gamification" && <GamificationView />}
+
+          {/* Tab: Library */}
+          {activeTab === "library" && <LibraryView />}
+
+          {/* Tab: Grades */}
+          {activeTab === "grades" && <GradesView />}
+
           {/* Tab: Timetable */}
           {activeTab === "timetable" && (
             <TimetableView onAskHelpdesk={handleAskHelpdesk} />
@@ -334,6 +357,16 @@ function StudentHelpdeskContent() {
             <ClubsView />
           )}
 
+          {/* Tab: Lost & Found */}
+          {activeTab === "lost-and-found" && (
+            <LostAndFoundView />
+          )}
+
+          {/* Tab: Bookings */}
+          {activeTab === "bookings" && (
+            <BookingsView />
+          )}
+
           {/* Tab: Calendar */}
           {activeTab === "calendar" && (
             <CalendarView
@@ -341,6 +374,33 @@ function StudentHelpdeskContent() {
               onNavigateTab={(tab) => setActiveTab(tab)}
             />
           )}
+
+          {/* Tab: Map */}
+          {activeTab === "map" && <CampusMapView />}
+
+          {/* Tab: Events */}
+          {activeTab === "events" && <EventRegistrationView />}
+
+          {/* Tab: Hostel */}
+          {activeTab === "hostel" && <HostelManagementView />}
+
+          {/* Tab: Marketplace */}
+          {activeTab === "marketplace" && <MarketplaceView />}
+
+          {/* Tab: Transport */}
+          {activeTab === "transport" && <TransportView />}
+
+          {/* Tab: Alumni */}
+          {activeTab === "alumni" && <AlumniView />}
+
+          {/* Tab: Polling */}
+          {activeTab === "polling" && <PollingView />}
+
+          {/* Tab: Wellness */}
+          {activeTab === "wellness" && <WellnessView />}
+
+          {/* Tab: Career */}
+          {activeTab === "career" && <CareerView />}
 
           {/* Tab: Services */}
           {activeTab === "services" && (

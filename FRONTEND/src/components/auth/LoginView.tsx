@@ -284,6 +284,17 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
                 <span>{t.loginTwelveFederated || "12 Federated Agents"}</span>
               </div>
             </div>
+
+            {/* Admin Portal Link */}
+            <div className="pt-4 border-t border-slate-200 text-center">
+              <a 
+                href="/admin/login" 
+                className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-blue-600 transition-colors"
+              >
+                <ShieldCheck className="h-4 w-4" />
+                Nodal Officer / Admin Login
+              </a>
+            </div>
           </div>
         </div>
       </main>

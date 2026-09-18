@@ -18,6 +18,7 @@ export const metadata: Metadata = {
     "Single point of access for authenticated students to personal institutional records, attendance telemetry, examinations, fees, curriculum, and student services.",
 };
 
+import { BroadcastBanner } from "@/components/layout/BroadcastBanner";
 import { StudentProvider } from "@/context/StudentContext";
 
 export default function RootLayout({
@@ -29,6 +30,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className={`h-full ${jakarta.variable} ${geistMono.variable}`}>
       <body className="min-h-full flex flex-col antialiased bg-background text-foreground selection:bg-blue-100 selection:text-blue-900">
         <StudentProvider>
+          <BroadcastBanner />
           {children}
         </StudentProvider>
       </body>
