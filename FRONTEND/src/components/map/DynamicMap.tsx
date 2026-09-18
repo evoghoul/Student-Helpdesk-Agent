@@ -35,6 +35,7 @@ interface DynamicMapProps {
   locations: LocationData[];
   selectedLocation?: LocationData | null;
   userCharacter?: string;
+  onLocationSelect?: (location: LocationData) => void;
 }
 
 // Pseudo-random number generator for deterministic placement based on string
@@ -48,7 +49,7 @@ const hashString = (str: string) => {
   return hash;
 };
 
-export default function DynamicMap({ locations, selectedLocation, userCharacter = "🔵" }: DynamicMapProps) {
+export default function DynamicMap({ locations, selectedLocation, userCharacter = "🔵", onLocationSelect }: DynamicMapProps) {
   // Center of Vignan University Campus
   const defaultCenter: [number, number] = [16.232820, 80.550347];
   
@@ -113,7 +114,18 @@ export default function DynamicMap({ locations, selectedLocation, userCharacter 
         const lng = loc.longitude || (defaultCenter[1] + lngOffset);
         
         return (
-          <Marker key={loc.id} position={[lat, lng]}>
+          <Marker 
+            key={loc.id} 
+            position={[lat, lng]}
+            eventHandlers={{
+              click: () => {
+                if (onLocationSelect) {
+                  onLocationSelect(loc);
+                }
+              }
+            }}
+          >
+            {/* Keeping popup for backward compatibility, but parent component will also show UI */}
             <Popup>
               <div className="text-sm">
                 <p className="font-bold">{loc.name}</p>
