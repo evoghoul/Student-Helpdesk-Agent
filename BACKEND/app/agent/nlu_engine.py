@@ -244,7 +244,7 @@ class NLUEngine:
             ]
 
         # D. Attendance Card (Non-destructive widget attachment)
-        elif cls.has_any_word(q_lower, ["attendance", "classes held", "classes attended", "attendance shortage", "bunk", "bunked", "75%"]) and not cls.has_any_word(q_lower, ["policy", "policies", "regulation", "regulations", "condonation", "hall ticket", "admit card", "hold"]) and not is_peer_query:
+        elif cls.has_any_word(q_lower, ["attendance", "classes held", "classes attended", "attendance shortage", "bunk", "bunked", "75%"]) and not cls.has_any_word(q_lower, ["policy", "policies", "regulation", "regulations", "condonation", "hall ticket", "admit card", "hold", "how", "decrease", "increase", "improve", "maintain"]) and not is_peer_query:
             att_res = get_attendance_summary(session, active_subject)
             direct_response_text = att_res.get("text", "")
             card_data = att_res.get("structured_card")
@@ -799,7 +799,7 @@ class NLUEngine:
             )
 
         # 4. Service Request triggers in prompt
-        if cls.has_any_word(q_lower, ["bonafide", "certificate", "bus pass", "railway concession", "apply for"]):
+        if cls.has_any_word(q_lower, ["bonafide", "certificate", "bus pass", "railway concession"]):
             sr = DataRepository.create_service_request(session, {
                 "category": "BONAFIDE_CERTIFICATE" if "bonafide" in q_lower else "OTHER",
                 "title": "Bonafide Certificate Application",
@@ -815,8 +815,29 @@ class NLUEngine:
                 f"Your certificate request has been successfully routed to Agent 46."
             )
 
+        # 4b. Club Application triggers
+        if cls.has_any_word(q_lower, ["join club", "apply for club", "register club", "join the club", "join a club", "join", "apply"]) and cls.has_any_word(q_lower, ["club", "music", "drama", "ai", "sports", "code", "theatrix"]):
+            # Quick extract club name
+            clubs = DataRepository.get_clubs()
+            target_club_id = "CLUB_AI"
+            target_club_name = "AI Innovation Club"
+            for c in clubs:
+                if c["name"].lower() in q_lower or (c["category"] and c["category"].lower() in q_lower):
+                    target_club_id = c["club_id"]
+                    target_club_name = c["name"]
+                    break
+            
+            app = DataRepository.create_club_application(session, target_club_id, name)
+            return (
+                f"Hello {first_name}, your application to join **{target_club_name}** has been submitted.\n\n"
+                f"• **Club:** {target_club_name}\n"
+                f"• **Status:** Pending Review\n"
+                f"• **Next Steps:** The club leads will review your application. Check your notifications for audition/orientation details."
+            )
+
+
         # 5. Attendance
-        if cls.has_any_word(q_lower, ["attendance", "bunk", "classes held", "75%"]) or any(0x0C00 <= ord(c) <= 0x0C7F for c in query) or any(0x0900 <= ord(c) <= 0x097F for c in query) or "హాజరు" in query or "अटेंडेंस" in query or "उपस्थिति" in query:
+        if (cls.has_any_word(q_lower, ["attendance", "bunk", "classes held", "75%"]) or any(0x0C00 <= ord(c) <= 0x0C7F for c in query) or any(0x0900 <= ord(c) <= 0x097F for c in query) or "హాజరు" in query or "अटेंडेंस" in query or "उपस्थिति" in query) and not cls.has_any_word(q_lower, ["how", "decrease", "increase", "improve", "maintain"]):
             att = DataRepository.get_attendance(session, active_subject)
             if att:
                 rec = att[0]
@@ -1038,13 +1059,10 @@ class NLUEngine:
 
         # If the student asked a question or sought guidance rather than requesting a raw capabilities list
         if any(w in q_lower for w in ["how", "what", "can i", "why", "where", "should", "guide", "advice", "help"]):
-            cgpa_str = f"{cgpa:.2f}" if cgpa is not None else "Not Available"
-            att_str = f"{overall_att:.0f}%" if overall_att is not None else "Not Available"
             return (
-                f"Hello {first_name}, based on your verified university records (Current CGPA: **{cgpa_str}**, Attendance: **{att_str}**):\n\n"
-                f"• **Academic Standing:** You are currently in good academic standing with no active backlogs. Your upcoming CIE examinations commence on **October 6**.\n"
-                f"• **Attendance Status:** At **{att_str}**, you are on the borderline of the mandatory 75% cutoff. Attending your next 5 consecutive lectures will secure your exam eligibility without condonation risk.\n"
-                f"• **Advisory Support:** For specific academic planning or guidance, your counselor **{coun_name}** and class teacher **{ct_name}** are available. Would you like me to book a mentor meeting via Agent 46?"
+                f"Hello {first_name}, I am currently operating in limited offline mode. "
+                f"I am unable to process complex inquiries or procedural guidance right now. "
+                f"If your query requires immediate assistance, please book a meeting with your counselor **{coun_name}** or class teacher **{ct_name}**."
             )
 
         return (

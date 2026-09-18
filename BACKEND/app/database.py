@@ -426,6 +426,18 @@ class DataRepository:
         return DataRepository._execute_query("SELECT * FROM service_requests WHERE student_id = ?", (session.student_id,))
 
     @staticmethod
+    def create_club_application(session: DatabaseSession, club_id: str, student_name: str) -> Dict[str, Any]:
+        sid = DataRepository._resolve_student_id(session)
+        query = "INSERT INTO studentlife_club_application (club_id, student_name, status, student_id) VALUES (?, ?, ?, ?)"
+        DataRepository._execute_insert(query, (club_id, student_name, "Pending", sid))
+        res = DataRepository._execute_query("SELECT * FROM studentlife_club_application WHERE student_id = ? ORDER BY id DESC LIMIT 1", (sid,))
+        return res[0] if res else None
+
+    @staticmethod
+    def get_clubs() -> List[Dict[str, Any]]:
+        return DataRepository._execute_query("SELECT * FROM studentlife_club")
+
+    @staticmethod
     def log_crisis_escalation(session: DatabaseSession, trigger_phrase: str, student_info: Dict[str, Any]) -> Dict[str, Any]:
         esc_id = f"esc-{uuid.uuid4().hex[:8]}"
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
