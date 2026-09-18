@@ -65,11 +65,47 @@ export async function submitClubApplication(clubId: string, studentName: string)
   }
 }
 
+export async function withdrawTicket(ticketId: string, type: 'club' | 'grievance', reason: string) {
+  try {
+    const db = new Database(dbPath);
+    let stmt;
+    
+    if (type === 'grievance') {
+      stmt = db.prepare(`
+        UPDATE studentlife_grievance 
+        SET status = 'Withdrawn', withdrawal_reason = ? 
+        WHERE tracking_id = ?
+      `);
+    } else if (type === 'club') {
+      stmt = db.prepare(`
+        UPDATE studentlife_club_application 
+        SET status = 'Withdrawn', withdrawal_reason = ? 
+        WHERE id = ?
+      `);
+    }
+    
+    if (stmt) {
+      const result = stmt.run(reason, ticketId);
+      db.close();
+      if (result.changes > 0) {
+        return { success: true };
+      }
+      return { success: false, error: "Ticket not found." };
+    }
+    
+    db.close();
+    return { success: false, error: "Invalid ticket type." };
+  } catch (error) {
+    console.error("Error withdrawing ticket:", error);
+    return { success: false, error: "Failed to withdraw ticket" };
+  }
+}
+
 export async function fetchStudentDbActivity() {
   try {
     const db = new Database(dbPath);
-    const complaints = db.prepare(`SELECT tracking_id as id, description, status, timestamp FROM studentlife_grievance ORDER BY timestamp DESC`).all();
-    const clubApps = db.prepare(`SELECT id, club_id, status, timestamp FROM studentlife_club_application ORDER BY timestamp DESC`).all();
+    const complaints = db.prepare(`SELECT tracking_id as id, description, status, timestamp, withdrawal_reason FROM studentlife_grievance ORDER BY timestamp DESC`).all();
+    const clubApps = db.prepare(`SELECT id, club_id, status, timestamp, withdrawal_reason FROM studentlife_club_application ORDER BY timestamp DESC`).all();
     db.close();
     
     return { success: true, complaints, clubApps };

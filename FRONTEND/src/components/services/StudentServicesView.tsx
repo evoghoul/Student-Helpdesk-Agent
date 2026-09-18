@@ -14,12 +14,14 @@ import {
   Clock,
   ChevronDown,
   ChevronUp,
+  XCircle,
+  Loader2,
 } from "lucide-react";
 import { ServiceRequest } from "@/data/services";
 import { CURRENT_STUDENT } from "@/data/student";
 import { useStudent } from "@/context/StudentContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { fetchStudentDbActivity } from "@/actions/db";
+import { fetchStudentDbActivity, withdrawTicket } from "@/actions/db";
 
 interface StudentServicesViewProps {
   services: ServiceRequest[];
@@ -40,17 +42,35 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
   const [dbClubApps, setDbClubApps] = useState<any[]>([]);
   
   const [expandedReq, setExpandedReq] = useState<string | null>(null);
+  const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
+  const [withdrawReason, setWithdrawReason] = useState("");
+  const [isSubmittingWithdraw, setIsSubmittingWithdraw] = useState(false);
+
+  const loadDbActivity = async () => {
+    const res = await fetchStudentDbActivity();
+    if (res.success) {
+      setDbComplaints(res.complaints || []);
+      setDbClubApps(res.clubApps || []);
+    }
+  };
 
   useEffect(() => {
-    async function loadDbActivity() {
-      const res = await fetchStudentDbActivity();
-      if (res.success) {
-        setDbComplaints(res.complaints || []);
-        setDbClubApps(res.clubApps || []);
-      }
-    }
     loadDbActivity();
   }, []);
+
+  const handleWithdraw = async (id: string, type: 'club' | 'grievance') => {
+    if (!withdrawReason.trim()) return;
+    setIsSubmittingWithdraw(true);
+    const res = await withdrawTicket(id, type, withdrawReason);
+    setIsSubmittingWithdraw(false);
+    if (res.success) {
+      setWithdrawingId(null);
+      setWithdrawReason("");
+      loadDbActivity(); // refresh to show withdrawn status and reason
+    } else {
+      alert("Failed to withdraw: " + res.error);
+    }
+  };
 
   const serviceCards = [
     {
@@ -84,7 +104,11 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
   ];
 
   const toggleExpand = (id: string) => {
+    // Only toggle if we are not actively withdrawing
+    if (withdrawingId === id) return;
     setExpandedReq(expandedReq === id ? null : id);
+    setWithdrawingId(null);
+    setWithdrawReason("");
   };
 
   return (
@@ -152,11 +176,14 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
 
         <div className="divide-y divide-slate-100">
           {/* DB Club Applications */}
-          {dbClubApps.map((app) => (
+          {dbClubApps.map((app) => {
+            const isWithdrawn = app.status === 'Withdrawn';
+            const expId = `club-${app.id}`;
+            return (
             <div 
-              key={`club-${app.id}`} 
-              className="p-4 hover:bg-muted/50/60 transition-colors cursor-pointer"
-              onClick={() => toggleExpand(`club-${app.id}`)}
+              key={expId} 
+              className={`p-4 hover:bg-muted/50/60 transition-colors cursor-pointer ${isWithdrawn ? 'opacity-75' : ''}`}
+              onClick={() => toggleExpand(expId)}
             >
               <div className="flex flex-col @lg:flex-row @lg:items-center justify-between gap-2">
                 <div className="space-y-1">
@@ -176,8 +203,10 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
                 </div>
 
                 <div className="flex items-center @lg:flex-col @lg:items-end gap-2 shrink-0">
-                  <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-sm font-bold text-emerald-800 border border-emerald-200 flex items-center gap-1">
-                    <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                  <span className={`rounded-full px-2.5 py-0.5 text-sm font-bold border flex items-center gap-1 ${
+                    isWithdrawn ? 'bg-slate-50 text-slate-500 border-slate-200' : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                  }`}>
+                    {isWithdrawn ? <XCircle className="h-3 w-3" /> : <CheckCircle2 className="h-3 w-3 text-emerald-600" />}
                     <span>{app.status}</span>
                   </span>
                   <span className="text-sm font-medium text-slate-400">Priority: Normal</span>
@@ -185,34 +214,87 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
               </div>
               
               {/* Expanded Status View */}
-              {expandedReq === `club-${app.id}` && (
+              {expandedReq === expId && (
                 <div className="mt-4 pt-4 border-t border-slate-100 animate-fade-in pl-2">
                   <h4 className="text-sm font-bold text-foreground mb-3">Live Tracking Status</h4>
                   <div className="flex items-center text-sm">
                     <div className="flex flex-col items-center">
-                      <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white"><CheckCircle2 className="w-4 h-4"/></div>
-                      <div className="h-6 w-0.5 bg-emerald-500 my-1"></div>
-                      <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white"><CheckCircle2 className="w-4 h-4"/></div>
-                      <div className="h-6 w-0.5 bg-slate-200 my-1"></div>
-                      <div className="w-6 h-6 rounded-full bg-slate-200 border-2 border-slate-300"></div>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white ${isWithdrawn ? 'bg-slate-400' : 'bg-emerald-500'}`}><CheckCircle2 className="w-4 h-4"/></div>
+                      <div className={`h-6 w-0.5 my-1 ${isWithdrawn ? 'bg-slate-400' : 'bg-emerald-500'}`}></div>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white ${isWithdrawn ? 'bg-slate-400' : 'bg-emerald-500'}`}><CheckCircle2 className="w-4 h-4"/></div>
+                      <div className={`h-6 w-0.5 my-1 ${isWithdrawn ? 'bg-slate-400' : 'bg-slate-200'}`}></div>
+                      {isWithdrawn ? (
+                        <div className="w-6 h-6 rounded-full bg-slate-500 flex items-center justify-center text-white"><XCircle className="w-4 h-4"/></div>
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-slate-200 border-2 border-slate-300"></div>
+                      )}
                     </div>
                     <div className="ml-4 flex flex-col justify-between h-32 py-0.5 text-slate-600 font-medium">
                       <div><span className="text-slate-900">Application Submitted</span> <span className="text-xs font-normal ml-2">({new Date(app.timestamp).toLocaleString()})</span></div>
                       <div><span className="text-slate-900">Forwarded via WhatsApp</span> <span className="text-xs font-normal ml-2">Notification sent to Club Head</span></div>
-                      <div>Pending Review</div>
+                      <div>{isWithdrawn ? 'Withdrawn by Student' : 'Pending Review'}</div>
                     </div>
                   </div>
+
+                  {!isWithdrawn && withdrawingId !== expId && (
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setWithdrawingId(expId); }} 
+                      className="mt-4 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-100 inline-flex items-center gap-1 transition-colors"
+                    >
+                      Withdraw Request
+                    </button>
+                  )}
+
+                  {withdrawingId === expId && (
+                    <div className="mt-4 p-4 bg-rose-50 rounded-xl border border-rose-200 shadow-sm" onClick={(e) => e.stopPropagation()}>
+                      <p className="text-sm font-bold text-rose-900 mb-2">Why are you withdrawing this application?</p>
+                      <input 
+                        type="text" 
+                        value={withdrawReason} 
+                        onChange={(e) => setWithdrawReason(e.target.value)} 
+                        className="w-full text-sm p-2.5 rounded-lg border border-rose-200 mb-3 focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white" 
+                        placeholder="Reason for withdrawal..." 
+                        autoFocus
+                      />
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => handleWithdraw(app.id, 'club')} 
+                          disabled={isSubmittingWithdraw || !withdrawReason.trim()} 
+                          className="bg-rose-600 text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-rose-700 disabled:opacity-50 transition-colors flex items-center"
+                        >
+                          {isSubmittingWithdraw ? <Loader2 className="w-3 h-3 animate-spin mr-1"/> : null}
+                          Confirm Withdrawal
+                        </button>
+                        <button 
+                          onClick={() => { setWithdrawingId(null); setWithdrawReason(''); }} 
+                          className="text-slate-700 text-xs font-semibold px-4 py-2 rounded-lg hover:bg-slate-100 border border-slate-300 bg-white transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {isWithdrawn && app.withdrawal_reason && (
+                    <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200 inline-block">
+                      <p className="text-xs font-semibold text-slate-700">Withdrawal Reason:</p>
+                      <p className="text-xs text-slate-600 italic mt-0.5">"{app.withdrawal_reason}"</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          ))}
+          )})}
 
           {/* DB Complaints */}
-          {dbComplaints.map((comp) => (
+          {dbComplaints.map((comp) => {
+            const isWithdrawn = comp.status === 'Withdrawn';
+            const expId = comp.id;
+            return (
             <div 
-              key={comp.id} 
-              className="p-4 hover:bg-muted/50/60 transition-colors cursor-pointer"
-              onClick={() => toggleExpand(comp.id)}
+              key={expId} 
+              className={`p-4 hover:bg-muted/50/60 transition-colors cursor-pointer ${isWithdrawn ? 'opacity-75' : ''}`}
+              onClick={() => toggleExpand(expId)}
             >
               <div className="flex flex-col @lg:flex-row @lg:items-center justify-between gap-2">
                 <div className="space-y-1">
@@ -233,8 +315,10 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
                 </div>
 
                 <div className="flex items-center @lg:flex-col @lg:items-end gap-2 shrink-0">
-                  <span className="rounded-full bg-rose-50 px-2.5 py-0.5 text-sm font-bold text-rose-800 border border-rose-200 flex items-center gap-1">
-                    <ShieldCheck className="h-3 w-3 text-rose-600" />
+                  <span className={`rounded-full px-2.5 py-0.5 text-sm font-bold border flex items-center gap-1 ${
+                    isWithdrawn ? 'bg-slate-50 text-slate-500 border-slate-200' : 'bg-rose-50 text-rose-800 border-rose-200'
+                  }`}>
+                    {isWithdrawn ? <XCircle className="h-3 w-3" /> : <ShieldCheck className="h-3 w-3 text-rose-600" />}
                     <span>{comp.status}</span>
                   </span>
                   <span className="text-sm font-medium text-rose-500">Priority: High</span>
@@ -242,27 +326,77 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
               </div>
               
               {/* Expanded Status View */}
-              {expandedReq === comp.id && (
+              {expandedReq === expId && (
                 <div className="mt-4 pt-4 border-t border-slate-100 animate-fade-in pl-2">
                   <h4 className="text-sm font-bold text-foreground mb-3">Live Tracking Status</h4>
                   <div className="flex items-center text-sm">
                     <div className="flex flex-col items-center">
-                      <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white"><CheckCircle2 className="w-4 h-4"/></div>
-                      <div className="h-6 w-0.5 bg-emerald-500 my-1"></div>
-                      <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white"><CheckCircle2 className="w-4 h-4"/></div>
-                      <div className="h-6 w-0.5 bg-slate-200 my-1"></div>
-                      <div className="w-6 h-6 rounded-full bg-slate-200 border-2 border-slate-300"></div>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white ${isWithdrawn ? 'bg-slate-400' : 'bg-emerald-500'}`}><CheckCircle2 className="w-4 h-4"/></div>
+                      <div className={`h-6 w-0.5 my-1 ${isWithdrawn ? 'bg-slate-400' : 'bg-emerald-500'}`}></div>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white ${isWithdrawn ? 'bg-slate-400' : 'bg-emerald-500'}`}><CheckCircle2 className="w-4 h-4"/></div>
+                      <div className={`h-6 w-0.5 my-1 ${isWithdrawn ? 'bg-slate-400' : 'bg-slate-200'}`}></div>
+                      {isWithdrawn ? (
+                        <div className="w-6 h-6 rounded-full bg-slate-500 flex items-center justify-center text-white"><XCircle className="w-4 h-4"/></div>
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-slate-200 border-2 border-slate-300"></div>
+                      )}
                     </div>
                     <div className="ml-4 flex flex-col justify-between h-32 py-0.5 text-slate-600 font-medium">
                       <div><span className="text-slate-900">Incident Reported</span> <span className="text-xs font-normal ml-2">({new Date(comp.timestamp).toLocaleString()})</span></div>
                       <div><span className="text-slate-900">Received & Secured</span> <span className="text-xs font-normal ml-2">Assigned to Nodal Officer</span></div>
-                      <div>Under Investigation</div>
+                      <div>{isWithdrawn ? 'Withdrawn by Student' : 'Under Investigation'}</div>
                     </div>
                   </div>
+
+                  {!isWithdrawn && withdrawingId !== expId && (
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setWithdrawingId(expId); }} 
+                      className="mt-4 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-100 inline-flex items-center gap-1 transition-colors"
+                    >
+                      Withdraw Request
+                    </button>
+                  )}
+
+                  {withdrawingId === expId && (
+                    <div className="mt-4 p-4 bg-rose-50 rounded-xl border border-rose-200 shadow-sm" onClick={(e) => e.stopPropagation()}>
+                      <p className="text-sm font-bold text-rose-900 mb-2">Why are you withdrawing this grievance?</p>
+                      <input 
+                        type="text" 
+                        value={withdrawReason} 
+                        onChange={(e) => setWithdrawReason(e.target.value)} 
+                        className="w-full text-sm p-2.5 rounded-lg border border-rose-200 mb-3 focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white" 
+                        placeholder="Reason for withdrawal..." 
+                        autoFocus
+                      />
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => handleWithdraw(comp.id, 'grievance')} 
+                          disabled={isSubmittingWithdraw || !withdrawReason.trim()} 
+                          className="bg-rose-600 text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-rose-700 disabled:opacity-50 transition-colors flex items-center"
+                        >
+                          {isSubmittingWithdraw ? <Loader2 className="w-3 h-3 animate-spin mr-1"/> : null}
+                          Confirm Withdrawal
+                        </button>
+                        <button 
+                          onClick={() => { setWithdrawingId(null); setWithdrawReason(''); }} 
+                          className="text-slate-700 text-xs font-semibold px-4 py-2 rounded-lg hover:bg-slate-100 border border-slate-300 bg-white transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {isWithdrawn && comp.withdrawal_reason && (
+                    <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200 inline-block">
+                      <p className="text-xs font-semibold text-slate-700">Withdrawal Reason:</p>
+                      <p className="text-xs text-slate-600 italic mt-0.5">"{comp.withdrawal_reason}"</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          ))}
+          )})}
 
           {/* Static Mock Services */}
           {services.map((req) => (
