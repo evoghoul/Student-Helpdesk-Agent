@@ -134,7 +134,9 @@ class Agent65ApiClient {
     if (!token) {
       const savedRoll = typeof window !== "undefined" ? localStorage.getItem("agent65_active_student") : null;
       if (savedRoll) {
-        const loginData = await this.login(savedRoll, savedRoll);
+        // Use correct password format for the demo
+        const defaultPwd = "aman@" + savedRoll;
+        const loginData = await this.login(savedRoll, defaultPwd);
         if (loginData) {
           token = loginData.access_token;
         }
@@ -218,7 +220,8 @@ class Agent65ApiClient {
     if (!token || convId === "local-conversation-session") {
       const savedRoll = typeof window !== "undefined" ? localStorage.getItem("agent65_active_student") : null;
       if (savedRoll) {
-        token = await this.login(savedRoll, savedRoll).then((t) => t?.access_token || null);
+        const defaultPwd = "aman@" + savedRoll;
+        token = await this.login(savedRoll, defaultPwd).then((t) => t?.access_token || null);
         convId = await this.getOrCreateConversation(true);
       }
       if (!token || convId === "local-conversation-session") {
