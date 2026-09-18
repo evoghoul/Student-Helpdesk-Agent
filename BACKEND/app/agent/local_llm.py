@@ -131,6 +131,37 @@ class LocalLLMClient:
         return cls._send_chat(messages, model=model, timeout=timeout, language=language)
 
     @classmethod
+    def classify_intent(cls, query: str) -> str:
+        """
+        Quickly classifies the user's intent into a specific backend module.
+        """
+        prompt = f"""You are a query classifier. Classify the user query into exactly ONE of the following intents:
+- PROFILE (queries about student profile, enrollment number, personal info)
+- ATTENDANCE (queries about student attendance percentage, missed classes)
+- MARKS (queries about student grades, marks, results, CGPA)
+- FEES (queries about student fee balance, payments, dues)
+- LIBRARY (queries about issued library books, overdue fines for the student)
+- TIMETABLE (queries about student's class schedule, periods, times)
+- EXAMS (queries about exam dates, midterm schedule)
+- CURRICULUM (queries about syllabus, credits, degree requirements)
+- FACULTY (queries about professors, advisors, contacting faculty)
+- KNOWLEDGE_BASE (queries about campus facilities, locations, buildings (e.g. MHP, Zest, print shop), rules, FAQs, general questions)
+
+User Query: "{query}"
+
+Output ONLY the exact intent string without any extra text."""
+        
+        # We use a short timeout for classification
+        res, _, _ = cls._send_chat([{"role": "user", "content": prompt}], model="8b", timeout=5.0)
+        
+        intent = (res or "").strip().upper()
+        
+        valid_intents = ["PROFILE", "ATTENDANCE", "MARKS", "FEES", "LIBRARY", "TIMETABLE", "EXAMS", "CURRICULUM", "FACULTY", "KNOWLEDGE_BASE"]
+        if intent in valid_intents:
+            return intent
+        return "KNOWLEDGE_BASE"
+
+    @classmethod
     def chat_with_history(
         cls,
         system_prompt: str,
@@ -286,7 +317,7 @@ class LocalLLMClient:
         if system_instruction:
             payload["systemInstruction"] = system_instruction
             
-        candidate_models = ["gemini-3.6-flash", "gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash"]
+        candidate_models = ["gemini-3.6-flash"]
         import time
         for cand_model in candidate_models:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{cand_model}:generateContent?key={api_key}"

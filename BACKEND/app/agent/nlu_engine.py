@@ -243,249 +243,118 @@ class NLUEngine:
                 }
             ]
 
-        # D. Attendance Card (Non-destructive widget attachment)
-        elif cls.has_any_word(q_lower, ["attendance", "classes held", "classes attended", "attendance shortage", "bunk", "bunked", "75%"]) and not cls.has_any_word(q_lower, ["policy", "policies", "regulation", "regulations", "condonation", "hall ticket", "admit card", "hold", "how", "decrease", "increase", "improve", "maintain"]) and not is_peer_query:
-            att_res = get_attendance_summary(session, active_subject)
-            direct_response_text = att_res.get("text", "")
-            card_data = att_res.get("structured_card")
-            if att_res.get("context_subject"):
-                active_subject = att_res["context_subject"]
-            citations = [
-                {
-                    "title": "Academic Regulations R23",
-                    "clause": "Clause 4.2: Minimum 75% Attendance Requirement",
-                    "effective_date": "2023-07-15",
-                    "summary": "Mandates 75% attendance to appear in End-Semester Examinations."
-                }
-            ]
-            category = "PERSONAL_DATA"
-            topic = "Attendance Analytics"
-            source_agent = "Agent 11 (Attendance System)"
-
-        # D. Exam Card
-        elif cls.has_any_word(q_lower, ["exam", "exams", "assessment", "assessments", "cie", "cie-1", "cie-2", "cie 2", "second formative", "formative assessment", "hall ticket", "examination schedule", "exam date"]) and not is_peer_query:
-            exam_res = get_exams_summary(session)
-            direct_response_text = exam_res.get("text", "")
-            card_data = exam_res.get("structured_card")
-            citations = [
-                {
-                    "title": "Examination Ordinance 2026",
-                    "clause": "Clause 8.1: Continuous Internal Evaluation",
-                    "effective_date": "2026-08-01",
-                    "summary": "Two continuous internal evaluations required per semester."
-                }
-            ]
-            category = "PERSONAL_DATA"
-            topic = "Examinations & Assessments"
-            source_agent = "Agent 30 & Agent 34 (Examination Hub)"
-
-        # E. Fee Card (CRITICAL: Whole-word boundary ensures 'feeling' never triggers this)
-        elif cls.has_any_word(q_lower, ["fee", "fees", "dues", "tuition", "payment", "installment", "pay fee", "balance due", "pending fees", "fee demand", "fee receipt"]) and not is_peer_query:
-            fee_res = get_fees_summary(session)
-            direct_response_text = fee_res.get("text", "")
-            card_data = fee_res.get("structured_card")
-            citations = [
-                {
-                    "title": "Fee Payment Notification No. 104/2026",
-                    "clause": "Clause 2: Late Surcharge Schedule",
-                    "effective_date": "2026-08-15",
-                    "summary": "Late fine of Rs. 50/day applicable after 15 Oct 2026."
-                }
-            ]
-            category = "TRANSACTIONAL"
-            topic = "Student Fee Ledgers"
-            source_agent = "Agent 40 (Finance Engine)"
-
-        # F. Timetable Card
-        elif cls.has_any_word(q_lower, ["timetable", "class schedule", "schedule today", "classes today", "class today", "next class", "room no", "lecture time"]) and not is_peer_query:
-            tt_res = get_timetable_summary(session)
-            direct_response_text = tt_res.get("text", "")
-            card_data = tt_res.get("structured_card")
-            category = "PERSONAL_DATA"
-            topic = "Academic Timetable"
-            source_agent = "Agent 10 (Scheduling Service)"
-
-        # G. Marks & Grades Card
-        elif cls.has_any_word(q_lower, ["mark", "marks", "score", "scores", "grade", "grades", "gpa", "sgpa", "cgpa", "backlog", "backlogs", "internal mark", "internal marks"]) and not is_peer_query:
-            marks_res = get_marks_summary(session)
-            direct_response_text = marks_res.get("text", "")
-            card_data = marks_res.get("structured_card")
-            citations = [
-                {
-                    "title": "Grading System Manual 2026",
-                    "clause": "Clause 3.4: 10-Point Relative Grading Scale",
-                    "effective_date": "2026-07-01",
-                    "summary": "Minimum passing grade of 'P' (4.0/10) required for credit award."
-                }
-            ]
-            category = "PERSONAL_DATA"
-            topic = "Academic Performance & Marks"
-            source_agent = "Agent 30 (Assessment Engine)"
-
-        # H. Curriculum & Degree Card
-        elif cls.has_any_word(q_lower, ["curriculum", "credit", "credits", "graduate", "graduation", "next semester", "prerequisite", "degree audit", "subject", "subjects", "semester"]) and not is_peer_query:
-            curr_res = get_curriculum_summary(session)
-            if cls.has_any_word(q_lower, ["subject", "subjects"]):
-                enrolled_subjects = DataRepository.get_attendance(session)
-                unique_subjects = []
-                seen_subjects = set()
-                for subject in enrolled_subjects:
-                    key = subject.get("course_code") or subject.get("course_title")
-                    if key and key not in seen_subjects:
-                        seen_subjects.add(key)
-                        unique_subjects.append(subject)
-
-                if unique_subjects:
-                    subject_lines = ["These are your subjects registered for the current semester:\n"]
-                    subject_lines.extend(
-                        f"• **{subject.get('course_code', 'Course')}** - {subject.get('course_title', 'Unnamed subject')}"
-                        for subject in unique_subjects
-                    )
-                    direct_response_text = "\n".join(subject_lines)
-                else:
-                    direct_response_text = "No registered subjects were found for the current semester."
-                card_data = None
-                topic = "Registered Semester Subjects"
-                source_agent = "Agent 52 (Curriculum & Enrollment)"
-            else:
+        # D. Intent Classification (Dynamic LLM Routing)
+        else:
+            intent = LocalLLMClient.classify_intent(query)
+            
+            if intent == "ATTENDANCE":
+                att_res = get_attendance_summary(session, active_subject)
+                direct_response_text = att_res.get("text", "")
+                card_data = att_res.get("structured_card")
+                if att_res.get("context_subject"):
+                    active_subject = att_res["context_subject"]
+                citations = [{"title": "Academic Regulations R23", "clause": "Clause 4.2", "effective_date": "2023-07-15", "summary": "Mandates 75% attendance"}]
+                category = "PERSONAL_DATA"
+                topic = "Attendance Analytics"
+                source_agent = "Agent 11 (Attendance System)"
+                
+            elif intent == "EXAMS":
+                exam_res = get_exams_summary(session)
+                direct_response_text = exam_res.get("text", "")
+                card_data = exam_res.get("structured_card")
+                citations = [{"title": "Examination Ordinance 2026", "clause": "Clause 8.1", "effective_date": "2026-08-01", "summary": "Two continuous internal evaluations"}]
+                category = "PERSONAL_DATA"
+                topic = "Examinations & Assessments"
+                source_agent = "Agent 30 & Agent 34 (Examination Hub)"
+                
+            elif intent == "FEES":
+                fee_res = get_fees_summary(session)
+                direct_response_text = fee_res.get("text", "")
+                card_data = fee_res.get("structured_card")
+                citations = [{"title": "Fee Payment Notification No. 104/2026", "clause": "Clause 2: Late Surcharge Schedule", "effective_date": "2026-08-15", "summary": "Late fine of Rs. 50/day applicable after 15 Oct 2026."}]
+                category = "TRANSACTIONAL"
+                topic = "Student Fee Ledgers"
+                source_agent = "Agent 40 (Finance Engine)"
+                
+            elif intent == "TIMETABLE":
+                tt_res = get_timetable_summary(session)
+                direct_response_text = tt_res.get("text", "")
+                card_data = tt_res.get("structured_card")
+                category = "PERSONAL_DATA"
+                topic = "Academic Timetable"
+                source_agent = "Agent 10 (Scheduling Service)"
+                
+            elif intent == "MARKS":
+                marks_res = get_marks_summary(session)
+                direct_response_text = marks_res.get("text", "")
+                card_data = marks_res.get("structured_card")
+                citations = [{"title": "Grading System Manual 2026", "clause": "Clause 3.4: 10-Point Relative Grading Scale", "effective_date": "2026-07-01", "summary": "Minimum passing grade of 'P' (4.0/10) required for credit award."}]
+                category = "PERSONAL_DATA"
+                topic = "Academic Performance & Marks"
+                source_agent = "Agent 30 (Assessment Engine)"
+                
+            elif intent == "CURRICULUM":
+                curr_res = get_curriculum_summary(session)
                 direct_response_text = curr_res.get("text", "")
                 card_data = curr_res.get("structured_card")
-            citations = [
-                {
-                    "title": "B.Tech Curriculum Framework 2026",
-                    "clause": "Section 5: Graduation Credit Requirements",
-                    "effective_date": "2026-07-01",
-                    "summary": "Total 120 credits required for B.Tech degree completion."
-                }
-            ]
-            category = "PERSONAL_DATA" if cls.has_any_word(q_lower, ["subject", "subjects"]) else "ACADEMIC_AUDIT"
-            if not cls.has_any_word(q_lower, ["subject", "subjects"]):
+                citations = [{"title": "B.Tech Curriculum Framework 2026", "clause": "Section 5", "effective_date": "2026-07-01", "summary": "Total 120 credits required"}]
+                category = "ACADEMIC_AUDIT"
                 topic = "Curriculum & Degree Audit"
                 source_agent = "Agent 20 (Curriculum Engine)"
-
-        # H2. Library Books Card
-        elif cls.has_any_word(q_lower, ["library", "book", "books", "due date", "fine", "lended", "issued"]) and not is_peer_query:
-            lib_res = get_library_summary(session)
-            direct_response_text = lib_res.get("text", "")
-            card_data = lib_res.get("structured_card")
-            citations = [
-                {
-                    "title": "Central Library Policies",
-                    "clause": "Section 2: Lending and Fines",
-                    "effective_date": "2026-08-01",
-                    "summary": "Students are responsible for returning books by the due date. Overdue books incur fines."
-                }
-            ]
-            category = "PERSONAL_DATA"
-            topic = "Library Circulation Records"
-            source_agent = "Agent 25 (Library System)"
-
-
-        # I. Official Policies & Bylaws
-        elif cls.has_any_word(q_lower, ["policy", "policies", "circular", "circulars", "bylaw", "bylaws", "by-law", "regulation", "regulations", "ordinance", "condonation rule", "revaluation fee", "holiday list"]):
-            pol_res = search_policies_and_circulars(query)
-            direct_response_text = pol_res.get("text", "")
-            card_data = pol_res.get("structured_card")
-            citations = pol_res.get("citations", [])
-            category = "INSTITUTIONAL_INFO"
-            topic = "Official University Regulations"
-            source_agent = "Agent 53 & Agent 55 (Policy Hub)"
-
-        # J. Faculty & Advisor Contact Directory
-        elif cls.has_any_word(q_lower, ["class teacher", "counsellor", "counselor", "mentor", "advisor", "faculty", "hod", "teacher", "professor", "who teaches", "taught by"]):
-            advisors = DataRepository.get_student_advisors(session)
-            if advisors:
-                card_title = "Academic Advisors & Faculty Contacts"
-                badge = "Verified Faculty"
-                if "class teacher" in q_lower:
-                    card_title = "Class Teacher Information"
-                    badge = "Class Teacher"
-                elif "counsel" in q_lower:
-                    card_title = "Student Counsellor Information"
-                    badge = "Student Counsellor"
-                elif "mentor" in q_lower:
-                    card_title = "Faculty Mentor Information"
-                    badge = "Faculty Mentor"
-                elif "hod" in q_lower:
-                    card_title = "Department Head Information"
-                    badge = "HOD CSE"
-
-                card_data = {
-                    "type": "FACULTY_CONTACT",
-                    "title": card_title,
-                    "subtitle": "Section 7 Official Faculty Directory",
-                    "badge": badge,
-                    "badgeVariant": "blue",
-                    "data": advisors,
-                    "actionLabel": "Book Advisor Session",
-                    "actionIntent": "Book mentor meeting"
-                }
+                
+            elif intent == "LIBRARY":
+                lib_res = get_library_summary(session)
+                direct_response_text = lib_res.get("text", "")
+                card_data = lib_res.get("structured_card")
+                citations = [{"title": "Central Library Policies", "clause": "Section 2", "effective_date": "2026-08-01", "summary": "Overdue books incur fines"}]
                 category = "PERSONAL_DATA"
-                topic = "Faculty & Advisor Directory"
-                source_agent = "Agent 44 (Faculty & Identity System)"
-
-        # K. Campus Location & Navigation
-        elif cls.has_any_word(q_lower, ["where is", "navigate to", "direction to", "directions to", "room", "cabin", "block"]):
-            # Extract room number, e.g. "room 309", "A-309", "H-102"
-            room_match = re.search(r'(?:room|cabin)?\s*([A-Za-z]?-?\d{2,3})', q_lower)
-            if room_match:
-                room_no = room_match.group(1).replace(" ", "").upper()
-                loc_data = DataRepository.get_campus_location(room_no)
-                if loc_data:
+                topic = "Library Circulation Records"
+                source_agent = "Agent 25 (Library System)"
+                
+            elif intent == "FACULTY":
+                advisors = DataRepository.get_student_advisors(session)
+                if advisors:
                     card_data = {
-                        "type": "CAMPUS_NAVIGATION",
-                        "title": f"Navigation: {loc_data['block']} - {loc_data['room_number']}",
-                        "subtitle": loc_data['description'],
-                        "badge": "Campus Map",
-                        "badgeVariant": "green",
-                        "data": {
-                            "Room": loc_data['room_number'],
-                            "Block": loc_data['block'],
-                            "Floor": loc_data['floor']
-                        }
+                        "type": "FACULTY_CONTACT",
+                        "title": "Academic Advisors & Faculty Contacts",
+                        "subtitle": "Section 7 Official Faculty Directory",
+                        "badge": "Verified Faculty",
+                        "badgeVariant": "blue",
+                        "data": advisors,
+                        "actionLabel": "Book Advisor Session",
+                        "actionIntent": "Book mentor meeting"
                     }
-                    direct_response_text = f"To get to {loc_data['description']} (Room {loc_data['room_number']}), please go to the {loc_data['floor']} of {loc_data['block']}."
+                    category = "PERSONAL_DATA"
+                    topic = "Faculty & Advisor Directory"
+                    source_agent = "Agent 44 (Faculty & Identity System)"
+                    
+            else:
+                # Universal Knowledge Search for KNOWLEDGE_BASE or GENERAL
+                parts = []
+                # 1. Fresher FAQs
+                faq_res = DataRepository.search_fresher_faqs(q_lower)
+                if faq_res:
+                    for f in faq_res[:2]:
+                        parts.append(f"FAQ: {f['topic']} - {f['question']}\nAnswer: {f['answer']}")
+                
+                # 2. Policies
+                pol_res = search_policies_and_circulars(query)
+                if pol_res and pol_res.get("text"):
+                    parts.append(f"POLICY: {pol_res['text']}")
+                    
+                # 3. Campus Location
+                room_match = re.search(r'(?:room|cabin|block)?\s*([A-Za-z]?-?\d{1,3})', q_lower)
+                if room_match:
+                    room_no = room_match.group(1).replace(" ", "").upper()
+                    loc_data = DataRepository.get_campus_location(room_no)
+                    if loc_data:
+                        parts.append(f"LOCATION: To get to {loc_data['description']} (Room {loc_data['room_number']}), please go to the {loc_data['floor']} of {loc_data['block']}.")
+                        
+                if parts:
+                    direct_response_text = "\n\n".join(parts)
                     category = "INSTITUTIONAL_INFO"
-                    topic = "Campus Navigation"
-                    source_agent = "Agent 70 (Campus Nav System)"
-
-        # L. Fresher FAQs
-        elif cls.has_any_word(q_lower, ["fresher", "anti-ragging", "ragging", "hostel", "food court", "canteen", "library", "id card", "club", "sac", "mhp", "zest", "print", "shop", "shops"]):
-            faq_res = DataRepository.search_fresher_faqs(q_lower)
-            if faq_res:
-                faq = faq_res[0]
-                card_data = {
-                    "type": "FRESHER_FAQ",
-                    "title": faq['topic'],
-                    "subtitle": faq['question'],
-                    "badge": "Fresher Guide",
-                    "badgeVariant": "purple",
-                    "data": {
-                        "Topic": faq['topic']
-                    }
-                }
-                direct_response_text = faq['answer']
-                category = "INSTITUTIONAL_INFO"
-                topic = "Fresher Guide & FAQs"
-                source_agent = "Agent 71 (Fresher Onboarding)"
-
-        # Quick actions use 3B as a fast database formatter. Skip model inference
-        # when a verified database/tool response is already available.
-        if selected_model == "3B" and direct_response_text:
-            return {
-                "category": category,
-                "topic": topic,
-                "source_agent": source_agent,
-                "content": direct_response_text,
-                "citations": citations,
-                "structured_card": card_data,
-                "suggested_follow_ups": cls.generate_dynamic_followups(query, active_subject),
-                "active_subject": active_subject,
-                "language": effective_lang,
-                "llm_provider": "local",
-                "model_used": "agent65-3b:latest",
-                "used_fallback": False
-            }
+                    topic = "Knowledge Base"
+                    source_agent = "Agent 55 (Knowledge Hub)"
 
 
         # ---------------- 3. COGNITIVE LLM GENERATION (ChatGPT/Gemini Quality) ----------------
