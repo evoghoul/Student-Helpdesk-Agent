@@ -18,7 +18,7 @@ export const HostelManagementView = () => {
   const fetchReqs = async () => {
     const res = await getHostelRequests(student.id);
     if (res.success) {
-      setRequests(res.data);
+      setRequests((res.data as any[]) || []);
     }
   };
 

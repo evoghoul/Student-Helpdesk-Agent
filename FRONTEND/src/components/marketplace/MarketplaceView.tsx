@@ -20,7 +20,7 @@ export const MarketplaceView = () => {
   const fetchListings = async () => {
     const res = await getMarketplaceListings();
     if (res.success) {
-      setListings(res.data);
+      setListings((res.data as any[]) || []);
     }
   };
 

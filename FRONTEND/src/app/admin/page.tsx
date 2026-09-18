@@ -108,10 +108,10 @@ export default function AdminDashboard() {
     setLoading(true);
     const res = await fetchAllTickets();
     if (res.success) {
-      setGrievances(res.grievances);
-      setClubApps(res.clubApps);
-      setBookings(res.bookings || []);
-      setLostAndFound(res.lostAndFound || []);
+      setGrievances((res.grievances as Grievance[]) || []);
+      setClubApps((res.clubApps as ClubApp[]) || []);
+      setBookings((res.bookings as BookingItem[]) || []);
+      setLostAndFound((res.lostAndFound as LostFoundItem[]) || []);
     }
     
     const analyticsRes = await getAnalyticsData();
@@ -598,7 +598,7 @@ export default function AdminDashboard() {
                         <select 
                           className="text-xs bg-white border border-slate-200 rounded-md px-2 py-1.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                           value={b.status}
-                          onChange={(e) => handleStatusUpdate(b.id, 'booking', e.target.value)}
+                          onChange={(e) => handleStatusUpdate(b.id, 'booking' as any, e.target.value)}
                         >
                           <option value="pending">Pending</option>
                           <option value="confirmed">Confirmed</option>
@@ -633,7 +633,7 @@ export default function AdminDashboard() {
                         <select 
                           className="text-xs bg-white border border-slate-200 rounded-md px-2 py-1.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                           value={l.status}
-                          onChange={(e) => handleStatusUpdate(l.id, 'lost_found', e.target.value)}
+                          onChange={(e) => handleStatusUpdate(l.id, 'lost_found' as any, e.target.value)}
                         >
                           <option value="open">Open</option>
                           <option value="claimed">Claimed</option>

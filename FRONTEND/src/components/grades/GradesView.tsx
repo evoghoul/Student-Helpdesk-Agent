@@ -13,7 +13,7 @@ export const GradesView = () => {
     const fetchRecords = async () => {
       const res = await getAcademicRecords(student.id);
       if (res.success) {
-        setRecords(res.data);
+        setRecords((res.data as any[]) || []);
       }
     };
     fetchRecords();

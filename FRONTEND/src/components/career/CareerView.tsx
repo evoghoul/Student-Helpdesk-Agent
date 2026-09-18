@@ -17,9 +17,10 @@ export const CareerView = () => {
     const fetchResume = async () => {
       const res = await getResumeData(student.id);
       if (res.success && res.data) {
-        setSkills(res.data.skills || "");
-        setProjects(res.data.projects || "");
-        if (res.data.skills || res.data.projects) setShowPreview(true);
+        const data = res.data as any;
+        setSkills(data.skills || "");
+        setProjects(data.projects || "");
+        if (data.skills || data.projects) setShowPreview(true);
       }
     };
     fetchResume();

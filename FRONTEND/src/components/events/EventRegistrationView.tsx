@@ -13,7 +13,7 @@ export const EventRegistrationView = () => {
     const fetchRegs = async () => {
       const res = await getEventRegistrations(student.id);
       if (res.success) {
-        setRegistrations(res.data);
+        setRegistrations((res.data as any[]) || []);
       }
     };
     fetchRegs();

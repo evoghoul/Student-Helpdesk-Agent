@@ -27,7 +27,7 @@ export const CampusMapView = () => {
     const fetchLocations = async () => {
       const res = await getCampusLocations();
       if (res.success) {
-        setLocations(res.data);
+        setLocations((res.data as any[]) || []);
       }
     };
     fetchLocations();

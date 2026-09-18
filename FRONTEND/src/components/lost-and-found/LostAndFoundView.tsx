@@ -5,7 +5,7 @@ import { Search, MapPin, Tag, Plus, CheckCircle2, User, Loader2, AlertTriangle, 
 import { fetchLostAndFoundItems, claimLostAndFoundItem, reportLostAndFoundItem } from "@/actions/lostAndFound";
 import { useStudent } from "@/context/StudentContext";
 import { ReportItemModal } from "./ReportItemModal";
-import formatDistanceToNow from "date-fns/formatDistanceToNow";
+import { formatDistanceToNow } from "date-fns";
 
 interface LostAndFoundItem {
   id: number;
@@ -35,7 +35,7 @@ export const LostAndFoundView = () => {
     setLoading(true);
     const res = await fetchLostAndFoundItems(filterType);
     if (res.success && res.items) {
-      setItems(res.items);
+      setItems((res.items as LostAndFoundItem[]) || []);
     }
     setLoading(false);
   };
