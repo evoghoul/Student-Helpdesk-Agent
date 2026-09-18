@@ -305,7 +305,7 @@ class LocalLLMClient:
         if system_instruction:
             payload["systemInstruction"] = system_instruction
             
-        candidate_models = ["gemini-3.6-flash", "gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash"]
+        candidate_models = ["gemini-3.6-flash", "gemini-3.1-flash-tts-preview", "gemini-2.5-computer-use-preview-10-2025", "gemini-2.0-flash", "gemini-2.5-flash"]
         import time
         for cand_model in candidate_models:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{cand_model}:generateContent?key={api_key}"
@@ -346,7 +346,7 @@ class LocalLLMClient:
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
-        candidate_models = ["openai/gpt-oss-20b", "openai/gpt-oss-120b", "groq/compound", "qwen/qwen3.6-27b"]
+        candidate_models = ["openai/gpt-oss-20b", "openai/gpt-oss-120b", "groq/compound", "qwen/qwen3.8-27b"]
         import time
         for candidate_model in candidate_models:
             payload = {
@@ -359,7 +359,11 @@ class LocalLLMClient:
                 resp = requests.post(url, headers=headers, json=payload, timeout=timeout)
                 if resp.status_code == 200:
                     data = resp.json()
-                    msg = data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+                    message = data.get("choices", [{}])[0].get("message", {})
+                    msg = message.get("content", "")
+                    if not msg:
+                        msg = message.get("reasoning", "")
+                    msg = msg.strip()
                     if msg:
                         cleaned_msg = cls.clean_latex_formatting(msg)
                         return cleaned_msg
