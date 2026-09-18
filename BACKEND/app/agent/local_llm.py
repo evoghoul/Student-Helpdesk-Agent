@@ -19,6 +19,13 @@ def get_ollama_base_url() -> str:
 DEFAULT_MODEL = "agent65-8b:latest"
 FALLBACK_MODELS = ["agent65-8b:latest", "agent65-8b", "agent65:latest", "agent65", "llama3.2:3b", "llama3.1:8b"]
 
+def _usable_secret(value: Optional[str]) -> str:
+    """Return a credential only when it is not an unset example placeholder."""
+    candidate = (value or "").strip()
+    if not candidate or candidate.upper().startswith(("YOUR_", "REPLACE_", "CHANGE_")):
+        return ""
+    return candidate
+
 class LocalLLMClient:
     """
     Client for local open-source LLM inference via Ollama.
@@ -84,8 +91,8 @@ class LocalLLMClient:
             pass
 
         # Fallback to cloud if keys are present (True Tier 2 Cascade)
-        gemini_key = getattr(settings, "GEMINI_API_KEY", "")
-        groq_key = getattr(settings, "GROQ_API_KEY", "") or getattr(settings, "CLOUD_API_KEY", "")
+        gemini_key = _usable_secret(getattr(settings, "GEMINI_API_KEY", ""))
+        groq_key = _usable_secret(getattr(settings, "GROQ_API_KEY", "")) or _usable_secret(getattr(settings, "CLOUD_API_KEY", ""))
         if gemini_key or groq_key:
             cls._available = True
             return True
@@ -201,8 +208,8 @@ class LocalLLMClient:
         target_model = cls.resolve_model_name(model)
         is_indic = language in ["hi", "hinglish", "te", "te_roman"]
 
-        gemini_key = getattr(settings, "GEMINI_API_KEY", "")
-        groq_key = getattr(settings, "GROQ_API_KEY", "") or getattr(settings, "CLOUD_API_KEY", "")
+        gemini_key = _usable_secret(getattr(settings, "GEMINI_API_KEY", ""))
+        groq_key = _usable_secret(getattr(settings, "GROQ_API_KEY", "")) or _usable_secret(getattr(settings, "CLOUD_API_KEY", ""))
 
         # ---------------- PRIORITY FOR LONG PROMPTS & INDIC LANGUAGES ----------------
         # Cloud LLMs (Gemini / Groq) handle long reasoning better and possess vast native multilingual vocabularies
@@ -215,7 +222,7 @@ class LocalLLMClient:
                 res = cls._send_gemini_chat(messages, timeout=14.0)
                 if res:
                     logger.info(f"Successfully generated response via Gemini Cloud API (Reason: {routing_reason})")
-                    return res, "cloud", "Gemini 1.5 Flash"
+                    return res, "cloud", getattr(settings, "GEMINI_MODEL", "gemini-2.0-flash")
             if groq_key:
                 res = cls._send_groq_chat(messages, timeout=14.0)
                 if res:
@@ -257,7 +264,7 @@ class LocalLLMClient:
         if gemini_key:
             res = cls._send_gemini_chat(messages, timeout=14.0)
             if res:
-                return res, "cloud", "Gemini 1.5 Flash"
+                return res, "cloud", getattr(settings, "GEMINI_MODEL", "gemini-2.0-flash")
 
         if groq_key:
             res = cls._send_groq_chat(messages, timeout=14.0)
@@ -273,7 +280,7 @@ class LocalLLMClient:
         messages: List[Dict[str, str]],
         timeout: float = 15.0
     ) -> Optional[str]:
-        api_key = getattr(settings, "GEMINI_API_KEY", "")
+        api_key = _usable_secret(getattr(settings, "GEMINI_API_KEY", ""))
         if not api_key:
             return None
         
@@ -305,7 +312,9 @@ class LocalLLMClient:
         if system_instruction:
             payload["systemInstruction"] = system_instruction
             
-        candidate_models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+        configured_model = getattr(settings, "GEMINI_MODEL", "gemini-2.0-flash").strip()
+        candidate_models = [configured_model, "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+        candidate_models = list(dict.fromkeys(model for model in candidate_models if model))
         import time
         for cand_model in candidate_models:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{cand_model}:generateContent?key={api_key}"
@@ -319,6 +328,7 @@ class LocalLLMClient:
                             msg = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
                             if msg:
                                 cleaned_msg = cls.clean_latex_formatting(msg)
+                                logger.info("Gemini request succeeded with model %s", cand_model)
                                 return cleaned_msg
                     elif resp.status_code == 429:
                         time.sleep(1.5)
@@ -339,7 +349,7 @@ class LocalLLMClient:
         messages: List[Dict[str, str]],
         timeout: float = 15.0
     ) -> Optional[str]:
-        api_key = getattr(settings, "GROQ_API_KEY", "") or getattr(settings, "CLOUD_API_KEY", "")
+        api_key = _usable_secret(getattr(settings, "GROQ_API_KEY", "")) or _usable_secret(getattr(settings, "CLOUD_API_KEY", ""))
         if not api_key:
             return None
         url = "https://api.groq.com/openai/v1/chat/completions"
