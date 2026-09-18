@@ -222,7 +222,7 @@ class LocalLLMClient:
                 res = cls._send_gemini_chat(messages, timeout=14.0)
                 if res:
                     logger.info(f"Successfully generated response via Gemini Cloud API (Reason: {routing_reason})")
-                    return res, "cloud", getattr(settings, "GEMINI_MODEL", "gemini-2.0-flash")
+                    return res, "cloud", getattr(settings, "GEMINI_MODEL", "gemini-3.6-flash")
             if groq_key:
                 res = cls._send_groq_chat(messages, timeout=14.0)
                 if res:
@@ -264,7 +264,7 @@ class LocalLLMClient:
         if gemini_key:
             res = cls._send_gemini_chat(messages, timeout=14.0)
             if res:
-                return res, "cloud", getattr(settings, "GEMINI_MODEL", "gemini-2.0-flash")
+                return res, "cloud", getattr(settings, "GEMINI_MODEL", "gemini-3.6-flash")
 
         if groq_key:
             res = cls._send_groq_chat(messages, timeout=14.0)
@@ -312,8 +312,15 @@ class LocalLLMClient:
         if system_instruction:
             payload["systemInstruction"] = system_instruction
             
-        configured_model = getattr(settings, "GEMINI_MODEL", "gemini-2.0-flash").strip()
-        candidate_models = [configured_model, "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+        configured_model = getattr(settings, "GEMINI_MODEL", "gemini-3.6-flash").strip()
+        candidate_models = [
+            configured_model,
+            "gemini-3.6-flash",
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
+            "gemini-1.5-flash",
+            "gemini-1.5-pro",
+        ]
         candidate_models = list(dict.fromkeys(model for model in candidate_models if model))
         import time
         for cand_model in candidate_models:

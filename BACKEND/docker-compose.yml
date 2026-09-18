@@ -29,6 +29,10 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:postgrespassword@db:5432/student_helpdesk
       - LLM_PROVIDER=cloud
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-3.6-flash}
       - SECRET_KEY=production-secret-key-agent65-student-helpdesk
       - FRONTEND_ORIGINS=["http://localhost:3000","http://127.0.0.1:3000"]
     depends_on:

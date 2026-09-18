@@ -54,7 +54,7 @@ Aapka backend `BACKEND/app/agent/local_llm.py` ek **3-Tier Cascade Architecture*
                                                          ▼
                                               ┌───────────────────────┐
                                               │  Tier 2b: Gemini Free │
-                                              │    (Gemini 2.5 Flash) │
+                                              │    (Gemini 3.6 Flash) │
                                               └──────────┬────────────┘
                                                          │
                                               [If Internet API fails]
