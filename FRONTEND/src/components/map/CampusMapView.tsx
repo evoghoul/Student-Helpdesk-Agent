@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { MapPin, Search, Compass, Navigation } from "lucide-react";
+import { MapPin, Search, Compass, Navigation, LocateFixed, Layers } from "lucide-react";
 import { getCampusLocations } from "@/actions/campus";
 import dynamic from "next/dynamic";
 
@@ -20,8 +20,15 @@ export const CampusMapView = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLocation, setSelectedLocation] = useState<any | null>(null);
   const [userCharacter, setUserCharacter] = useState("🔵"); // Default dot
+  
+  // New Map States
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [routeTo, setRouteTo] = useState<any | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string>("All");
 
   const characters = ["🔵", "🧑‍🎓", "🚶", "🚴", "🚗"];
+  const categories = ["All", "Academic", "Administrative", "Facility", "Hostel", "Food"];
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -33,13 +40,67 @@ export const CampusMapView = () => {
     fetchLocations();
   }, []);
 
+  // Reset route when selecting a new location
+  useEffect(() => {
+    if (selectedLocation?.id !== routeTo?.id) {
+      setRouteTo(null);
+    }
+  }, [selectedLocation, routeTo]);
+
+  const handleLocateMe = () => {
+    setIsLocating(true);
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation([position.coords.latitude, position.coords.longitude]);
+          setIsLocating(false);
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          alert("Could not get your location. Please ensure location permissions are granted.");
+          setIsLocating(false);
+        },
+        { enableHighAccuracy: true }
+      );
+    } else {
+      alert("Geolocation is not supported by your browser");
+      setIsLocating(false);
+    }
+  };
+
+  const handleGetDirections = () => {
+    if (!userLocation) {
+      // If no user location yet, try to get it first
+      handleLocateMe();
+      // Use campus center as fallback for demo purposes
+      setUserLocation([16.232820, 80.550347]);
+    }
+    setRouteTo(selectedLocation);
+  };
+
   const normalizedSearch = searchTerm.toLowerCase().replace(/[\s-]/g, '');
-  const filteredLocations = locations.filter(l => 
-    l.name.toLowerCase().replace(/[\s-]/g, '').includes(normalizedSearch) || 
-    l.building.toLowerCase().replace(/[\s-]/g, '').includes(normalizedSearch) ||
-    (l.description && l.description.toLowerCase().replace(/[\s-]/g, '').includes(normalizedSearch)) ||
-    (l.type && l.type.toLowerCase().replace(/[\s-]/g, '').includes(normalizedSearch))
-  );
+  const filteredLocations = locations.filter(l => {
+    const matchesSearch = l.name.toLowerCase().replace(/[\s-]/g, '').includes(normalizedSearch) || 
+      l.building.toLowerCase().replace(/[\s-]/g, '').includes(normalizedSearch) ||
+      (l.description && l.description.toLowerCase().replace(/[\s-]/g, '').includes(normalizedSearch)) ||
+      (l.type && l.type.toLowerCase().replace(/[\s-]/g, '').includes(normalizedSearch));
+
+    if (activeCategory === "All") return matchesSearch;
+    
+    const typeLower = (l.type || "").toLowerCase();
+    let matchesCategory = false;
+    
+    switch(activeCategory) {
+      case "Food": matchesCategory = typeLower.includes("food") || typeLower.includes("canteen") || typeLower.includes("cafeteria"); break;
+      case "Academic": matchesCategory = typeLower.includes("academic") || typeLower.includes("lab") || typeLower.includes("classroom") || typeLower.includes("office"); break;
+      case "Hostel": matchesCategory = typeLower.includes("hostel") || typeLower.includes("dorm"); break;
+      case "Administrative": matchesCategory = typeLower.includes("admin"); break;
+      case "Facility": matchesCategory = typeLower.includes("facility") || typeLower.includes("bank") || typeLower.includes("atm") || typeLower.includes("library"); break;
+      default: matchesCategory = true;
+    }
+    
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300 flex flex-col h-[calc(100vh-12rem)] min-h-[500px]">
@@ -60,17 +121,44 @@ export const CampusMapView = () => {
         </div>
       </div>
 
+      {/* Category Filter Chips */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide shrink-0">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setActiveCategory(cat)}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+              activeCategory === cat 
+                ? 'bg-blue-600 text-white shadow-sm' 
+                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
         {/* Interactive Map */}
-        <div className="lg:col-span-2 rounded-xl border border-border bg-card overflow-hidden shadow-sm flex flex-col h-full">
+        <div className="lg:col-span-2 rounded-xl border border-border bg-card overflow-hidden shadow-sm flex flex-col h-full relative">
           <div className="bg-muted/30 border-b border-border p-4 flex flex-wrap items-center justify-between gap-2 shrink-0">
-            <div className="flex items-center gap-2">
-              <Compass className="h-5 w-5 text-blue-600" />
-              <h3 className="font-semibold text-sm">Interactive Map</h3>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Compass className="h-5 w-5 text-blue-600" />
+                <h3 className="font-semibold text-sm hidden sm:inline-block">Interactive Map</h3>
+              </div>
+              <button 
+                onClick={handleLocateMe}
+                disabled={isLocating}
+                className="flex items-center gap-1.5 text-xs font-medium bg-white border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50 text-slate-700 transition-colors disabled:opacity-50"
+              >
+                <LocateFixed className={`h-4 w-4 text-blue-600 ${isLocating ? 'animate-spin' : ''}`} />
+                {isLocating ? 'Locating...' : 'Locate Me'}
+              </button>
             </div>
             
             <div className="flex items-center gap-2">
-              <div className="flex items-center bg-white border border-border rounded-lg px-2 py-1 gap-1">
+              <div className="flex items-center bg-white border border-border rounded-lg px-2 py-1 gap-1 hidden sm:flex">
                 <span className="text-xs text-muted-foreground mr-1">You:</span>
                 {characters.map(char => (
                   <button
@@ -94,9 +182,11 @@ export const CampusMapView = () => {
           </div>
           <div className="flex-1 relative z-0 min-h-0">
             <DynamicMap 
-              locations={locations} 
+              locations={filteredLocations} 
               selectedLocation={selectedLocation} 
               userCharacter={userCharacter} 
+              userLocation={userLocation}
+              routeTo={routeTo}
               onLocationSelect={setSelectedLocation}
             />
           </div>
@@ -120,6 +210,16 @@ export const CampusMapView = () => {
                 </button>
               </div>
               <div className="p-4 flex-1 overflow-y-auto space-y-4">
+                
+                {/* Directions Button - NEW */}
+                <button 
+                  onClick={handleGetDirections}
+                  className="w-full flex items-center justify-center gap-2 bg-blue-50 text-blue-700 hover:bg-blue-100 py-3 px-4 rounded-lg text-sm font-semibold transition-colors border border-blue-200"
+                >
+                  <Navigation className="h-4 w-4" />
+                  {routeTo?.id === selectedLocation.id ? 'Route Displayed' : 'Get Directions'}
+                </button>
+
                 <div>
                   <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Description</h4>
                   <p className="text-sm">{selectedLocation.description || "No description available for this location."}</p>
@@ -128,7 +228,6 @@ export const CampusMapView = () => {
                 <div className="space-y-2 pt-4 border-t border-border">
                   {selectedLocation.features && selectedLocation.features.length > 0 ? (
                     selectedLocation.features.map((feature: string, idx: number) => {
-                      // Pick styling based on feature string
                       let btnClass = "w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-colors ";
                       let icon = null;
                       
@@ -159,8 +258,8 @@ export const CampusMapView = () => {
           ) : (
             // Directory List View
             <>
-              <div className="bg-muted/30 border-b border-border p-4 shrink-0">
-                <h3 className="font-semibold text-sm">Directory</h3>
+              <div className="bg-muted/30 border-b border-border p-4 shrink-0 flex justify-between items-center">
+                <h3 className="font-semibold text-sm">Directory ({filteredLocations.length})</h3>
               </div>
               <div className="flex-1 overflow-y-auto p-2 space-y-2 scrollbar-thin min-h-0">
                 {filteredLocations.length > 0 ? (
@@ -188,7 +287,7 @@ export const CampusMapView = () => {
                       <div className={`mt-3 flex items-center text-xs font-medium transition-opacity ${
                         selectedLocation?.id === loc.id ? 'text-blue-700 opacity-100' : 'text-blue-600 opacity-0 group-hover:opacity-100'
                       }`}>
-                        <Navigation className="h-3 w-3 mr-1" /> {selectedLocation?.id === loc.id ? 'Selected' : 'View Details'}
+                        <Navigation className="h-3 w-3 mr-1" /> View Details
                       </div>
                     </div>
                   ))

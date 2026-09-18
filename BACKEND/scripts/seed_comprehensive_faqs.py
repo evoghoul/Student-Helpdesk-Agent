@@ -51,8 +51,14 @@ def seed_comprehensive_faqs():
         {
             "topic": "Campus Facilities",
             "question": "Where can I get photocopies, document printing, and stationery?",
-            "answer": "The main stationery shop and reprography (photocopy/printing) center is located on the Ground Floor of the A-Block. There is also a smaller stationary store near the food court.",
-            "keywords": "photocopies, print, printing, stationery, xerox"
+            "answer": "There are print out copy shops and a canteen on the ground floor of each block. The main stationery shop and reprography (photocopy/printing) center is located on the Ground Floor of the A-Block.",
+            "keywords": "photocopies, print, printing, stationery, xerox, copy shops"
+        },
+        {
+            "topic": "Campus Facilities",
+            "question": "Where is the main canteen and where can I buy day-to-day items?",
+            "answer": "There is a big canteen named MHP where you can eat during break times. Just beside it is Zest, a utility store where you can buy day-to-day life things. Also, there are smaller canteens on the ground floor of each block.",
+            "keywords": "canteen, food, MHP, Zest, daily items, groceries, eat, break"
         },
         {
             "topic": "Campus Facilities",
@@ -81,8 +87,8 @@ def seed_comprehensive_faqs():
         {
             "topic": "Campus Navigation",
             "question": "Where are the departmental labs for physics, chemistry, and computer science?",
-            "answer": "Physics and Chemistry labs are on the Ground and 1st floors of the Vignan (H) Block. Computer Science labs (IT Centers) are primarily located in the N-Block.",
-            "keywords": "labs, physics, chemistry, computer science, laboratory"
+            "answer": "Physics and Chemistry labs are on the Ground and 1st floors of the Vignan (H) Block. Computer Science labs (IT Centers) are primarily located in the N-Block. In front of N block is the Vignan Vihar Boys hostel.",
+            "keywords": "labs, physics, chemistry, computer science, laboratory, N block, Vignan Vihar"
         },
         {
             "topic": "Campus Facilities",
