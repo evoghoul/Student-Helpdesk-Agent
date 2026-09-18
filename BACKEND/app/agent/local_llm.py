@@ -305,7 +305,7 @@ class LocalLLMClient:
         if system_instruction:
             payload["systemInstruction"] = system_instruction
             
-        candidate_models = ["gemini-3.6-flash", "gemini-3.1-flash-tts-preview", "gemini-2.5-computer-use-preview-10-2025", "gemini-2.0-flash", "gemini-2.5-flash"]
+        candidate_models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
         import time
         for cand_model in candidate_models:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{cand_model}:generateContent?key={api_key}"
