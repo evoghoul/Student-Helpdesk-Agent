@@ -364,7 +364,12 @@ class LocalLLMClient:
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
-        candidate_models = ["openai/gpt-oss-20b", "openai/gpt-oss-120b", "groq/compound", "qwen/qwen3.8-27b"]
+        candidate_models = [
+            "llama3-8b-8192",
+            "llama3-70b-8192",
+            "mixtral-8x7b-32768",
+            "gemma-7b-it"
+        ]
         import time
         for candidate_model in candidate_models:
             payload = {
