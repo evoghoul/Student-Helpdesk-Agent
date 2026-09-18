@@ -52,6 +52,15 @@ class LocalLLMClient:
             cls._available = False
             return False
 
+        # Cloud mode should not wait for an unreachable local Ollama daemon.
+        if provider == "cloud":
+            has_cloud_key = any(
+                _usable_secret(getattr(settings, key, ""))
+                for key in ("GEMINI_API_KEY", "GROQ_API_KEY", "CLOUD_API_KEY", "OPENAI_API_KEY")
+            )
+            cls._available = has_cloud_key
+            return has_cloud_key
+
         configured_model = getattr(settings, "LOCAL_MODEL_NAME", "")
         candidates = [configured_model, *FALLBACK_MODELS]
         candidates = [candidate for candidate in candidates if candidate]
@@ -218,7 +227,8 @@ class LocalLLMClient:
         user_msg = next((m.get("content", "") for m in reversed(messages) if m.get("role") == "user"), "")
         is_long_prompt = len(user_msg.split()) > 30
 
-        if (is_indic or is_long_prompt) and (openai_key or gemini_key or groq_key):
+        cloud_available = openai_key or gemini_key or groq_key
+        if (provider == "cloud" or is_indic or is_long_prompt) and cloud_available:
             routing_reason = "Indic language" if is_indic else f"Long prompt ({len(user_msg.split())} words)"
             if openai_key:
                 res = cls._send_openai_chat(messages, timeout=14.0)
@@ -235,6 +245,9 @@ class LocalLLMClient:
                 if res:
                     logger.info(f"Successfully generated response via Gemini Cloud API (Reason: {routing_reason})")
                     return res, "cloud", getattr(settings, "GEMINI_MODEL", "gemini-3.6-flash")
+
+            if provider == "cloud":
+                return None, "mock", "deterministic-fallback"
 
         # ---------------- TIER 1: LOCAL OLLAMA INFERENCE ----------------
         if provider != "mock":
@@ -255,7 +268,7 @@ class LocalLLMClient:
                 resp = requests.post(
                     url,
                     json=payload,
-                    timeout=(4.0, timeout),
+                    timeout=(1.5, min(timeout, 12.0)),
                     headers={"ngrok-skip-browser-warning": "true"}
                 )
                 if resp.status_code == 200:
@@ -419,10 +432,9 @@ class LocalLLMClient:
             "Content-Type": "application/json"
         }
         candidate_models = [
-            "llama-3.3-70b-versatile",
-            "llama-3.1-8b-instant",
             "openai/gpt-oss-20b",
-            "qwen/qwen3-32b"
+            "qwen/qwen3-32b",
+            "llama-3.3-70b-versatile"
         ]
         import time
         for candidate_model in candidate_models:
