@@ -35,7 +35,18 @@ class Agent65Orchestrator:
         # ---------------- 1. MANDATORY SAFETY GUARDRAIL (Workflow Step 9) ----------------
         if detect_distress(query):
             is_distress_detected = True
-            silent_mock_alert_counselor(session, query)
+            
+            # Remove silent_mock_alert_counselor and use handle_crisis_escalation instead
+            from app.tools.distress_tool import handle_crisis_escalation
+            crisis_response = handle_crisis_escalation(session, query)
+
+            # ---------------- 3. RECORD STUDENT MESSAGE ----------------
+            DataRepository.add_message(session, conversation_id, {
+                "sender_role": "STUDENT",
+                "content": query,
+                "category": "DISTRESS_SUPPORT",
+                "is_distress": True
+            })
 
             # Log anonymous metric (Step 10)
             DataRepository.record_query_metric(
@@ -44,6 +55,34 @@ class Agent65Orchestrator:
                 language=language,
                 is_distress=True
             )
+
+            # ---------------- 6. PERSIST AGENT RESPONSE IN DB ----------------
+            agent_msg = DataRepository.add_message(session, conversation_id, {
+                "sender_role": "AGENT_65",
+                "content": crisis_response["text"],
+                "category": crisis_response["category"],
+                "source_agent": crisis_response["source_agent"],
+                "citations": [],
+                "structured_card": crisis_response.get("structured_card"),
+                "is_distress": True
+            })
+
+            return {
+                "message_id": agent_msg["message_id"],
+                "conversation_id": conversation_id,
+                "sender_role": "AGENT_65",
+                "content": crisis_response["text"],
+                "category": crisis_response["category"],
+                "source_agent": crisis_response["source_agent"],
+                "citations": [],
+                "structured_card": crisis_response.get("structured_card"),
+                "is_distress": True,
+                "suggested_follow_ups": [],
+                "llm_provider": "system",
+                "model_used": "rules",
+                "used_fallback": False,
+                "created_at": agent_msg["created_at"]
+            }
 
         # ---------------- 2. MULTI-TURN CONTEXT RESOLUTION (Workflow Step 5) ----------------
         history = DataRepository.get_conversation_messages(session, conversation_id)

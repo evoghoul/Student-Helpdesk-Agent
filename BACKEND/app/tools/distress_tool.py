@@ -11,7 +11,7 @@ DISTRESS_KEYWORDS = [
     "can't take this anymore", "cant take this anymore", "cannot take this anymore",
     "kill myself", "hate my life", "overwhelmed and crying", "too much stress to survive",
     "panic attack", "no reason to live", "ending it all", "end it all", "better off dead",
-    "dying", "stressed"
+    "dying"
 ]
 
 def detect_distress(message_text: str) -> bool:
@@ -28,6 +28,9 @@ def handle_crisis_escalation(session: DatabaseSession, trigger_message: str) -> 
         trigger_phrase=trigger_message,
         student_info=student_profile
     )
+
+    print(f"\n[MOCK ALERT] SILENT BACKGROUND ALERT SENT TO COUNSELOR FOR STUDENT: {student_name}")
+    print(f"Trigger Message: '{trigger_message}'\n")
 
     # Compassionate, zero-delay crisis response
     text = (

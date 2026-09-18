@@ -131,6 +131,25 @@ class LocalLLMClient:
         return cls._send_chat(messages, model=model, timeout=timeout, language=language)
 
     @classmethod
+    def classify_intent(cls, query: str) -> str:
+        """
+        Classify the user query into a fixed set of intents using the LLM.
+        """
+        system_prompt = (
+            "Classify the user's query into exactly ONE of the following intents: "
+            "ATTENDANCE, EXAMS, FEES, TIMETABLE, MARKS, CURRICULUM, LIBRARY, FACULTY, KNOWLEDGE_BASE, GENERAL. "
+            "Respond with ONLY the intent name in uppercase, and nothing else."
+        )
+        reply, _, _ = cls.generate(system_prompt, query, timeout=5.0)
+        if reply:
+            reply = reply.strip().upper()
+            valid_intents = ["ATTENDANCE", "EXAMS", "FEES", "TIMETABLE", "MARKS", "CURRICULUM", "LIBRARY", "FACULTY", "KNOWLEDGE_BASE", "GENERAL"]
+            for intent in valid_intents:
+                if intent in reply:
+                    return intent
+        return "GENERAL"
+
+    @classmethod
     def chat_with_history(
         cls,
         system_prompt: str,
