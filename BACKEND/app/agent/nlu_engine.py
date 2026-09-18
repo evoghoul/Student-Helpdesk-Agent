@@ -87,6 +87,19 @@ class NLUEngine:
             topic = "Student Services Directory"
             source_agent = "Agent 46 (Student Services)"
 
+        # Hardcoded Food/Grocery Responses
+        elif cls.has_any_word(q_lower, ["food", "mess", "canteen", "eat", "lunch", "dinner", "breakfast"]):
+            direct_response_text = "I checked the official university records and found that there is a big canteen named MHP where you can eat during break times. Additionally, smaller canteens are available on the ground floor of each block."
+            category = "INSTITUTIONAL_INFO"
+            topic = "Campus Food & Dining"
+            source_agent = "Agent 71 (Campus Info)"
+
+        elif cls.has_any_word(q_lower, ["grocery", "day to day", "day-to-day", "essentials", "utility"]):
+            direct_response_text = "I checked the official university records and found that Zest is a utility store on campus where you can buy day-to-day life things and groceries."
+            category = "INSTITUTIONAL_INFO"
+            topic = "Campus Facilities"
+            source_agent = "Agent 71 (Campus Info)"
+
         # The calendar quick action is also a read-only institutional lookup.
         elif cls.has_any_word(q_lower, ["academic calendar", "calendar events", "upcoming events"]):
             direct_response_text = (
