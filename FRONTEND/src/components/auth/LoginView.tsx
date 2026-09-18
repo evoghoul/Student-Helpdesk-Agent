@@ -133,7 +133,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
 
       {/* Main Login Card Section */}
       <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-lg">
           {/* Card Container */}
           <div className="rounded-lg border border-slate-200 bg-card p-7 sm:p-8 shadow-sm space-y-6">
             {/* Header / Avatar */}

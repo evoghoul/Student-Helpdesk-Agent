@@ -6,7 +6,7 @@ import { getGamificationData } from "@/actions/gamification";
 import { CURRENT_STUDENT } from "@/data/student";
 
 export function GamificationView() {
-  const [data, setData] = useState<{points: number; badges: string[]}>({ points: 0, badges: [] });
+  const [data, setData] = useState<{points: number; badges: any[]}>({ points: 0, badges: [] });
 
   useEffect(() => {
     getGamificationData(CURRENT_STUDENT.id).then(setData);
@@ -34,9 +34,9 @@ export function GamificationView() {
           <div className="flex flex-wrap gap-2">
             {data.badges.length > 0 ? (
               data.badges.map((badge, idx) => (
-                <div key={idx} className="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-full text-sm font-medium">
+                <div key={idx} className="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-full text-sm font-medium" title={badge.description}>
                   <Star className="h-4 w-4" />
-                  {badge}
+                  {typeof badge === 'string' ? badge : badge.name}
                 </div>
               ))
             ) : (

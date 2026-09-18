@@ -1714,7 +1714,7 @@ const enDict: TranslationDictionary = {
   "sectionOverview": "Overview",
   "sectionSupport": "Institution & Support",
   "sectionSynchronized": "Section 7 Synchronized",
-  "sectionSystem": "System",
+  "sectionSystem": "EXPLORE MORE",
   "secureConnection": "Securely connected to your student profile",
   "securityTitle": "Security & Access Audit",
   "selectCategory": "Select Category",

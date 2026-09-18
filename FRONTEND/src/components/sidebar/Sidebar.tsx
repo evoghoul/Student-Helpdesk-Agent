@@ -33,7 +33,6 @@ import {
   Trophy,
   Book,
   Bus,
-  HeartPulse,
   BarChart3,
 } from "lucide-react";
 import { CURRENT_STUDENT } from "@/data/student";
@@ -103,21 +102,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           badge: `${student?.cgpa?.toFixed(2) ?? "8.42"}`,
           badgeColor: "bg-emerald-100 text-emerald-800",
         },
-        {
-          id: "grades",
-          label: "Academic Progress",
-          icon: TrendingUp,
-        },
-        {
-          id: "gamification",
-          label: "Rewards & Badges",
-          icon: Trophy,
-          badge: "New",
-          badgeColor: "bg-yellow-100 text-yellow-800",
-        },
+
         {
           id: "library",
-          label: "Digital Library",
+          label: "Library",
           icon: Book,
         },
         {
@@ -166,11 +154,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           badge: "AI",
           badgeColor: "bg-indigo-100 text-indigo-700",
         },
-        {
-          id: "wellness",
-          label: "Wellness Hub",
-          icon: HeartPulse,
-        },
+
         {
           id: "calendar",
           label: t.navCalendar || "Academic Calendar",
@@ -182,24 +166,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
       title: t.sectionSystem || "University Info",
       items: [
         {
-          id: "clubs",
-          label: "Clubs & Communities",
-          icon: Users,
-        },
-        {
-          id: "events",
-          label: "Event Registration",
-          icon: Ticket,
-        },
-        {
-          id: "marketplace",
-          label: "Marketplace",
-          icon: Store,
+          id: "circulars",
+          label: t.navCirculars || "Circulars & Notices",
+          icon: Bell,
+          badge: "New",
+          badgeColor: "bg-red-100 text-red-700",
         },
         {
           id: "map",
           label: "Campus Map",
           icon: MapPin,
+        },
+        {
+          id: "transport",
+          label: "Transport (Live)",
+          icon: Bus,
+        },
+        {
+          id: "events",
+          label: "Event Registration",
+          icon: Ticket,
         },
         {
           id: "lost-and-found",
@@ -214,14 +200,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           icon: CalendarPlus,
         },
         {
-          id: "transport",
-          label: "Transport (Live)",
-          icon: Bus,
+          id: "clubs",
+          label: "Clubs & Communities",
+          icon: Users,
         },
         {
-          id: "alumni",
-          label: "Alumni Network",
-          icon: Users,
+          id: "marketplace",
+          label: "Marketplace",
+          icon: Store,
         },
         {
           id: "polling",
@@ -229,16 +215,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           icon: BarChart3,
         },
         {
+          id: "alumni",
+          label: "Alumni Network",
+          icon: Users,
+        },
+        {
           id: "policies",
           label: t.navPolicies || "Policies & Regulations",
           icon: FileText,
-        },
-        {
-          id: "circulars",
-          label: t.navCirculars || "Circulars & Notices",
-          icon: Bell,
-          badge: "New",
-          badgeColor: "bg-red-100 text-red-700",
         },
       ],
     },

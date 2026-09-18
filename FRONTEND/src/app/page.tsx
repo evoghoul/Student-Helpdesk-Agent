@@ -20,7 +20,6 @@ import { ClubsView } from "@/components/clubs/ClubsView";
 import { LostAndFoundView } from "@/components/lost-and-found/LostAndFoundView";
 import { BookingsView } from "@/components/bookings/BookingsView";
 import { StudentServicesView } from "@/components/services/StudentServicesView";
-import { GradesView } from "@/components/grades/GradesView";
 import { CampusMapView } from "@/components/map/CampusMapView";
 import { EventRegistrationView } from "@/components/events/EventRegistrationView";
 import { HostelManagementView } from "@/components/hostel/HostelManagementView";
@@ -318,9 +317,6 @@ function StudentHelpdeskContent() {
 
           {/* Tab: Library */}
           {activeTab === "library" && <LibraryView />}
-
-          {/* Tab: Grades */}
-          {activeTab === "grades" && <GradesView />}
 
           {/* Tab: Timetable */}
           {activeTab === "timetable" && (

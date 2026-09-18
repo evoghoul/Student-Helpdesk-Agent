@@ -8,7 +8,7 @@ const dbPath = path.resolve(process.cwd(), "../database/student_helpdesk.db");
 export async function getCampusLocations() {
   try {
     const db = new Database(dbPath);
-    const records = db.prepare("SELECT * FROM campus_locations ORDER BY name ASC").all();
+    const records = db.prepare("SELECT location_id as id, room_number as name, block as building, floor, 'Facility' as type, description FROM campus_locations ORDER BY room_number ASC").all();
     db.close();
     return { success: true, data: records };
   } catch (error: any) {

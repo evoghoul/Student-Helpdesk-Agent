@@ -40,7 +40,8 @@ export async function reportLostAndFoundItem(
     const db = new Database(dbPath);
     const datePosted = new Date().toISOString();
     // Providing a random placeholder image since no actual upload is configured
-    const imageUrl = `https://images.unsplash.com/photo-${Math.floor(Math.random() * 1000000)}?auto=format&fit=crop&w=400&q=80`;
+    const randomSeed = Math.floor(Math.random() * 1000000);
+    const imageUrl = `https://picsum.photos/seed/${randomSeed}/400/300`;
     
     const result = db.prepare(`
       INSERT INTO lost_and_found (student_id, type, title, description, tags, contact_info, status, date_posted, image_url)
