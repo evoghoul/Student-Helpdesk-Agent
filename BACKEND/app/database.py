@@ -313,9 +313,28 @@ class DataRepository:
 
     @staticmethod
     def search_fresher_faqs(query_text: str) -> List[Dict[str, Any]]:
-        query = "SELECT * FROM fresher_faqs WHERE LOWER(topic) LIKE ? OR LOWER(question) LIKE ? OR LOWER(answer) LIKE ? OR LOWER(keywords) LIKE ?"
-        like_val = f"%{query_text.lower()}%"
-        return DataRepository._execute_query(query, (like_val, like_val, like_val, like_val))
+        faqs = DataRepository._execute_query("SELECT * FROM fresher_faqs")
+        import re
+        words = set(re.findall(r'\b\w+\b', query_text.lower()))
+        
+        best_faq = None
+        best_score = 0
+        
+        for faq in faqs:
+            text = (faq['topic'] + " " + faq['question'] + " " + faq['answer'] + " " + faq['keywords']).lower()
+            score = 0
+            for w in words:
+                if len(w) > 3 and w in text:
+                    score += 1
+                elif w in ['mhp', 'zest', 'sac', 'fee', 'id']:
+                    if w in text:
+                        score += 5
+            
+            if score > best_score:
+                best_score = score
+                best_faq = faq
+                
+        return [best_faq] if best_faq and best_score > 0 else []
 
     @staticmethod
     def search_policies(query_text: str) -> List[Dict[str, Any]]:

@@ -450,7 +450,7 @@ class NLUEngine:
                     source_agent = "Agent 70 (Campus Nav System)"
 
         # L. Fresher FAQs
-        elif cls.has_any_word(q_lower, ["fresher", "anti-ragging", "ragging", "hostel", "food court", "canteen", "library", "id card", "club", "sac"]):
+        elif cls.has_any_word(q_lower, ["fresher", "anti-ragging", "ragging", "hostel", "food court", "canteen", "library", "id card", "club", "sac", "mhp", "zest", "print", "shop", "shops"]):
             faq_res = DataRepository.search_fresher_faqs(q_lower)
             if faq_res:
                 faq = faq_res[0]
