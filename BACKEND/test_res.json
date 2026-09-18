@@ -1,0 +1,43 @@
+{
+  "category": "PERSONAL_DATA",
+  "topic": "Attendance Analytics",
+  "source_agent": "Agent 11 (Attendance System) [CLOUD ACCELERATED: Groq Cloud]",
+  "content": "I checked the official university records and found that your attendance in **Digital Electronics (CS302)** is **68.0 %** (34 out of 50 classes attended).\n\n- **Current status:** Below the mandatory 75 % threshold.  \n- **Classes needed to reach 75 %:** **14 consecutive classes** without absence.  \n- **Deadline for condonation:** **2026-11-15**.\n\nPlease make sure to attend the next 14 classes to secure your eligibility for the end-semester exam. If you have any medical concerns, contact Prof. K. Raman for approval.",
+  "citations": [
+    {
+      "title": "Academic Regulations R23",
+      "clause": "Clause 4.2: Minimum 75% Attendance Requirement",
+      "effective_date": "2023-07-15",
+      "summary": "Mandates 75% attendance to appear in End-Semester Examinations."
+    }
+  ],
+  "structured_card": {
+    "type": "attendance",
+    "title": "Digital Electronics (CS302)",
+    "subtitle": "Faculty: Prof. K. Raman",
+    "badge": "68.0% Attendance",
+    "badgeVariant": "amber",
+    "data": {
+      "courseCode": "CS302",
+      "courseTitle": "Digital Electronics",
+      "currentPct": 68.0,
+      "classesHeld": 50,
+      "classesAttended": 34,
+      "classesNeeded": 14,
+      "deadline": "2026-11-15",
+      "isAtRisk": true
+    },
+    "actionLabel": "Apply for Medical Condonation",
+    "actionIntent": "service:condonation"
+  },
+  "suggested_follow_ups": [
+    "How many classes do I need in Digital Electronics?",
+    "What is the medical condonation policy?",
+    "When is my next class today?"
+  ],
+  "active_subject": "Digital Electronics",
+  "language": "en",
+  "llm_provider": "cloud",
+  "model_used": "Groq Cloud",
+  "used_fallback": false
+}

@@ -497,7 +497,8 @@ class NLUEngine:
             active_subject=active_subject,
             action_note=action_note,
             language=effective_lang,
-            selected_model=selected_model
+            selected_model=selected_model,
+            direct_response_text=direct_response_text
         )
 
         if used_fallback:
@@ -544,7 +545,8 @@ class NLUEngine:
         active_subject: Optional[str],
         action_note: str = "",
         language: str = "en",
-        selected_model: str = "8B"
+        selected_model: str = "8B",
+        direct_response_text: str = ""
     ) -> Tuple[str, bool, str, str]:
         """
         Generates genuine, empathetic, contextual reasoning from the local open-source LLM (agent65).
@@ -560,6 +562,8 @@ class NLUEngine:
         # If LLM is available, generate response
         if LocalLLMClient.is_available():
             grounded_context = cls.build_grounded_student_context(session, query, active_subject)
+            if direct_response_text:
+                grounded_context += f"\n\n- Verified Database Information / System Answer to use:\n{direct_response_text}\n"
             
             action_section = f"\nSystem Action Status:\n{action_note}\n" if action_note else ""
 
@@ -638,7 +642,8 @@ class NLUEngine:
                 "9. Never hallucinate fake grades or dates not present in the verified records.\n"
                 "10. Be concise, clear, and articulate. Express all formatting using clean Markdown bullets and bold text. NEVER use LaTeX tags or raw HTML tags.\n"
                 f"{procedural_directive}\n"
-                "12. When asked for student identity, registration number, or roll number, ALWAYS state their verified Roll Number and Name from the Authenticated Student Verified Records."
+                "12. When asked for student identity, registration number, or roll number, ALWAYS state their verified Roll Number and Name from the Authenticated Student Verified Records.\n"
+                "13. CRITICAL: If 'Verified Database Information / System Answer to use' is provided in the context, you MUST explicitly state in your opening sentence that you retrieved this information from the official university records/database. Example: 'I checked the official university records and found that...'"
             )
             llm_reply, provider_used, model_used = LocalLLMClient.chat_with_history(
                 system_prompt=system_prompt,
