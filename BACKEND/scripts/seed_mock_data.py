@@ -186,19 +186,19 @@ def seed():
 
     # 14. Lost & Found
     lost = [
-        (STUDENT_ID, "lost", "Blue Milton Water Bottle", "Lost near the central library seating area.", "bottle, blue", "251fa04e13@vignan.ac.in", "open", delta(-2), "https://picsum.photos/seed/bottle/400/300"),
-        ("OTHER_STU", "found", "Scientific Calculator", "Found Casio calculator in N-312", "calculator", "admin@vignan.ac.in", "claimed", delta(-10), None),
-        ("OTHER_STU", "lost", "Hostel Keys with Marvel keychain", "Lost somewhere near the canteen", "keys, marvel", "other@vignan.ac.in", "open", delta(0, -12), None),
-        (STUDENT_ID, "found", "Apple AirPods Pro", "Found in AI Lab near the window seats", "airpods, apple", "251fa04e13@vignan.ac.in", "open", delta(0, -2), None),
+        (STUDENT_ID, "lost", "Blue Milton Water Bottle", "Lost near the central library seating area.", "bottle, blue", "251fa04e13@vignan.ac.in", "open", delta(-2), "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400&q=80"),
+        ("OTHER_STU", "found", "Scientific Calculator", "Found Casio calculator in N-312", "calculator", "admin@vignan.ac.in", "claimed", delta(-10), "https://images.unsplash.com/photo-1594980596870-8aa52a78d8cd?w=400&q=80"),
+        ("OTHER_STU", "lost", "Hostel Keys with Marvel keychain", "Lost somewhere near the canteen", "keys, marvel", "other@vignan.ac.in", "open", delta(0, -12), "https://images.unsplash.com/photo-1582139329536-e7284fece509?w=400&q=80"),
+        (STUDENT_ID, "found", "Apple AirPods Pro", "Found in AI Lab near the window seats", "airpods, apple", "251fa04e13@vignan.ac.in", "open", delta(0, -2), "https://images.unsplash.com/photo-1606220588913-b3aacb4d2f46?w=400&q=80"),
     ]
     c.executemany("INSERT INTO lost_and_found (student_id, type, title, description, tags, contact_info, status, date_posted, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", lost)
 
     # 15. Facilities & Bookings
     facilities = [
-        (1, "Badminton Court 1", "Sports", "Indoor synthetic court with proper lighting", 4, "https://picsum.photos/seed/badminton/800/600"),
-        (2, "Study Room A", "Academic", "Quiet study room with whiteboards and AC", 6, "https://picsum.photos/seed/study/800/600"),
-        (3, "Basketball Court", "Sports", "Outdoor cement court", 10, "https://picsum.photos/seed/basketball/800/600"),
-        (4, "Music Room", "Extracurricular", "Soundproof room with drumkit and keyboards", 8, "https://picsum.photos/seed/music/800/600"),
+        (1, "Badminton Court 1", "Sports", "Indoor synthetic court with proper lighting", 4, "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=800&q=80"),
+        (2, "Study Room A", "Academic", "Quiet study room with whiteboards and AC", 6, "https://images.unsplash.com/photo-1497215840673-a178e727914e?w=800&q=80"),
+        (3, "Basketball Court", "Sports", "Outdoor cement court", 10, "https://images.unsplash.com/photo-1519861531473-9200262188bf?w=800&q=80"),
+        (4, "Music Room", "Extracurricular", "Soundproof room with drumkit and keyboards", 8, "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=800&q=80"),
     ]
     c.executemany("INSERT INTO facilities (id, name, type, description, capacity, image_url) VALUES (?, ?, ?, ?, ?, ?)", facilities)
     

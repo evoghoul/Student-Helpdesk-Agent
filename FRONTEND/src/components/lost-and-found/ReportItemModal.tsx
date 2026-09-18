@@ -10,6 +10,7 @@ interface ReportItemModalProps {
     description: string;
     tags: string;
     contactInfo: string;
+    imageUrl?: string;
   }) => Promise<void>;
 }
 
@@ -23,6 +24,7 @@ export const ReportItemModal: React.FC<ReportItemModalProps> = ({
   const [description, setDescription] = useState("");
   const [tags, setTags] = useState("");
   const [contactInfo, setContactInfo] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
@@ -30,7 +32,7 @@ export const ReportItemModal: React.FC<ReportItemModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    await onSubmit({ type, title, description, tags, contactInfo });
+    await onSubmit({ type, title, description, tags, contactInfo, imageUrl });
     setIsSubmitting(false);
     onClose();
     // Reset form
@@ -38,6 +40,7 @@ export const ReportItemModal: React.FC<ReportItemModalProps> = ({
     setDescription("");
     setTags("");
     setContactInfo("");
+    setImageUrl("");
   };
 
   return (
@@ -140,10 +143,36 @@ export const ReportItemModal: React.FC<ReportItemModalProps> = ({
               />
             </div>
 
-            <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 flex flex-col items-center justify-center text-center cursor-not-allowed opacity-70">
-               <UploadCloud className="h-8 w-8 text-slate-400 mb-2" />
-               <p className="text-sm font-medium text-slate-700">Image Upload Disabled</p>
-               <p className="text-xs text-slate-500 mt-1">Prototype mode uses auto-generated mock images.</p>
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Image Upload
+              </label>
+              <div className="relative rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 flex flex-col items-center justify-center text-center hover:bg-slate-100 transition-colors cursor-pointer">
+                 <input 
+                   type="file" 
+                   accept="image/*"
+                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                   onChange={(e) => {
+                     const file = e.target.files?.[0];
+                     if (file) {
+                       const reader = new FileReader();
+                       reader.onloadend = () => {
+                         setImageUrl(reader.result as string);
+                       };
+                       reader.readAsDataURL(file);
+                     }
+                   }}
+                 />
+                 {imageUrl ? (
+                   <img src={imageUrl} alt="Preview" className="h-32 w-auto object-cover rounded-md mb-2 shadow-sm" />
+                 ) : (
+                   <>
+                     <UploadCloud className="h-8 w-8 text-blue-500 mb-2" />
+                     <p className="text-sm font-medium text-slate-700">Click or drag image to upload</p>
+                     <p className="text-xs text-slate-500 mt-1">PNG, JPG up to 5MB</p>
+                   </>
+                 )}
+              </div>
             </div>
           </div>
 

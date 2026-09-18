@@ -59,7 +59,7 @@ export const LostAndFoundView = () => {
 
   const handleReportItem = async (data: any) => {
     if (!student?.id) return;
-    const res = await reportLostAndFoundItem(student.id, data.type, data.title, data.description, data.tags, data.contactInfo);
+    const res = await reportLostAndFoundItem(student.id, data.type, data.title, data.description, data.tags, data.contactInfo, data.imageUrl);
     if (res.success) {
       alert("Item reported successfully!");
       // Reload items
