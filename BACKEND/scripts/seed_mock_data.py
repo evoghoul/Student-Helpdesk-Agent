@@ -188,7 +188,7 @@ def seed():
     lost = [
         (STUDENT_ID, "lost", "Blue Milton Water Bottle", "Lost near the central library seating area.", "bottle, blue", "251fa04e13@vignan.ac.in", "open", delta(-2), "https://picsum.photos/seed/bottle/400/300"),
         ("OTHER_STU", "found", "Scientific Calculator", "Found Casio calculator in N-312", "calculator", "admin@vignan.ac.in", "claimed", delta(-10), None),
-        ("OTHER_STU", "lost", "Hostel Keys with Marvel keychain", "Lost somewhere near the canteen", "keys, marvel", "other@vignan.ac.in", "open", delta(0, -12), None),
+        ("OTHER_STU", "lost", "Hostel Keys with Marvel keychain", "Lost somewhere near the canteen", "keys, marvel", "other@vignan.ac.in", "open", delta(0, -12), "/captain_america_key.jpg"),
         (STUDENT_ID, "found", "Apple AirPods Pro", "Found in AI Lab near the window seats", "airpods, apple", "251fa04e13@vignan.ac.in", "open", delta(0, -2), None),
     ]
     c.executemany("INSERT INTO lost_and_found (student_id, type, title, description, tags, contact_info, status, date_posted, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", lost)
