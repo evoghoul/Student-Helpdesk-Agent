@@ -28,7 +28,7 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://postgres:postgrespassword@db:5432/student_helpdesk
-      - LLM_PROVIDER=mock
+      - LLM_PROVIDER=cloud
       - SECRET_KEY=production-secret-key-agent65-student-helpdesk
       - FRONTEND_ORIGINS=["http://localhost:3000","http://127.0.0.1:3000"]
     depends_on:

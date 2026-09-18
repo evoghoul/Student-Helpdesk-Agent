@@ -72,14 +72,14 @@ class LocalLLMClient:
                             f"None of candidate models {candidates} are installed in Ollama. "
                             f"Available models: {model_names}. Please install or create one."
                         )
-                        cls._available = False
-                        return False
+                        # Do not return False here, allow falling back to cloud
                 else:
                     logger.warning("Ollama daemon responded, but no models are installed.")
-                    cls._available = False
-                    return False
-                cls._available = True
-                return True
+                    # Do not return False here, allow falling back to cloud
+                
+                if cls._active_model:
+                    cls._available = True
+                    return True
         except Exception:
             pass
 
@@ -324,10 +324,11 @@ class LocalLLMClient:
                         time.sleep(1.5)
                         continue
                     else:
-                        logger.warning(f"Gemini model {cand_model} returned {resp.status_code}: {resp.text[:200]}")
+                        error_text = resp.text[:500]
+                        logger.error(f"Gemini API Error for model {cand_model}: HTTP {resp.status_code}. Response: {error_text}")
                         break
                 except Exception as e:
-                    logger.warning(f"Gemini API request failed ({cand_model}): {e}")
+                    logger.error(f"Gemini API request exception ({cand_model}): {e}")
                     break
                 
         return None
