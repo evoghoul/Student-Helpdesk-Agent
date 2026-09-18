@@ -215,7 +215,7 @@ class LocalLLMClient:
                 res = cls._send_gemini_chat(messages, timeout=14.0)
                 if res:
                     logger.info(f"Successfully generated response via Gemini Cloud API (Reason: {routing_reason})")
-                    return res, "cloud", "Gemini 3.6 Flash"
+                    return res, "cloud", "Gemini 1.5 Flash"
             if groq_key:
                 res = cls._send_groq_chat(messages, timeout=14.0)
                 if res:
@@ -257,7 +257,7 @@ class LocalLLMClient:
         if gemini_key:
             res = cls._send_gemini_chat(messages, timeout=14.0)
             if res:
-                return res, "cloud", "Gemini 3.6 Flash"
+                return res, "cloud", "Gemini 1.5 Flash"
 
         if groq_key:
             res = cls._send_groq_chat(messages, timeout=14.0)
