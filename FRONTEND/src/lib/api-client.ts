@@ -4,10 +4,10 @@
  * Uses NEXT_PUBLIC_BACKEND_URL or defaults to the deployed Agent 65 API.
  */
 
-const ACTIVE_BACKEND_BASE_URL = "https://student-helpdesk-agent.onrender.com/api/v1";
+const ACTIVE_BACKEND_BASE_URL = "/api/v1";
 const configuredBackendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/+$/, "");
 const BACKEND_BASE_URL =
-  !configuredBackendUrl || configuredBackendUrl === "https://agent65-api.onrender.com/api/v1"
+  !configuredBackendUrl || configuredBackendUrl === "https://agent65-api.onrender.com/api/v1" || configuredBackendUrl === "https://student-helpdesk-agent.onrender.com/api/v1"
     ? ACTIVE_BACKEND_BASE_URL
     : configuredBackendUrl;
 
