@@ -47,7 +47,7 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
   const [isSubmittingWithdraw, setIsSubmittingWithdraw] = useState(false);
 
   const loadDbActivity = async () => {
-    const res = await fetchStudentDbActivity();
+    const res = await fetchStudentDbActivity(student.id);
     if (res.success) {
       setDbComplaints(res.complaints || []);
       setDbClubApps(res.clubApps || []);
@@ -56,12 +56,12 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
 
   useEffect(() => {
     loadDbActivity();
-  }, []);
+  }, [student.id]);
 
   const handleWithdraw = async (id: string, type: 'club' | 'grievance') => {
     if (!withdrawReason.trim()) return;
     setIsSubmittingWithdraw(true);
-    const res = await withdrawTicket(id, type, withdrawReason);
+    const res = await withdrawTicket(id, type, withdrawReason, student.id);
     setIsSubmittingWithdraw(false);
     if (res.success) {
       setWithdrawingId(null);

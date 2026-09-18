@@ -10,6 +10,7 @@ from app.tools.fees_tool import get_fees_summary
 from app.tools.curriculum_tool import get_curriculum_summary
 from app.tools.knowledge_tool import search_policies_and_circulars
 from app.tools.services_tool import handle_service_request, handle_human_handover
+from app.tools.library_tool import get_library_summary
 from app.agent.local_llm import LocalLLMClient
 from app.config import settings
 
@@ -193,28 +194,32 @@ class NLUEngine:
             profile = DataRepository.get_student_profile(session)
             name = profile.get("full_name", "Student") if profile else "Student"
             first_name = name.split()[0] if name else "Student"
-            cgpa = profile.get("cgpa", 8.09) or 8.09
-            overall_att = profile.get("overall_attendance_pct", 76.0) or 76.0
+            cgpa = profile.get("cgpa") if profile else None
+            cgpa_str = f"{cgpa:.2f}" if cgpa is not None else "Not Available"
+            overall_att = profile.get("overall_attendance_pct") if profile else None
+            att_str = f"{overall_att:.0f}%" if overall_att is not None else "Not Available"
             advisors = DataRepository.get_student_advisors(session)
-            coun_name = advisors.get("counsellor", {}).get("name", "Mr. T. Latesh Babu") if advisors else "Mr. T. Latesh Babu"
-            coun_phone = advisors.get("counsellor", {}).get("phone", "+91 94901 23456") if advisors else "+91 94901 23456"
-            ct_name = advisors.get("class_teacher", {}).get("name", "Mr. T. Latesh Babu") if advisors else "Mr. T. Latesh Babu"
+            coun_name = advisors.get("counsellor", {}).get("name", "your assigned counsellor") if advisors else "your assigned counsellor"
+            coun_phone = advisors.get("counsellor", {}).get("phone", "") if advisors else ""
+            ct_name = advisors.get("class_teacher", {}).get("name", "your class teacher") if advisors else "your class teacher"
+
+            coun_contact = f"{coun_name} (Ph: {coun_phone})" if coun_phone else coun_name
 
             card_data = {
                 "type": "ACADEMIC_ROADMAP",
                 "title": "Academic Roadmap & Performance Plan",
-                "subtitle": f"Personalized Strategy for {first_name} (Current CGPA: {cgpa:.2f})",
+                "subtitle": f"Personalized Strategy for {first_name} (Current CGPA: {cgpa_str})",
                 "badge": "Academic Advisory",
                 "badgeVariant": "green",
                 "data": {
                     "student_name": name,
-                    "current_cgpa": f"{cgpa:.2f}",
+                    "current_cgpa": cgpa_str,
                     "target_cgpa": "8.50 - 9.00+",
-                    "current_attendance": f"{overall_att:.0f}%",
+                    "current_attendance": att_str,
                     "attendance_buffer": "Attend next 5 consecutive lectures without absence",
                     "key_milestone": "CIE-1 Assessments starting October 6, 2026",
                     "priority_focus": "Target S-Grades in Core Theory Credits",
-                    "assigned_counsellor": f"{coun_name} (Ph: {coun_phone})",
+                    "assigned_counsellor": coun_contact,
                     "class_teacher": ct_name
                 },
                 "actionLabel": f"Book Session with {coun_name}",
@@ -357,6 +362,24 @@ class NLUEngine:
             if not cls.has_any_word(q_lower, ["subject", "subjects"]):
                 topic = "Curriculum & Degree Audit"
                 source_agent = "Agent 20 (Curriculum Engine)"
+
+        # H2. Library Books Card
+        elif cls.has_any_word(q_lower, ["library", "book", "books", "due date", "fine", "lended", "issued"]) and not is_peer_query:
+            lib_res = get_library_summary(session)
+            direct_response_text = lib_res.get("text", "")
+            card_data = lib_res.get("structured_card")
+            citations = [
+                {
+                    "title": "Central Library Policies",
+                    "clause": "Section 2: Lending and Fines",
+                    "effective_date": "2026-08-01",
+                    "summary": "Students are responsible for returning books by the due date. Overdue books incur fines."
+                }
+            ]
+            category = "PERSONAL_DATA"
+            topic = "Library Circulation Records"
+            source_agent = "Agent 25 (Library System)"
+
 
         # I. Official Policies & Bylaws
         elif cls.has_any_word(q_lower, ["policy", "policies", "circular", "circulars", "bylaw", "bylaws", "by-law", "regulation", "regulations", "ordinance", "condonation rule", "revaluation fee", "holiday list"]):
@@ -569,15 +592,12 @@ class NLUEngine:
                     "You MUST respond exclusively in natural, warm, conversational English using the standard Latin alphabet.\n"
                 )
 
-            cgpa_val = profile.get("cgpa", 8.09) if profile else 8.09
-            if cgpa_val is None:
-                cgpa_val = 8.09
-            att_val = profile.get("overall_attendance_pct", 76.0) if profile else 76.0
-            if att_val is None:
-                att_val = 76.0
+            cgpa_val = profile.get("cgpa") if profile else None
+            att_val = profile.get("overall_attendance_pct") if profile else None
+            
             advisors = DataRepository.get_student_advisors(session) or {}
-            coun_name = advisors.get("counsellor", {}).get("name", "Mr. T. Latesh Babu")
-            ct_name = advisors.get("class_teacher", {}).get("name", "Mr. T. Latesh Babu")
+            coun_name = advisors.get("counsellor", {}).get("name", "your assigned counsellor")
+            ct_name = advisors.get("class_teacher", {}).get("name", "your class teacher")
 
             is_peer_query = cls.has_any_word(query.lower(), ["other student", "another student", "other students", "classmates", "classmate", "peers", "peer", "topper", "toppers", "compare", "comparison", "highest marks", "highest cgpa", "batch average"])
             if is_peer_query:
@@ -589,12 +609,15 @@ class NLUEngine:
                     "   c) Do not automatically dump their metrics in the same breath. Rephrase the sentences to sound natural, helpful, and beautifully formatted."
                 )
             else:
+                cgpa_str = f"{cgpa_val:.2f}" if cgpa_val is not None else "Not Available"
+                att_str = f"{att_val:.0f}%" if att_val is not None else "Not Available"
+                
                 procedural_directive = (
                     "11. PROCEDURAL GUIDANCE: If the student asks how to perform better, improve CGPA/grades, top the class, or study effectively:\n"
-                    f"   a) Ground your advice directly in their actual profile metrics (Current CGPA: {cgpa_val:.2f}, Overall Attendance: {att_val:.0f}%).\n"
+                    f"   a) Ground your advice directly in their actual profile metrics (Current CGPA: {cgpa_str}, Overall Attendance: {att_str}). If the data is 'Not Available', state that you do not have access to their current academic metrics.\n"
                     "   b) Provide a structured, numbered 3-part academic improvement roadmap:\n"
                     "      1. Target S-Grades in Formative Assessments: Upcoming CIE exams begin on October 6. Focusing on core theory credits will provide the highest weight toward pushing CGPA above 8.5/9.0 under the 10-point relative grading scale.\n"
-                    f"      2. Attendance Safety Buffer: At {att_val:.0f}%, attendance is right on the borderline of the 75% mandatory cutoff. Attending the next 5 consecutive lectures will secure exam eligibility without condonation risk.\n"
+                    f"      2. Attendance Safety Buffer: At {att_str}, attendance is right on the borderline of the 75% mandatory cutoff. Attending the next 5 consecutive lectures will secure exam eligibility without condonation risk.\n"
                     f"      3. Academic Guidance: Proactively offer to schedule a 1-on-1 counseling session with counselor {coun_name} (or class teacher {ct_name}) or raise an academic support request through Agent 46.\n"
                     "   c) NEVER dump an introductory capabilities menu or say 'You can ask me about...' when asked for academic or procedural guidance."
                 )
@@ -682,10 +705,10 @@ class NLUEngine:
 
         # 0. Student Registration / Roll Number / ID Card Inquiry
         if cls.has_any_word(q_lower, ["registration", "roll number", "roll no", "reg number", "reg no", "student id", "my id", "roll"]):
-            student_roll = profile.get("roll_no") or profile.get("student_id") or "Student"
-            prog = profile.get("programme_name") or profile.get("degree") or "B.Tech Computer Science and Engineering"
-            sec = profile.get("section_code") or profile.get("section") or "Section A"
-            yr = profile.get("current_year_of_study", 2)
+            student_roll = profile.get("roll_no") or profile.get("student_id") or "Not Available"
+            prog = profile.get("programme_name") or profile.get("degree") or "Not Available"
+            sec = profile.get("section_code") or profile.get("section") or "Not Available"
+            yr = profile.get("current_year_of_study") or "Not Available"
             return (
                 f"Hello {first_name}, your verified university registration and identity details are:\n\n"
                 f"• **Registration / Roll Number:** `{student_roll}`\n"
@@ -743,13 +766,13 @@ class NLUEngine:
 
         # 3b. Procedural Academic Guidance & Peer Boundary Adherence (Evaluator-Ready)
         if cls.is_peer_or_procedural_guidance(q_lower):
-            cgpa = profile.get("cgpa", 8.09) or 8.09
-            overall_att = profile.get("overall_attendance_pct", 76.0) or 76.0
+            cgpa = profile.get("cgpa")
+            overall_att = profile.get("overall_attendance_pct")
             advisors = DataRepository.get_student_advisors(session)
             coun = advisors.get("counsellor", {}) if advisors else {}
-            coun_name = coun.get("name", "Mr. T. Latesh Babu")
-            coun_phone = coun.get("phone", "+91 94901 23456")
-            coun_email = coun.get("email", "latesh.babu@vignan.ac.in")
+            coun_name = coun.get("name", "your assigned counsellor")
+            coun_phone = coun.get("phone", "")
+            coun_email = coun.get("email", "")
 
             is_peer_query = cls.has_any_word(q_lower, ["other student", "another student", "other students", "classmates", "classmate", "peers", "peer", "topper", "toppers", "compare", "comparison", "highest marks", "highest cgpa", "batch average"])
             
@@ -760,11 +783,19 @@ class NLUEngine:
                     "However, if you'd like to check your own attendance or performance, I'm here to help!"
                 )
 
+            cgpa_str = f"{cgpa:.2f}" if cgpa is not None else "Not Available"
+            att_str = f"{overall_att:.0f}%" if overall_att is not None else "Not Available"
+            
+            coun_contact_parts = []
+            if coun_phone: coun_contact_parts.append(f"Ph: {coun_phone}")
+            if coun_email: coun_contact_parts.append(f"Email: {coun_email}")
+            coun_contact = f"({', '.join(coun_contact_parts)})" if coun_contact_parts else ""
+
             return (
-                f"Looking at your current profile, you are maintaining a solid **{cgpa:.2f} CGPA** with **{overall_att:.0f}% attendance**. To elevate your performance:\n\n"
+                f"Looking at your current profile, you are maintaining a **{cgpa_str} CGPA** with **{att_str} attendance**. To elevate your performance:\n\n"
                 f"1. **Target S-Grades in Formative Assessments:** Your upcoming CIE exams begin on **October 6**. Focusing on your core theory credits will provide the highest weight toward pushing your CGPA above 8.5.\n"
-                f"2. **Attendance Safety Buffer:** At {overall_att:.0f}%, you are right on the borderline of the 75% mandatory cutoff. Attending your next 5 consecutive lectures will secure your exam eligibility without condonation risk.\n"
-                f"3. **Academic Guidance:** Would you like me to schedule a 1-on-1 counseling session with your counselor, **{coun_name}** (Ph: {coun_phone}, Email: {coun_email}), or raise an academic support request through Agent 46?"
+                f"2. **Attendance Safety Buffer:** At {att_str}, you are right on the borderline of the 75% mandatory cutoff. Attending your next 5 consecutive lectures will secure your exam eligibility without condonation risk.\n"
+                f"3. **Academic Guidance:** Would you like me to schedule a 1-on-1 counseling session with your counselor, **{coun_name}** {coun_contact}, or raise an academic support request through Agent 46?"
             )
 
         # 4. Service Request triggers in prompt
@@ -1000,17 +1031,19 @@ class NLUEngine:
 
         # 12. Universal Fallback (Guarantees no None return)
         advisors = DataRepository.get_student_advisors(session)
-        ct_name = advisors.get("class_teacher", {}).get("name", "Mr. T. Latesh Babu") if advisors else "Mr. T. Latesh Babu"
-        coun_name = advisors.get("counsellor", {}).get("name", "Mr. T. Latesh Babu") if advisors else "Mr. T. Latesh Babu"
-        cgpa = profile.get("cgpa", 8.09) or 8.09
-        overall_att = profile.get("overall_attendance_pct", 76.0) or 76.0
+        ct_name = advisors.get("class_teacher", {}).get("name", "your class teacher") if advisors else "your class teacher"
+        coun_name = advisors.get("counsellor", {}).get("name", "your assigned counsellor") if advisors else "your assigned counsellor"
+        cgpa = profile.get("cgpa")
+        overall_att = profile.get("overall_attendance_pct")
 
         # If the student asked a question or sought guidance rather than requesting a raw capabilities list
         if any(w in q_lower for w in ["how", "what", "can i", "why", "where", "should", "guide", "advice", "help"]):
+            cgpa_str = f"{cgpa:.2f}" if cgpa is not None else "Not Available"
+            att_str = f"{overall_att:.0f}%" if overall_att is not None else "Not Available"
             return (
-                f"Hello {first_name}, based on your verified university records (Current CGPA: **{cgpa:.2f}**, Attendance: **{overall_att:.0f}%**):\n\n"
+                f"Hello {first_name}, based on your verified university records (Current CGPA: **{cgpa_str}**, Attendance: **{att_str}**):\n\n"
                 f"• **Academic Standing:** You are currently in good academic standing with no active backlogs. Your upcoming CIE examinations commence on **October 6**.\n"
-                f"• **Attendance Status:** At **{overall_att:.0f}%**, you are on the borderline of the mandatory 75% cutoff. Attending your next 5 consecutive lectures will secure your exam eligibility without condonation risk.\n"
+                f"• **Attendance Status:** At **{att_str}**, you are on the borderline of the mandatory 75% cutoff. Attending your next 5 consecutive lectures will secure your exam eligibility without condonation risk.\n"
                 f"• **Advisory Support:** For specific academic planning or guidance, your counselor **{coun_name}** and class teacher **{ct_name}** are available. Would you like me to book a mentor meeting via Agent 46?"
             )
 
@@ -1366,7 +1399,7 @@ class NLUEngine:
         q_lower = query.lower()
         if cls.is_peer_or_procedural_guidance(q_lower):
             return [
-                "Book mentor meeting with Mr. T. Latesh Babu",
+                "Book mentor meeting with my counselor",
                 "What are the grade point boundaries for S and A grades?",
                 "When is my next CIE exam?"
             ]

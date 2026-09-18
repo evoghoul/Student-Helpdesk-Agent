@@ -1,4 +1,4 @@
-﻿import datetime
+import datetime
 from typing import Dict, Any, Optional
 from app.database import DataRepository, DatabaseSession
 
@@ -17,15 +17,27 @@ def get_timetable_summary(session: DatabaseSession, day: Optional[str] = None) -
     if not slots:
         slots = DataRepository.get_timetable(session)
 
+    profile = DataRepository.get_student_profile(session) or {}
+    section = profile.get("section") or profile.get("section_code") or "Not Assigned"
+    room_no = profile.get("class_room") or "Not Assigned"
+    
+    advisors = DataRepository.get_student_advisors(session) or {}
+    class_teacher = advisors.get("class_teacher", {}).get("name", "Not Assigned")
+    coordinator = profile.get("coordinator_name", "Not Assigned")
+    if coordinator == "Not Assigned" and "coordinator_phone" in profile:
+        coordinator_phone = profile.get("coordinator_phone")
+        if coordinator_phone:
+            coordinator = f"{coordinator} ({coordinator_phone})"
+
     if not slots:
         return {
-            'text': f'You have no scheduled lectures or laboratories on {target_day}. Section-7 (N-312) timetable is active.',
+            'text': f'You have no scheduled lectures or laboratories on {target_day}.',
             'structured_card': None
         }
 
     text_lines = [
-        f'Here is your official schedule for Section-7 (N-312) on **{target_day}**:\n',
-        'Class Teacher: **Mr. T. Latesh Babu** | Coordinator: **Mr. Uttej Kumar Nannapaneni (9573793802)**\n'
+        f'Here is your official schedule for Section {section} ({room_no}) on **{target_day}**:\n',
+        f'Class Teacher: **{class_teacher}** | Coordinator: **{coordinator}**\n'
     ]
     for s in slots:
         time_slot = s.get('time_slot', '')
@@ -40,15 +52,15 @@ def get_timetable_summary(session: DatabaseSession, day: Optional[str] = None) -
 
     card_data = {
         'type': 'timetable',
-        'title': f'Academic Schedule ({target_day}) — Section-7 (N-312)',
+        'title': f'Academic Schedule ({target_day}) — Section {section} ({room_no})',
         'subtitle': f'{len(slots)} Sessions Scheduled',
-        'badge': 'Section 7 Active',
+        'badge': f'Section {section} Active',
         'badgeVariant': 'blue',
         'data': {
             'day': target_day,
-            'room': 'N-312 (Section 7)',
-            'class_teacher': 'Mr. T. Latesh Babu',
-            'coordinator': 'Mr. Uttej Kumar Nannapaneni (9573793802)',
+            'room': room_no,
+            'class_teacher': class_teacher,
+            'coordinator': coordinator,
             'slots': slots
         },
         'actionLabel': 'View Full Weekly Routine',

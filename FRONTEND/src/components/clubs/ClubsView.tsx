@@ -5,6 +5,8 @@ import { Users, ChevronDown, ChevronUp, Send, CheckCircle2, Loader2, Activity, P
 import { CLUBS_DATA, Club } from '@/data/clubs';
 import { AncSection } from './AncSection';
 import { submitClubApplication } from '@/actions/db';
+import { useStudent } from '@/context/StudentContext';
+import { CURRENT_STUDENT } from '@/data/student';
 
 export function ClubsView() {
   const ancClub = CLUBS_DATA.find(c => c.id === 'ANC');
@@ -56,6 +58,9 @@ export function ClubsView() {
 }
 
 function ClubCard({ club }: { club: Club }) {
+  const { studentData } = useStudent();
+  const student = studentData?.profile || CURRENT_STUDENT;
+
   const [expandedJoin, setExpandedJoin] = useState(false);
   const [expandedActivities, setExpandedActivities] = useState(false);
   const [expandedResources, setExpandedResources] = useState(false);
@@ -76,12 +81,12 @@ function ClubCard({ club }: { club: Club }) {
   const handleApply = async () => {
     setIsApplying(true);
     
-    // Default mock name for the demo
-    const studentName = "John Doe (Demo User)";
+    // Use the actual logged in student's name
+    const studentName = student.name;
     
     // Give it a tiny simulated delay for realism
     setTimeout(async () => {
-      const result = await submitClubApplication(club.id, studentName);
+      const result = await submitClubApplication(club.id, studentName, student.id);
       setIsApplying(false);
       
       if (result.success) {

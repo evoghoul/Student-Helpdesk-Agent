@@ -186,27 +186,27 @@ class DataRepository:
             "roll_no": profile.get("roll_no"),
             "full_name": profile.get("full_name"),
             "class_teacher": {
-                "name": profile.get("class_teacher_name") or "Mr. T. Latesh Babu",
-                "phone": profile.get("class_teacher_phone") or "+91 94901 23456",
-                "email": profile.get("class_teacher_email") or "latesh.babu@vignan.ac.in",
-                "cabin": profile.get("class_teacher_cabin") or "N-312 Faculty Staff Room / CSE Department"
+                "name": profile.get("class_teacher_name") or "Not Assigned",
+                "phone": profile.get("class_teacher_phone") or "",
+                "email": profile.get("class_teacher_email") or "",
+                "cabin": profile.get("class_teacher_cabin") or "Not Assigned"
             },
             "counsellor": {
-                "name": profile.get("counsellor_name") or "Mr. T. Latesh Babu",
-                "phone": profile.get("counsellor_phone") or "+91 94901 23456",
-                "email": profile.get("counsellor_email") or "latesh.babu@vignan.ac.in",
-                "cabin": profile.get("counsellor_cabin") or "N-312 Faculty Staff Room / CSE Department"
+                "name": profile.get("counsellor_name") or "Not Assigned",
+                "phone": profile.get("counsellor_phone") or "",
+                "email": profile.get("counsellor_email") or "",
+                "cabin": profile.get("counsellor_cabin") or "Not Assigned"
             },
             "mentor": {
-                "name": profile.get("mentor_name") or profile.get("class_teacher_name") or "Mr. T. Latesh Babu",
-                "phone": profile.get("mentor_phone") or "+91 94901 23456",
-                "email": profile.get("mentor_email") or "latesh.babu@vignan.ac.in",
-                "cabin": profile.get("mentor_cabin") or "N-312 Faculty Staff Room / CSE Department"
+                "name": profile.get("mentor_name") or profile.get("class_teacher_name") or "Not Assigned",
+                "phone": profile.get("mentor_phone") or "",
+                "email": profile.get("mentor_email") or "",
+                "cabin": profile.get("mentor_cabin") or "Not Assigned"
             },
             "hod": {
-                "name": profile.get("hod_name") or "Dr. S. V. Phani Kumar",
-                "phone": profile.get("hod_phone") or "+91 94401 55678",
-                "email": profile.get("hod_email") or "hod_cse@vignan.ac.in"
+                "name": profile.get("hod_name") or "Not Assigned",
+                "phone": profile.get("hod_phone") or "",
+                "email": profile.get("hod_email") or ""
             }
         }
 
@@ -230,13 +230,13 @@ class DataRepository:
                 phone = f_info.get("phone")
                 if not phone and "(" in fac_name and any(c.isdigit() for c in fac_name):
                     phone = "+91 " + fac_name.split("(")[1].split(")")[0]
-                cabin = f_info.get("cabin") or "N-312 Faculty Staff Room"
+                cabin = f_info.get("cabin") or "Not Assigned"
                 res.append({
                     "course_code": c_code,
                     "course_title": a.get("course_title"),
                     "faculty_name": f_info.get("name") or clean_name,
-                    "phone": phone or "+91 94901 23456",
-                    "email": f_info.get("email") or "faculty@vignan.ac.in",
+                    "phone": phone or "",
+                    "email": f_info.get("email") or "",
                     "cabin": cabin,
                     "cabin_location": cabin,
                     "designation": f_info.get("designation") or "Faculty Member"
@@ -285,6 +285,12 @@ class DataRepository:
         sid = DataRepository._resolve_student_id(session)
         res = DataRepository._execute_query("SELECT * FROM fees WHERE student_id = ?", (sid,))
         return res[0] if res else None
+
+    @staticmethod
+    def get_library_lended_books(session: DatabaseSession) -> List[Dict[str, Any]]:
+        sid = DataRepository._resolve_student_id(session)
+        return DataRepository._execute_query("SELECT * FROM library_lended_books WHERE student_id = ?", (sid,))
+
 
     @staticmethod
     def get_curriculum(session: DatabaseSession) -> Optional[Dict[str, Any]]:

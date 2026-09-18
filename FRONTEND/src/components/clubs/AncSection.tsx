@@ -4,12 +4,17 @@ import React, { useState } from 'react';
 import { AlertTriangle, ShieldCheck, Send, Search, Loader2 } from 'lucide-react';
 import { Club } from '@/data/clubs';
 import { submitAncComplaint, trackComplaint } from '@/actions/db';
+import { useStudent } from '@/context/StudentContext';
+import { CURRENT_STUDENT } from '@/data/student';
 
 interface AncSectionProps {
   club: Club;
 }
 
 export function AncSection({ club }: AncSectionProps) {
+  const { studentData } = useStudent();
+  const student = studentData?.profile || CURRENT_STUDENT;
+
   const [showComplaintForm, setShowComplaintForm] = useState(false);
   const [complaintText, setComplaintText] = useState('');
   
@@ -34,7 +39,7 @@ export function AncSection({ club }: AncSectionProps) {
     setTimeout(() => setProgressStep(3), 2400); // Securing...
     
     // Actually call the DB
-    const res = await submitAncComplaint(complaintText);
+    const res = await submitAncComplaint(complaintText, student.id);
     
     setTimeout(() => {
       setIsSubmitting(false);
@@ -50,7 +55,7 @@ export function AncSection({ club }: AncSectionProps) {
     if (!searchId.trim()) return;
     
     setIsTracking(true);
-    const res = await trackComplaint(searchId);
+    const res = await trackComplaint(searchId, student.id);
     if (res.success) {
       setTrackResult(res.data);
     } else {

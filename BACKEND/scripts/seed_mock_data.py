@@ -24,7 +24,8 @@ def seed():
         "studentlife_club_application", "studentlife_club", "event_registrations",
         "marketplace_listings", "campus_locations", "lost_and_found", "bookings",
         "facilities", "transportation_routes", "alumni_mentors", "campus_polls",
-        "broadcast_alerts", "fresher_faqs", "knowledge_procedure_step", "knowledge_procedure"
+        "broadcast_alerts", "fresher_faqs", "knowledge_procedure_step", "knowledge_procedure",
+        "library_lended_books"
     ]
     for table in tables:
         try:
@@ -73,6 +74,15 @@ def seed():
     ]
     c.executemany("INSERT INTO library_resources (title, course_code, type, link) VALUES (?, ?, ?, ?)", library)
 
+    # 4b. Library Lended Books
+    lended_books = [
+        (STUDENT_ID, "Introduction to Algorithms", delta(-15), delta(5), "Issued"),
+        (STUDENT_ID, "Computer Networks", delta(-30), delta(-5), "Overdue"),
+        ("OTHER_STU", "Machine Learning Basics", delta(-10), delta(10), "Issued")
+    ]
+    c.executemany("INSERT INTO library_lended_books (student_id, book_title, issued_date, due_date, status) VALUES (?, ?, ?, ?, ?)", lended_books)
+
+
     # 5. Calendar Events
     calendar = [
         (STUDENT_ID, "Mid-Term Exam: OS", "Operating Systems Mid-term", delta(10, 10), delta(10, 12), "Academic", "Room N-312"),
@@ -94,11 +104,11 @@ def seed():
 
     # 7. Studentlife Grievance (escalation)
     grievances = [
-        ("GRV-1001", "Wi-Fi extremely slow in Block B library section", "In Progress", delta(-2), None),
-        ("GRV-1002", "Water cooler on 3rd floor N block is dispensing hot water", "Pending", delta(0, -5), None),
-        ("GRV-1003", "Stray dogs near the boys hostel entrance at night", "Resolved", delta(-15), "Animal control team handled it."),
+        ("GRV-1001", "Wi-Fi extremely slow in Block B library section", "In Progress", delta(-2), None, STUDENT_ID),
+        ("GRV-1002", "Water cooler on 3rd floor N block is dispensing hot water", "Pending", delta(0, -5), None, STUDENT_ID),
+        ("GRV-1003", "Stray dogs near the boys hostel entrance at night", "Resolved", delta(-15), "Animal control team handled it.", "OTHER_STU"),
     ]
-    c.executemany("INSERT INTO studentlife_grievance (tracking_id, description, status, timestamp, withdrawal_reason) VALUES (?, ?, ?, ?, ?)", grievances)
+    c.executemany("INSERT INTO studentlife_grievance (tracking_id, description, status, timestamp, withdrawal_reason, student_id) VALUES (?, ?, ?, ?, ?, ?)", grievances)
 
     # 8. Career / Resumes
     c.execute("INSERT INTO resumes (student_id, skills, projects, generated_pdf_link, created_at) VALUES (?, ?, ?, ?, ?)",
@@ -125,10 +135,11 @@ def seed():
     c.executemany("INSERT INTO studentlife_club (club_id, name, category, description, theme_color) VALUES (?, ?, ?, ?, ?)", clubs)
     
     club_members = [
-        ("MEM_1", "CLUB_AI", "Agent 65", "Member", "Active contributor since Sem 2"),
-        ("MEM_2", "CLUB_CODE", "Agent 65", "Co-Lead", "Organizes weekly contests"),
+        ("MEM_1", "CLUB_AI", "Agent 65", "Member", "Active contributor since Sem 2", STUDENT_ID),
+        ("MEM_2", "CLUB_CODE", "Agent 65", "Co-Lead", "Organizes weekly contests", STUDENT_ID),
+        ("MEM_3", "CLUB_DRAMA", "Other Student", "Member", "Active actor", "OTHER_STU")
     ]
-    c.executemany("INSERT INTO studentlife_club_member (member_id, club_id, member_name, role, details) VALUES (?, ?, ?, ?, ?)", club_members)
+    c.executemany("INSERT INTO studentlife_club_member (member_id, club_id, member_name, role, details, student_id) VALUES (?, ?, ?, ?, ?, ?)", club_members)
 
     club_steps = [
         ("STP_1", "CLUB_MUSIC", 1, "Fill Interest Form", "Provide your musical background"),
@@ -137,10 +148,11 @@ def seed():
     c.executemany("INSERT INTO studentlife_club_joining_step (step_id, club_id, step_order, title, description) VALUES (?, ?, ?, ?, ?)", club_steps)
 
     club_apps = [
-        ("CLUB_MUSIC", "Agent 65", "Pending", delta(-1), None)
+        ("CLUB_MUSIC", "Agent 65", "Pending", delta(-1), None, STUDENT_ID),
+        ("CLUB_DRAMA", "Other Student", "Pending", delta(-2), None, "OTHER_STU")
     ]
     try:
-        c.executemany("INSERT INTO studentlife_club_application (club_id, student_name, status, timestamp, withdrawal_reason) VALUES (?, ?, ?, ?, ?)", club_apps)
+        c.executemany("INSERT INTO studentlife_club_application (club_id, student_name, status, timestamp, withdrawal_reason, student_id) VALUES (?, ?, ?, ?, ?, ?)", club_apps)
     except sqlite3.OperationalError:
         pass # Handle slightly varying schemas if any
 
