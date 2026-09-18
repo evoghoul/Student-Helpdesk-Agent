@@ -151,10 +151,10 @@ Ye key tab kaam aayegi jab aapka laptop band hoga taaki website tab bhi smart an
 6. Click **Deploy Web Service**.
 7. Render 3-5 minute me Docker image build karega. Jab deployment complete ho jaye, Render aapko ek URL dega:
    ```
-   https://agent65-api.onrender.com
+   https://student-helpdesk-agent.onrender.com
    ```
 8. Browser me check karein:
-   `https://agent65-api.onrender.com/health`
+   `https://student-helpdesk-agent.onrender.com/health`
    Aapko dikhega: `{"status": "healthy", "agent": "Agent 65..."}`
 
 ---
@@ -169,7 +169,7 @@ Ye key tab kaam aayegi jab aapka laptop band hoga taaki website tab bhi smart an
    * **Framework Preset**: `Next.js` (automatically detect ho jayega).
 5. Open **Environment Variables** section aur add karein:
    * **Name**: `NEXT_PUBLIC_BACKEND_URL`
-   * **Value**: `https://agent65-api.onrender.com/api/v1`
+   * **Value**: `https://student-helpdesk-agent.onrender.com/api/v1`
    *(Dhayan dein: aakhri me `/api/v1` lagana hai!)*
 6. Click **Deploy**.
 7. 2 minute me aapki website live ho jayegi aur aapko link mil jayega:
