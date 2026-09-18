@@ -93,7 +93,8 @@ class LocalLLMClient:
         # Fallback to cloud if keys are present (True Tier 2 Cascade)
         gemini_key = _usable_secret(getattr(settings, "GEMINI_API_KEY", ""))
         groq_key = _usable_secret(getattr(settings, "GROQ_API_KEY", "")) or _usable_secret(getattr(settings, "CLOUD_API_KEY", ""))
-        if gemini_key or groq_key:
+        openai_key = _usable_secret(getattr(settings, "OPENAI_API_KEY", ""))
+        if gemini_key or groq_key or openai_key:
             cls._available = True
             return True
 
@@ -210,24 +211,30 @@ class LocalLLMClient:
 
         gemini_key = _usable_secret(getattr(settings, "GEMINI_API_KEY", ""))
         groq_key = _usable_secret(getattr(settings, "GROQ_API_KEY", "")) or _usable_secret(getattr(settings, "CLOUD_API_KEY", ""))
+        openai_key = _usable_secret(getattr(settings, "OPENAI_API_KEY", ""))
 
         # ---------------- PRIORITY FOR LONG PROMPTS & INDIC LANGUAGES ----------------
-        # Cloud LLMs (Gemini / Groq) handle long reasoning better and possess vast native multilingual vocabularies
+        # Cloud LLMs (Gemini / Groq / OpenAI) handle long reasoning better and possess vast native multilingual vocabularies
         user_msg = next((m.get("content", "") for m in reversed(messages) if m.get("role") == "user"), "")
         is_long_prompt = len(user_msg.split()) > 30
 
-        if (is_indic or is_long_prompt) and (gemini_key or groq_key):
+        if (is_indic or is_long_prompt) and (openai_key or gemini_key or groq_key):
             routing_reason = "Indic language" if is_indic else f"Long prompt ({len(user_msg.split())} words)"
-            if gemini_key:
-                res = cls._send_gemini_chat(messages, timeout=14.0)
+            if openai_key:
+                res = cls._send_openai_chat(messages, timeout=14.0)
                 if res:
-                    logger.info(f"Successfully generated response via Gemini Cloud API (Reason: {routing_reason})")
-                    return res, "cloud", getattr(settings, "GEMINI_MODEL", "gemini-3.6-flash")
+                    logger.info(f"Successfully generated response via OpenAI API (Reason: {routing_reason})")
+                    return res, "cloud", getattr(settings, "OPENAI_MODEL", "gpt-4o")
             if groq_key:
                 res = cls._send_groq_chat(messages, timeout=14.0)
                 if res:
                     logger.info(f"Successfully generated response via Groq Cloud API (Reason: {routing_reason})")
                     return res, "cloud", "Groq Cloud"
+            if gemini_key:
+                res = cls._send_gemini_chat(messages, timeout=14.0)
+                if res:
+                    logger.info(f"Successfully generated response via Gemini Cloud API (Reason: {routing_reason})")
+                    return res, "cloud", getattr(settings, "GEMINI_MODEL", "gemini-3.6-flash")
 
         # ---------------- TIER 1: LOCAL OLLAMA INFERENCE ----------------
         if provider != "cloud":
@@ -261,15 +268,20 @@ class LocalLLMClient:
                 logger.warning(f"Local Ollama chat failed/timed out ({target_model}): {e}. Shifting to Cloud Acceleration.")
 
         # ---------------- TIER 2: CLOUD ACCELERATED FALLBACK ----------------
-        if gemini_key:
-            res = cls._send_gemini_chat(messages, timeout=14.0)
+        if openai_key:
+            res = cls._send_openai_chat(messages, timeout=14.0)
             if res:
-                return res, "cloud", getattr(settings, "GEMINI_MODEL", "gemini-3.6-flash")
+                return res, "cloud", getattr(settings, "OPENAI_MODEL", "gpt-4o")
 
         if groq_key:
             res = cls._send_groq_chat(messages, timeout=14.0)
             if res:
                 return res, "cloud", "Groq Cloud"
+
+        if gemini_key:
+            res = cls._send_gemini_chat(messages, timeout=14.0)
+            if res:
+                return res, "cloud", getattr(settings, "GEMINI_MODEL", "gemini-3.6-flash")
 
         # ---------------- TIER 3: DETERMINISTIC OFFLINE RULES ----------------
         return None, "mock", "deterministic-fallback"
@@ -348,6 +360,48 @@ class LocalLLMClient:
                     logger.error(f"Gemini API request exception ({cand_model}): {e}")
                     break
                 
+        return None
+
+    @classmethod
+    def _send_openai_chat(
+        cls,
+        messages: List[Dict[str, str]],
+        timeout: float = 15.0
+    ) -> Optional[str]:
+        api_key = _usable_secret(getattr(settings, "OPENAI_API_KEY", ""))
+        if not api_key:
+            return None
+        url = "https://api.openai.com/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        candidate_model = getattr(settings, "OPENAI_MODEL", "gpt-4o")
+        import time
+        payload = {
+            "model": candidate_model,
+            "messages": messages,
+            "temperature": 0.4,
+            "max_tokens": 1500
+        }
+        for attempt in range(2):
+            try:
+                resp = requests.post(url, headers=headers, json=payload, timeout=timeout)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    msg = data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+                    if msg:
+                        cleaned_msg = cls.clean_latex_formatting(msg)
+                        return cleaned_msg
+                elif resp.status_code == 429:
+                    time.sleep(1.0)
+                    continue
+                else:
+                    logger.warning(f"OpenAI API model {candidate_model} returned {resp.status_code}: {resp.text[:200]}")
+                    break
+            except Exception as e:
+                logger.warning(f"OpenAI API model {candidate_model} request failed: {e}")
+                break
         return None
 
     @classmethod
