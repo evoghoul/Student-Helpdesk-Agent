@@ -191,13 +191,14 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
               const categoryStr = (backendResp.category as string) || "PERSONAL_DATA";
               let mappedRedirectPath: string | undefined = undefined;
               
-              if (categoryStr === "ATTENDANCE") mappedRedirectPath = "attendance";
-              else if (categoryStr === "EXAMS") mappedRedirectPath = "exams";
-              else if (categoryStr === "FEES") mappedRedirectPath = "fees";
-              else if (categoryStr === "TIMETABLE") mappedRedirectPath = "timetable";
-              else if (categoryStr === "MARKS") mappedRedirectPath = "marks";
-              else if (categoryStr === "CURRICULUM") mappedRedirectPath = "curriculum";
-              else if (categoryStr === "FACULTY") mappedRedirectPath = "faculty";
+              const qLower = query.toLowerCase();
+              if (categoryStr === "ATTENDANCE" || qLower.includes("attendance")) mappedRedirectPath = "attendance";
+              else if (categoryStr === "EXAMS" || qLower.includes("exam")) mappedRedirectPath = "exams";
+              else if (categoryStr === "FEES" || qLower.includes("fee")) mappedRedirectPath = "fees";
+              else if (categoryStr === "TIMETABLE" || qLower.includes("timetable") || qLower.includes("schedule")) mappedRedirectPath = "timetable";
+              else if (categoryStr === "MARKS" || qLower.includes("mark") || qLower.includes("score") || qLower.includes("grade") || qLower.includes("cgpa")) mappedRedirectPath = "marks";
+              else if (categoryStr === "CURRICULUM" || qLower.includes("curriculum") || qLower.includes("credit")) mappedRedirectPath = "curriculum";
+              else if (categoryStr === "FACULTY" || qLower.includes("faculty") || qLower.includes("teacher") || qLower.includes("mentor")) mappedRedirectPath = "faculty";
               else if (categoryStr === "POLICIES") mappedRedirectPath = "policies";
               else if (categoryStr === "CIRCULARS") mappedRedirectPath = "circulars";
               else if (categoryStr === "CALENDAR") mappedRedirectPath = "calendar";
@@ -288,13 +289,14 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const localCategoryStr = (response.category as string) || "PERSONAL_DATA";
       let localMappedRedirectPath: string | undefined = undefined;
       
-      if (localCategoryStr === "ATTENDANCE") localMappedRedirectPath = "attendance";
-      else if (localCategoryStr === "EXAMS") localMappedRedirectPath = "exams";
-      else if (localCategoryStr === "FEES") localMappedRedirectPath = "fees";
-      else if (localCategoryStr === "TIMETABLE") localMappedRedirectPath = "timetable";
-      else if (localCategoryStr === "MARKS") localMappedRedirectPath = "marks";
-      else if (localCategoryStr === "CURRICULUM") localMappedRedirectPath = "curriculum";
-      else if (localCategoryStr === "FACULTY") localMappedRedirectPath = "faculty";
+      const qLowerLocal = query.toLowerCase();
+      if (localCategoryStr === "ATTENDANCE" || qLowerLocal.includes("attendance")) localMappedRedirectPath = "attendance";
+      else if (localCategoryStr === "EXAMS" || qLowerLocal.includes("exam")) localMappedRedirectPath = "exams";
+      else if (localCategoryStr === "FEES" || qLowerLocal.includes("fee")) localMappedRedirectPath = "fees";
+      else if (localCategoryStr === "TIMETABLE" || qLowerLocal.includes("timetable") || qLowerLocal.includes("schedule")) localMappedRedirectPath = "timetable";
+      else if (localCategoryStr === "MARKS" || qLowerLocal.includes("mark") || qLowerLocal.includes("score") || qLowerLocal.includes("grade") || qLowerLocal.includes("cgpa")) localMappedRedirectPath = "marks";
+      else if (localCategoryStr === "CURRICULUM" || qLowerLocal.includes("curriculum") || qLowerLocal.includes("credit")) localMappedRedirectPath = "curriculum";
+      else if (localCategoryStr === "FACULTY" || qLowerLocal.includes("faculty") || qLowerLocal.includes("teacher") || qLowerLocal.includes("mentor")) localMappedRedirectPath = "faculty";
 
       setMessages((prev) => [
         ...prev,
