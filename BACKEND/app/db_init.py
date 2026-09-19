@@ -57,8 +57,8 @@ def _create_tables(cur):
     cur.execute("CREATE TABLE IF NOT EXISTS circulars (circular_no TEXT, title TEXT, issued_date TEXT, effective_date TEXT, summary TEXT, issued_by TEXT)")
     cur.execute("CREATE TABLE IF NOT EXISTS policies (policy_id TEXT, title TEXT, clause_no TEXT, effective_date TEXT, summary TEXT, authority TEXT)")
     cur.execute("CREATE TABLE IF NOT EXISTS studentlife_club (club_id TEXT PRIMARY KEY, name TEXT, category TEXT, description TEXT, theme_color TEXT)")
-        cur.execute('ALTER TABLE studentlife_club_application ADD COLUMN IF NOT EXISTS timestamp TIMESTAMP')
     cur.execute("CREATE TABLE IF NOT EXISTS studentlife_club_application (id SERIAL PRIMARY KEY, club_id TEXT, student_name TEXT, status TEXT, timestamp TIMESTAMP, withdrawal_reason TEXT, student_id TEXT)")
+    cur.execute('ALTER TABLE studentlife_club_application ADD COLUMN IF NOT EXISTS timestamp TIMESTAMP')
 
 def _seed_calendar_events(cur, conn):
     cur.execute("SELECT COUNT(*) as cnt FROM calendar_events")
