@@ -178,35 +178,7 @@ class NLUEngine:
                 f"SLA Due Date: {sr_res['record']['sla_due_date']}. Inform the student warmly of this tracking number.]"
             )
 
-        # A2. Club Application (Agent 46 / Extracurriculars)
-        elif cls.has_any_word(q_lower, ["join club", "apply for club", "register club", "join the club", "join a club", "join", "apply"]) and cls.has_any_word(q_lower, ["club", "music", "drama", "ai", "sports", "code", "theatrix"]):
-            clubs = DataRepository.get_clubs()
-            target_club_id = "CLUB_AI"
-            target_club_name = "AI Innovation Club"
-            for c in clubs:
-                if c["name"].lower() in q_lower or (c["category"] and c["category"].lower() in q_lower):
-                    target_club_id = c["club_id"]
-                    target_club_name = c["name"]
-                    break
-            
-            profile = DataRepository.get_student_profile(session)
-            student_name = profile.get("full_name", "Student") if profile else "Student"
-            first_name = student_name.split()[0] if student_name else "Student"
-            
-            app = DataRepository.create_club_application(session, target_club_id, student_name)
-            
-            category = "SERVICE_REQUEST"
-            topic = f"Club Application: {target_club_name}"
-            source_agent = "Agent 46 (Extracurriculars)"
-            direct_response_text = (
-                f"Hello {first_name}, your application to join **{target_club_name}** has been submitted.\n\n"
-                f"• **Club:** {target_club_name}\n"
-                f"• **Status:** Pending Review\n"
-                f"• **Next Steps:** The club leads will review your application. Check your notifications for audition/orientation details."
-            )
-            action_note = f"[SYSTEM ACTION EXECUTED: Created club application for {target_club_name} (ID: {target_club_id})]"
-
-        # A3. Club Information Query (list clubs, process of joining, what clubs exist)
+        # A2. Club Information Query (list clubs, process of joining, what clubs exist)
         elif cls.has_any_word(q_lower, ["club", "clubs", "extracurricular", "society", "societies"]) and cls.has_any_word(q_lower, ["process", "how", "what", "list", "available", "which", "tell me", "details", "information", "info", "describe", "show", "know"]):
             clubs = DataRepository.get_clubs()
             profile = DataRepository.get_student_profile(session)
@@ -217,7 +189,7 @@ class NLUEngine:
                 f"• **{c['name']}** ({c['category']}) — {c['description']}"
                 for c in clubs
             )
-            category = "INSTITUTIONAL_INFO"
+            category = "CLUBS"
             topic = "Student Clubs & Extracurriculars"
             source_agent = "Agent 65 (Club Directory)"
             direct_response_text = (
@@ -229,6 +201,39 @@ class NLUEngine:
                 f"3. The club leads will review it and contact you for orientation/auditions.\n\n"
                 f"You can also browse all clubs in the **Clubs** tab on the left sidebar."
             )
+
+        # A3. Club Application (Agent 46 / Extracurriculars)
+        elif cls.has_any_word(q_lower, ["join club", "apply for club", "register club", "join the club", "join a club", "join", "apply"]) and cls.has_any_word(q_lower, ["club", "music", "drama", "ai", "sports", "code", "theatrix"]):
+            clubs = DataRepository.get_clubs()
+            target_club_id = "CLUB_AI"
+            target_club_name = "AI Innovation Club"
+            for c in clubs:
+                name_words = c["name"].lower().split()
+                if c["name"].lower() in q_lower or (c["category"] and c["category"].lower() in q_lower):
+                    target_club_id = c["club_id"]
+                    target_club_name = c["name"]
+                    break
+                elif any(word in q_lower.split() for word in name_words if word not in ["club", "society", "the", "and", "&"]):
+                    target_club_id = c["club_id"]
+                    target_club_name = c["name"]
+                    break
+            
+            profile = DataRepository.get_student_profile(session)
+            student_name = profile.get("full_name", "Student") if profile else "Student"
+            first_name = student_name.split()[0] if student_name else "Student"
+            
+            app = DataRepository.create_club_application(session, target_club_id, student_name)
+            
+            category = "CLUBS"
+            topic = f"Club Application: {target_club_name}"
+            source_agent = "Agent 46 (Extracurriculars)"
+            direct_response_text = (
+                f"Hello {first_name}, your application to join **{target_club_name}** has been submitted.\n\n"
+                f"• **Club:** {target_club_name}\n"
+                f"• **Status:** Pending Review\n"
+                f"• **Next Steps:** The club leads will review your application. Check your notifications for audition/orientation details."
+            )
+            action_note = f"[SYSTEM ACTION EXECUTED: Created club application for {target_club_name} (ID: {target_club_id})]"
 
         # B. Human Escalation (Step 8)
         elif cls.has_any_word(q_lower, ["talk to human", "escalate", "human officer", "dean", "hod", "exception", "discretion"]):
