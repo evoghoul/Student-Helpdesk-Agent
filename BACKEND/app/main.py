@@ -131,7 +131,7 @@ async def health_check():
         "status": "healthy",
         "agent": "Agent 65 (Student Helpdesk Agent)",
         "version": settings.APP_VERSION,
-        "llm_provider": settings.LLM_PROVIDER,
+        "llm_provider": getattr(settings, "LLM_PROVIDER", "gemini"),
         "gemini_configured": _usable_secret(getattr(settings, "GEMINI_API_KEY", "")),
         "gemini_model": settings.GEMINI_MODEL,
         "groq_configured": _usable_secret(getattr(settings, "GROQ_API_KEY", "")) or _usable_secret(getattr(settings, "CLOUD_API_KEY", "")),
