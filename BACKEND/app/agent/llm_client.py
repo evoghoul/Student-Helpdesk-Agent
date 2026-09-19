@@ -105,25 +105,33 @@ class LLMClient:
         import time
         for attempt in range(2):
             try:
-                chat_completion = client.chat.completions.create(
+                create_kwargs = dict(
                     messages=groq_messages,
                     model=candidate_model,
                     temperature=0.4,
                     max_tokens=1500,
                 )
-                if chat_completion.choices and chat_completion.choices[0].message.content:
-                    return cls.clean_latex_formatting(chat_completion.choices[0].message.content)
+                chat_completion = client.chat.completions.create(**create_kwargs)
+                raw_content = chat_completion.choices[0].message.content if chat_completion.choices else None
+                logger.info(f"Groq raw response length: {len(raw_content) if raw_content else 0}, model: {candidate_model}")
+                if raw_content:
+                    cleaned = cls.clean_latex_formatting(raw_content)
+                    # If cleaning removed all content (e.g. all thinking tokens), return the raw stripped version
+                    if not cleaned or not cleaned.strip():
+                        cleaned = re.sub(r'<think>.*?</think>', '', raw_content, flags=re.DOTALL).strip()
+                    if cleaned:
+                        return cleaned
+                logger.warning(f"Groq returned empty content for model {candidate_model}")
                 return None
             except APIError as e:
-                # Catch groq.APIError
+                logger.warning(f"Groq APIError (attempt {attempt+1}): {e}")
                 if "429" in str(e):
                     time.sleep(1.0)
                     continue
                 else:
-                    logger.warning(f"Groq API returned error: {e}")
                     break
             except Exception as e:
-                logger.warning(f"Groq API request failed: {e}")
+                logger.warning(f"Groq request failed (attempt {attempt+1}): {type(e).__name__}: {e}")
                 break
         return None
 
