@@ -10,6 +10,7 @@ interface ReportItemModalProps {
     description: string;
     tags: string;
     contactInfo: string;
+    imageUrl?: string;
   }) => Promise<void>;
 }
 
@@ -23,14 +24,58 @@ export const ReportItemModal: React.FC<ReportItemModalProps> = ({
   const [description, setDescription] = useState("");
   const [tags, setTags] = useState("");
   const [contactInfo, setContactInfo] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Client-side compression to avoid Next.js server action payload limits
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        
+        // Max dimensions
+        const MAX_WIDTH = 800;
+        const MAX_HEIGHT = 800;
+        
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          setImageUrl(dataUrl);
+        }
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    await onSubmit({ type, title, description, tags, contactInfo });
+    await onSubmit({ type, title, description, tags, contactInfo, imageUrl });
     setIsSubmitting(false);
     onClose();
     // Reset form
@@ -38,6 +83,7 @@ export const ReportItemModal: React.FC<ReportItemModalProps> = ({
     setDescription("");
     setTags("");
     setContactInfo("");
+    setImageUrl("");
   };
 
   return (
@@ -140,10 +186,21 @@ export const ReportItemModal: React.FC<ReportItemModalProps> = ({
               />
             </div>
 
-            <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 flex flex-col items-center justify-center text-center cursor-not-allowed opacity-70">
-               <UploadCloud className="h-8 w-8 text-slate-400 mb-2" />
-               <p className="text-sm font-medium text-slate-700">Image Upload Disabled</p>
-               <p className="text-xs text-slate-500 mt-1">Prototype mode uses auto-generated mock images.</p>
+            <div className="relative rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 flex flex-col items-center justify-center text-center hover:bg-slate-100 transition-colors cursor-pointer overflow-hidden">
+               {imageUrl ? (
+                 <img src={imageUrl} alt="Uploaded preview" className="absolute inset-0 w-full h-full object-cover opacity-30" />
+               ) : null}
+               <div className="relative z-10 flex flex-col items-center">
+                 <UploadCloud className="h-8 w-8 text-slate-400 mb-2" />
+                 <p className="text-sm font-medium text-slate-700">{imageUrl ? 'Change Image' : 'Upload an Image'}</p>
+                 <p className="text-xs text-slate-500 mt-1">Click to browse or drag and drop</p>
+               </div>
+               <input 
+                 type="file" 
+                 accept="image/*" 
+                 onChange={handleImageUpload}
+                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+               />
             </div>
           </div>
 

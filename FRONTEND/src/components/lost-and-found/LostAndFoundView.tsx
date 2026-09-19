@@ -59,7 +59,7 @@ export const LostAndFoundView = () => {
 
   const handleReportItem = async (data: any) => {
     if (!student?.id) return;
-    const res = await reportLostAndFoundItem(student.id, data.type, data.title, data.description, data.tags, data.contactInfo);
+    const res = await reportLostAndFoundItem(student.id, data.type, data.title, data.description, data.tags, data.contactInfo, data.imageUrl);
     if (res.success) {
       alert("Item reported successfully!");
       // Reload items
@@ -153,26 +153,29 @@ export const LostAndFoundView = () => {
               </div>
 
               {/* Image */}
-              <div className="relative h-48 w-full bg-slate-100 overflow-hidden">
-                {item.image_url ? (
+              {item.image_url && (
+                <div className="relative h-48 w-full bg-slate-100 overflow-hidden">
                   <img src={item.image_url} alt={item.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
-                ) : (
-                  <div className="flex items-center justify-center h-full text-slate-400">
-                    <MapPin className="h-8 w-8 opacity-20" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
+                  <div className="absolute bottom-3 left-3 right-3 text-white">
+                    <h3 className="font-bold text-sm truncate">{item.title}</h3>
+                    <p className="text-[10px] opacity-90 mt-0.5">
+                      Posted {formatDistanceToNow(new Date(item.date_posted), { addSuffix: true })}
+                    </p>
                   </div>
-                )}
-                {/* Gradient overlay to make text pop */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
-                <div className="absolute bottom-3 left-3 right-3 text-white">
-                  <h3 className="font-bold text-sm truncate">{item.title}</h3>
-                  <p className="text-[10px] opacity-90 mt-0.5">
-                    Posted {formatDistanceToNow(new Date(item.date_posted), { addSuffix: true })}
-                  </p>
                 </div>
-              </div>
+              )}
 
               {/* Content */}
-              <div className="flex flex-col flex-1 p-4">
+              <div className={`flex flex-col flex-1 p-4 ${!item.image_url ? 'pt-10' : ''}`}>
+                {!item.image_url && (
+                  <div className="mb-3">
+                    <h3 className="font-bold text-sm text-slate-800 line-clamp-1">{item.title}</h3>
+                    <p className="text-[10px] text-slate-500 mt-0.5">
+                      Posted {formatDistanceToNow(new Date(item.date_posted), { addSuffix: true })}
+                    </p>
+                  </div>
+                )}
                 <p className="text-xs text-slate-600 line-clamp-2 mb-3">
                   {item.description}
                 </p>

@@ -34,19 +34,16 @@ export async function reportLostAndFoundItem(
   title: string, 
   description: string, 
   tags: string, 
-  contactInfo: string
+  contactInfo: string,
+  imageUrl?: string
 ) {
   try {
     const db = new Database(dbPath);
     const datePosted = new Date().toISOString();
-    // Providing a random placeholder image since no actual upload is configured
-    const randomSeed = Math.floor(Math.random() * 1000000);
-    const imageUrl = `https://picsum.photos/seed/${randomSeed}/400/300`;
-    
     const result = db.prepare(`
       INSERT INTO lost_and_found (student_id, type, title, description, tags, contact_info, status, date_posted, image_url)
       VALUES (?, ?, ?, ?, ?, ?, 'open', ?, ?)
-    `).run(studentId, type, title, description, tags, contactInfo, datePosted, imageUrl);
+    `).run(studentId, type, title, description, tags, contactInfo, datePosted, imageUrl || null);
     
     db.close();
     return { success: true, id: result.lastInsertRowid };
