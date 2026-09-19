@@ -59,6 +59,8 @@ def _create_tables(cur):
     cur.execute("CREATE TABLE IF NOT EXISTS studentlife_club (club_id TEXT PRIMARY KEY, name TEXT, category TEXT, description TEXT, theme_color TEXT)")
     cur.execute("CREATE TABLE IF NOT EXISTS studentlife_club_application (id SERIAL PRIMARY KEY, club_id TEXT, student_name TEXT, status TEXT, timestamp TIMESTAMP, withdrawal_reason TEXT, student_id TEXT)")
     cur.execute('ALTER TABLE studentlife_club_application ADD COLUMN IF NOT EXISTS timestamp TIMESTAMP')
+    cur.execute('ALTER TABLE studentlife_club_application ADD COLUMN IF NOT EXISTS withdrawal_reason TEXT')
+    cur.execute('ALTER TABLE studentlife_club_application ADD COLUMN IF NOT EXISTS student_id TEXT')
 
 def _seed_calendar_events(cur, conn):
     cur.execute("SELECT COUNT(*) as cnt FROM calendar_events")
@@ -688,41 +690,41 @@ def _seed_broadcast_alerts(cur, conn):
     count = row.get("cnt", 0) if hasattr(row, "get") else (row[0] if row else 0)
     if count > 0:
         return
-    sql = """INSERT INTO broadcast_alerts (id,message,type,is_active,timestamp) VALUES (%s,%s,%s,%s::boolean,%s) ON CONFLICT (id) DO NOTHING""".strip()
+    sql = """INSERT INTO broadcast_alerts (id,message,type,is_active,timestamp) VALUES (%s,%s,%s,%s,%s) ON CONFLICT (id) DO NOTHING""".strip()
     rows = [
     [
         15,
         "Heavy rain expected tomorrow. Transport schedules may be delayed. Plan accordingly.",
         "warning",
-        1,
+        True,
         "2026-09-18T14:20:00.052421"
     ],
     [
         16,
         "TechFest 2026 registration is now open! Early bird discounts available.",
         "info",
-        1,
+        True,
         "2026-09-17T16:20:00.052421"
     ],
     [
         17,
         "Semester fee payment deadline extended to 15th October.",
         "info",
-        1,
+        True,
         "2026-09-16T16:20:00.052421"
     ],
     [
         18,
         "Fire drill scheduled for tomorrow 3 PM at N-Block.",
         "warning",
-        1,
+        True,
         "2026-09-18T04:20:00.052421"
     ],
     [
         19,
         "Emergency: Campus power maintenance from 1 AM to 3 AM tonight.",
         "emergency",
-        1,
+        True,
         "2026-09-18T15:20:00.052421"
     ]
 ]
