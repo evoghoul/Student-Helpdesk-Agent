@@ -122,7 +122,8 @@ class LLMClient:
         if gemini_key:
             result = cls._send_gemini_chat(messages, system_prompt, gemini_key)
             if result is not None:
-                model_used = getattr(settings, "GEMINI_MODEL", "gemini-3.6-flash")
+                # Force 3.6-flash to avoid any stale environment variable cache
+                model_used = "gemini-3.6-flash"
                 logger.info(f"Response served by Gemini ({model_used})")
                 return result, "gemini", model_used
             logger.warning("Gemini failed or rate-limited — falling back to Groq")
@@ -151,7 +152,8 @@ class LLMClient:
         try:
             from google import genai
 
-            model_name = getattr(settings, "GEMINI_MODEL", "gemini-3.6-flash")
+            # Force 3.6-flash to avoid any stale environment variable cache
+            model_name = "gemini-3.6-flash"
 
             contents = []
             for msg in messages:
