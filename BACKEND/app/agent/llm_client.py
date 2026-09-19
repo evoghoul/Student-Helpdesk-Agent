@@ -69,7 +69,7 @@ class LLMClient:
         
         res = cls._send_groq_chat(messages, system_prompt=system_prompt)
         if res:
-            model_used = getattr(settings, "GEMINI_MODEL", "openai/gpt-oss-20b")
+            model_used = getattr(settings, "GEMINI_MODEL", "qwen/qwen3.8-27b")
             return res, "cloud", model_used
             
         return None, "mock", "deterministic-fallback"
@@ -84,9 +84,9 @@ class LLMClient:
         if not api_key or api_key.startswith("YOUR_"):
             return None
             
-        candidate_model = getattr(settings, "GEMINI_MODEL", "openai/gpt-oss-20b")
-        if candidate_model.startswith("gemini") or candidate_model in ["llama3-8b-8192", "llama-3.1-8b-instant"]:
-            candidate_model = "openai/gpt-oss-20b"
+        candidate_model = getattr(settings, "GEMINI_MODEL", "qwen/qwen3.8-27b")
+        if candidate_model.startswith("gemini") or candidate_model in ["llama3-8b-8192", "llama-3.1-8b-instant", "openai/gpt-oss-20b", "openai/gpt-oss-120b"]:
+            candidate_model = "qwen/qwen3.8-27b"
             
         client = Groq(api_key=api_key)
         
