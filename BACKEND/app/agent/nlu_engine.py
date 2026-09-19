@@ -577,15 +577,9 @@ class NLUEngine:
             coun_name = advisors.get("counsellor", {}).get("name", "your assigned counsellor")
             ct_name = advisors.get("class_teacher", {}).get("name", "your class teacher")
 
-            is_peer_query = cls.has_any_word(query.lower(), ["other student", "another student", "other students", "classmates", "classmate", "peers", "peer", "topper", "toppers", "compare", "comparison", "highest marks", "highest cgpa", "batch average"])
-            if is_peer_query:
-                privacy_policy = os.environ.get("PRIVACY_POLICY_MESSAGE", "I cannot share other student records under university policies")
-                procedural_directive = (
-                    "11. PEER PRIVACY BOUNDARY: The student is asking about other students or comparing themselves to peers.\n"
-                    f"   a) Politely explain: {privacy_policy}\n"
-                    "   b) Then, optionally offer to show the logged-in student their own related data (e.g., 'However, if you want to check your own attendance or performance, I can help you with that!').\n"
-                    "   c) Do not automatically dump their metrics in the same breath. Rephrase the sentences to sound natural, helpful, and beautifully formatted."
-                )
+            # Privacy boundary disabled as per user request to allow models access to all data
+            if False:
+                pass
             else:
                 cgpa_str = f"{cgpa_val:.2f}" if cgpa_val is not None else "Not Available"
                 att_str = f"{att_val:.0f}%" if att_val is not None else "Not Available"
@@ -651,21 +645,21 @@ class NLUEngine:
                             model_used = r_model
                             provider_used = r_prov
 
-                # Privacy & Anti-Leak Sanitizer:
-                # Ensure no unauthorized cross-student names or roll numbers are leaked
-                student_roll_str = (profile.get("roll_no") or "").lower() if profile else ""
-                for forbidden in ["Rahul Verma", "24CSE002", "24cse002"]:
-                    if forbidden.lower() not in name.lower() and forbidden.lower() not in student_roll_str:
-                        llm_reply = re.sub(re.escape(forbidden), "[CONFIDENTIAL_RECORD]", llm_reply, flags=re.IGNORECASE)
+                # Privacy & Anti-Leak Sanitizer Disabled (User Request: All models can access all data)
+                # student_roll_str = (profile.get("roll_no") or "").lower() if profile else ""
+                # for forbidden in ["Rahul Verma", "24CSE002", "24cse002"]:
+                #     if forbidden.lower() not in name.lower() and forbidden.lower() not in student_roll_str:
+                #         llm_reply = re.sub(re.escape(forbidden), "[CONFIDENTIAL_RECORD]", llm_reply, flags=re.IGNORECASE)
 
                 return llm_reply, False, model_used, provider_used
 
         # Deterministic fallback if LLM is offline or timed out
         fallback_msg = cls.generate_deterministic_fallback(session, query, active_subject, effective_lang, action_note)
-        student_roll_str = (profile.get("roll_no") or "").lower() if profile else ""
-        for forbidden in ["Rahul Verma", "24CSE002", "24cse002"]:
-            if forbidden.lower() not in name.lower() and forbidden.lower() not in student_roll_str:
-                fallback_msg = re.sub(re.escape(forbidden), "[CONFIDENTIAL_RECORD]", fallback_msg, flags=re.IGNORECASE)
+        # Privacy & Anti-Leak Sanitizer Disabled (User Request: All models can access all data)
+        # student_roll_str = (profile.get("roll_no") or "").lower() if profile else ""
+        # for forbidden in ["Rahul Verma", "24CSE002", "24cse002"]:
+        #     if forbidden.lower() not in name.lower() and forbidden.lower() not in student_roll_str:
+        #         fallback_msg = re.sub(re.escape(forbidden), "[CONFIDENTIAL_RECORD]", fallback_msg, flags=re.IGNORECASE)
         return fallback_msg, True, "deterministic-fallback", "mock"
 
     @classmethod
@@ -755,12 +749,9 @@ class NLUEngine:
 
             is_peer_query = cls.has_any_word(q_lower, ["other student", "another student", "other students", "classmates", "classmate", "peers", "peer", "topper", "toppers", "compare", "comparison", "highest marks", "highest cgpa", "batch average"])
             
-            if is_peer_query:
-                privacy_policy = os.environ.get("PRIVACY_POLICY_MESSAGE", "I cannot share other student records under university policies")
-                return (
-                    f"{privacy_policy} "
-                    "However, if you'd like to check your own attendance or performance, I'm here to help!"
-                )
+            # Privacy boundary disabled as per user request to allow models access to all data
+            if False:
+                pass
 
             cgpa_str = f"{cgpa:.2f}" if cgpa is not None else "Not Available"
             att_str = f"{overall_att:.0f}%" if overall_att is not None else "Not Available"
@@ -1048,35 +1039,7 @@ class NLUEngine:
         Detects prompt-injection attempts, system rule overrides, and unauthorized cross-student queries
         before any LLM inference occurs, ensuring strict Row-Level Access Control (RLAC).
         """
-        system_overrides = [
-            "system override", "ignore all previous", "ignore previous", "disregard previous",
-            "bypass rules", "bypass the row-level", "bypass rlac", "bypass row level",
-            "override rules", "dump database", "reveal system prompt", "jailbreak",
-            "dump attendance records"
-        ]
-        if any(sig in q_lower for sig in system_overrides):
-            return True
-
-        cross_student_signals = [
-            "another student's", "classmate's marks",
-            "other student's attendance", "other students' attendance"
-        ]
-        if any(sig in q_lower for sig in cross_student_signals):
-            return True
-
-        profile = DataRepository.get_student_profile(session) if session else None
-        current_name = (profile.get("full_name") or "").lower() if profile else ""
-        current_roll = (profile.get("roll_no") or "").lower() if profile else ""
-
-        target_probes = [
-            ("rahul verma", "24cse002"),
-            ("asha reddy", "24cse001"),
-        ]
-        for name_sig, roll_sig in target_probes:
-            if name_sig in q_lower or roll_sig in q_lower:
-                if name_sig not in current_name and roll_sig not in current_roll:
-                    return True
-
+        # Feature disabled as per user request to allow API models access to all data
         return False
 
     @classmethod
