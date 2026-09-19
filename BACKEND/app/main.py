@@ -124,16 +124,17 @@ async def root():
 @app.get("/health", tags=["Health"])
 @app.get("/api/v1/health", tags=["Health"])
 async def health_check():
-    from app.agent.local_llm import _usable_secret
+    def _usable_secret(secret: str) -> bool:
+        return bool(secret and str(secret).strip() and not str(secret).startswith("YOUR_"))
 
     return {
         "status": "healthy",
         "agent": "Agent 65 (Student Helpdesk Agent)",
         "version": settings.APP_VERSION,
         "llm_provider": settings.LLM_PROVIDER,
-        "gemini_configured": bool(_usable_secret(settings.GEMINI_API_KEY)),
+        "gemini_configured": _usable_secret(getattr(settings, "GEMINI_API_KEY", "")),
         "gemini_model": settings.GEMINI_MODEL,
-        "groq_configured": bool(_usable_secret(settings.GROQ_API_KEY) or _usable_secret(settings.CLOUD_API_KEY)),
+        "groq_configured": _usable_secret(getattr(settings, "GROQ_API_KEY", "")) or _usable_secret(getattr(settings, "CLOUD_API_KEY", "")),
         "rls_guardrail_enforced": True
     }
 
