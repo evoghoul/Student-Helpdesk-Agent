@@ -1,22 +1,39 @@
 import json
 import logging
 import re
+import time
 from typing import Dict, Any, List, Optional, Tuple
 from groq import Groq, APIError
 from app.config import settings
 
 logger = logging.getLogger(__name__)
 
+
 class LLMClient:
     """
-    Client for cloud-based LLM inference using Groq API.
+    Client for cloud-based LLM inference.
+    Primary provider: Google Gemini (gemini-2.0-flash)
+    Fallback provider: Groq (qwen/qwen3.8-27b)
+    Automatically rotates to Groq when Gemini hits rate limits or fails.
     """
+
+    # ─────────────────────────── availability ──────────────────────────────
+
+    @classmethod
+    def _gemini_key(cls) -> str:
+        key = getattr(settings, "GEMINI_API_KEY", "").strip()
+        return key if (key and not key.startswith("YOUR_")) else ""
+
+    @classmethod
+    def _groq_key(cls) -> str:
+        key = getattr(settings, "GROQ_API_KEY", "").strip()
+        return key if (key and not key.startswith("YOUR_")) else ""
 
     @classmethod
     def is_available(cls) -> bool:
-        """Check if Groq API key (stored in GEMINI_API_KEY for compatibility) is configured."""
-        api_key = getattr(settings, "GEMINI_API_KEY", "")
-        return bool(api_key and api_key.strip() and not api_key.startswith("YOUR_"))
+        return bool(cls._gemini_key() or cls._groq_key())
+
+    # ─────────────────────────── public API ────────────────────────────────
 
     @classmethod
     def classify_intent(cls, query: str) -> str:
@@ -28,14 +45,18 @@ class LLMClient:
             "ATTENDANCE, EXAMS, FEES, TIMETABLE, MARKS, CURRICULUM, LIBRARY, FACULTY, KNOWLEDGE_BASE, GENERAL. "
             "Respond with ONLY the intent name in uppercase, and nothing else."
         )
-        
-        reply = cls._send_groq_chat([
-            {"role": "user", "content": query}
-        ], system_prompt=system_prompt)
-        
+
+        reply = cls._send_chat(
+            messages=[{"role": "user", "content": query}],
+            system_prompt=system_prompt,
+        )
+
         if reply:
             reply = reply.strip().upper()
-            valid_intents = ["ATTENDANCE", "EXAMS", "FEES", "TIMETABLE", "MARKS", "CURRICULUM", "LIBRARY", "FACULTY", "KNOWLEDGE_BASE", "GENERAL"]
+            valid_intents = [
+                "ATTENDANCE", "EXAMS", "FEES", "TIMETABLE", "MARKS",
+                "CURRICULUM", "LIBRARY", "FACULTY", "KNOWLEDGE_BASE", "GENERAL",
+            ]
             for intent in valid_intents:
                 if intent in reply:
                     return intent
@@ -49,14 +70,15 @@ class LLMClient:
         user_prompt: str,
         model: Optional[str] = None,
         max_history_turns: int = 4,
-        language: str = "en"
+        language: str = "en",
     ) -> Tuple[Optional[str], str, str]:
         """
-        Generate a multi-turn contextual response from Groq.
+        Generate a multi-turn contextual response.
+        Returns (response_text, provider_name, model_name).
         """
         messages = []
         recent_turns = history[-max_history_turns:] if len(history) > max_history_turns else history
-        
+
         for turn in recent_turns:
             role = "user" if turn.get("sender_role") == "STUDENT" else "assistant"
             content = turn.get("content", "")
@@ -66,74 +88,182 @@ class LLMClient:
                 messages.append({"role": role, "content": content})
 
         messages.append({"role": "user", "content": user_prompt})
-        
-        res = cls._send_groq_chat(messages, system_prompt=system_prompt)
+
+        res, provider, model_used = cls._send_chat_with_provider(messages, system_prompt=system_prompt)
         if res:
-            model_used = getattr(settings, "GEMINI_MODEL", "qwen/qwen3.8-27b")
-            return res, "cloud", model_used
-            
+            return res, provider, model_used
+
         return None, "mock", "deterministic-fallback"
+
+    # ─────────────────────────── routing logic ─────────────────────────────
+
+    @classmethod
+    def _send_chat(
+        cls,
+        messages: List[Dict[str, str]],
+        system_prompt: Optional[str] = None,
+    ) -> Optional[str]:
+        """Send chat, returns text only."""
+        result, _, _ = cls._send_chat_with_provider(messages, system_prompt)
+        return result
+
+    @classmethod
+    def _send_chat_with_provider(
+        cls,
+        messages: List[Dict[str, str]],
+        system_prompt: Optional[str] = None,
+    ) -> Tuple[Optional[str], str, str]:
+        """
+        Try Gemini first; fall back to Groq on failure or rate limit.
+        Returns (text, provider, model).
+        """
+        # 1. Try Gemini (primary)
+        gemini_key = cls._gemini_key()
+        if gemini_key:
+            result = cls._send_gemini_chat(messages, system_prompt, gemini_key)
+            if result is not None:
+                model_used = getattr(settings, "GEMINI_MODEL", "gemini-2.0-flash")
+                logger.info(f"Response served by Gemini ({model_used})")
+                return result, "gemini", model_used
+            logger.warning("Gemini failed or rate-limited — falling back to Groq")
+
+        # 2. Fall back to Groq
+        groq_key = cls._groq_key()
+        if groq_key:
+            result = cls._send_groq_chat(messages, system_prompt, groq_key)
+            if result is not None:
+                model_used = getattr(settings, "GROQ_MODEL", "qwen/qwen3.8-27b")
+                logger.info(f"Response served by Groq fallback ({model_used})")
+                return result, "groq", model_used
+
+        return None, "none", "none"
+
+    # ─────────────────────────── Gemini provider ───────────────────────────
+
+    @classmethod
+    def _send_gemini_chat(
+        cls,
+        messages: List[Dict[str, str]],
+        system_prompt: Optional[str],
+        api_key: str,
+    ) -> Optional[str]:
+        """Call Google Gemini API. Returns cleaned text or None on error."""
+        try:
+            from google import genai
+            from google.genai import types
+
+            model_name = getattr(settings, "GEMINI_MODEL", "gemini-2.0-flash")
+
+            contents = []
+            for msg in messages:
+                role = "user" if msg["role"] == "user" else "model"
+                contents.append(
+                    types.Content(
+                        role=role,
+                        parts=[types.Part(text=msg["content"])],
+                    )
+                )
+
+            config_kwargs: Dict[str, Any] = {
+                "max_output_tokens": 1500,
+                "temperature": 0.4,
+            }
+            if system_prompt:
+                config_kwargs["system_instruction"] = system_prompt
+
+            client = genai.Client(api_key=api_key)
+            response = client.models.generate_content(
+                model=model_name,
+                contents=contents,
+                config=types.GenerateContentConfig(**config_kwargs),
+            )
+
+            raw_text = response.text if response and response.text else None
+            if not raw_text:
+                logger.warning("Gemini returned empty response")
+                return None
+
+            cleaned = cls.clean_latex_formatting(raw_text)
+            if not cleaned or not cleaned.strip():
+                cleaned = re.sub(r"<think>.*?</think>", "", raw_text, flags=re.DOTALL).strip()
+            return cleaned if cleaned else None
+
+        except Exception as e:
+            err_str = str(e)
+            if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
+                logger.warning(f"Gemini rate limit hit: {e}")
+            elif "API_KEY_INVALID" in err_str or "INVALID_ARGUMENT" in err_str:
+                logger.error(f"Gemini API key error: {e}")
+            else:
+                logger.warning(f"Gemini request failed: {type(e).__name__}: {e}")
+            return None
+
+    # ─────────────────────────── Groq provider ─────────────────────────────
 
     @classmethod
     def _send_groq_chat(
         cls,
         messages: List[Dict[str, str]],
-        system_prompt: Optional[str] = None
+        system_prompt: Optional[str],
+        api_key: str,
     ) -> Optional[str]:
-        api_key = getattr(settings, "GEMINI_API_KEY", "").strip()
-        if not api_key or api_key.startswith("YOUR_"):
-            return None
-            
-        candidate_model = getattr(settings, "GEMINI_MODEL", "qwen/qwen3.8-27b")
-        if candidate_model.startswith("gemini") or candidate_model in ["llama3-8b-8192", "llama-3.1-8b-instant", "openai/gpt-oss-20b", "openai/gpt-oss-120b"]:
+        """Call Groq API. Returns cleaned text or None on error."""
+        candidate_model = getattr(settings, "GROQ_MODEL", "qwen/qwen3.8-27b")
+        if candidate_model.startswith("gemini"):
             candidate_model = "qwen/qwen3.8-27b"
-            
+
         client = Groq(api_key=api_key)
-        
+
         groq_messages = []
         if system_prompt:
             groq_messages.append({"role": "system", "content": system_prompt})
-            
         for msg in messages:
-            # Map 'model' to 'assistant' if it was passed that way
             role = "assistant" if msg["role"] == "model" else msg["role"]
-            groq_messages.append({
-                "role": role,
-                "content": msg["content"]
-            })
-            
-        import time
+            groq_messages.append({"role": role, "content": msg["content"]})
+
         for attempt in range(2):
             try:
-                create_kwargs = dict(
+                chat_completion = client.chat.completions.create(
                     messages=groq_messages,
                     model=candidate_model,
                     temperature=0.4,
                     max_tokens=1500,
                 )
-                chat_completion = client.chat.completions.create(**create_kwargs)
-                raw_content = chat_completion.choices[0].message.content if chat_completion.choices else None
-                logger.info(f"Groq raw response length: {len(raw_content) if raw_content else 0}, model: {candidate_model}")
+                raw_content = (
+                    chat_completion.choices[0].message.content
+                    if chat_completion.choices else None
+                )
+                logger.info(
+                    f"Groq raw response length: {len(raw_content) if raw_content else 0}, "
+                    f"model: {candidate_model}"
+                )
                 if raw_content:
                     cleaned = cls.clean_latex_formatting(raw_content)
-                    # If cleaning removed all content (e.g. all thinking tokens), return the raw stripped version
                     if not cleaned or not cleaned.strip():
-                        cleaned = re.sub(r'<think>.*?</think>', '', raw_content, flags=re.DOTALL).strip()
+                        cleaned = re.sub(
+                            r"<think>.*?</think>", "", raw_content, flags=re.DOTALL
+                        ).strip()
                     if cleaned:
                         return cleaned
                 logger.warning(f"Groq returned empty content for model {candidate_model}")
                 return None
+
             except APIError as e:
-                logger.warning(f"Groq APIError (attempt {attempt+1}): {e}")
+                logger.warning(f"Groq APIError (attempt {attempt + 1}): {e}")
                 if "429" in str(e):
-                    time.sleep(1.0)
+                    time.sleep(3.0)
                     continue
                 else:
                     break
             except Exception as e:
-                logger.warning(f"Groq request failed (attempt {attempt+1}): {type(e).__name__}: {e}")
+                logger.warning(
+                    f"Groq request failed (attempt {attempt + 1}): {type(e).__name__}: {e}"
+                )
                 break
+
         return None
+
+    # ─────────────────────────── text cleaning ─────────────────────────────
 
     @staticmethod
     def clean_latex_formatting(text: str) -> str:
@@ -172,21 +302,21 @@ class LLMClient:
         text = re.sub(r'\\\[\s*(.*?)\s*\\\]', r'\1', text, flags=re.DOTALL)
         text = re.sub(r'\$\$\s*(.*?)\s*\$\$', r'\1', text, flags=re.DOTALL)
         text = re.sub(r'\\\(\s*(.*?)\s*\\\)', r'\1', text)
-        text = re.sub(r'\\(?:left|right)\s*([()\[\]{}|<>])', r'\1', text)
+        text = re.sub(r'\\(?:left|right)\s*([()[\]{}|<>])', r'\1', text)
         text = re.sub(r'\\(?:left|right)\.?', '', text)
-        
+
         for _ in range(3):
             text = re.sub(r'\\(?:d|t)?frac\{([^{}]+)\}\{([^{}]+)\}', r'\1 / \2', text)
-            
+
         text = re.sub(r'\\sqrt\{([^{}]+)\}', r'√(\1)', text)
         text = re.sub(r'\^\{?\\circ\}?', '°', text)
         text = re.sub(r'\^\{?2\}?', '²', text)
         text = re.sub(r'\^\{?3\}?', '³', text)
-        
+
         replacements = [
             (r'\\approx\b', '≈'), (r'\\times\b', '×'), (r'\\div\b', '÷'), (r'\\cdot\b', '·'),
             (r'\\le\b', '≤'), (r'\\ge\b', '≥'), (r'\\ne\b', '≠'), (r'\\to\b', '→'),
-            (r'\\infty\b', '∞'), (r'\\\\', '\n')
+            (r'\\infty\b', '∞'), (r'\\\\', '\n'),
         ]
         for pattern, repl in replacements:
             text = re.sub(pattern, repl, text)
@@ -194,7 +324,8 @@ class LLMClient:
         text = re.sub(r'\\text\{([^{}]+)\}', r'\1', text)
         text = re.sub(r'\\mathbf\{([^{}]+)\}', r'**\1**', text)
         text = re.sub(r'\$([^$\n]+)\$', r'\1', text)
-        
+
         text = re.sub(r'\n\s*[-*•]\s*$', '', text)
         text = re.sub(r'\n{3,}', '\n\n', text)
         return text.strip()
+
