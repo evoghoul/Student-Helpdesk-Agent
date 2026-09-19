@@ -6,12 +6,10 @@
 
 const ACTIVE_BACKEND_BASE_URL = "/api/v1";
 const configuredBackendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/+$/, "");
-const BACKEND_BASE_URL =
-  !configuredBackendUrl || configuredBackendUrl === "https://agent65-api.onrender.com/api/v1" || configuredBackendUrl === "https://student-helpdesk-agent.onrender.com/api/v1"
-    ? ACTIVE_BACKEND_BASE_URL
-    : configuredBackendUrl;
 
-
+// Bypass Vercel's 10s Serverless timeout by calling Render directly from the client.
+// Vercel's rewrites are subject to a strict 10s timeout, causing the fallback to trigger.
+const BACKEND_BASE_URL = configuredBackendUrl || "https://agent65-api.onrender.com/api/v1";
 export interface BackendTokenResponse {
   access_token: string;
   token_type: string;
