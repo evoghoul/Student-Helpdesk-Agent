@@ -1,21 +1,23 @@
-import requests
 import json
 import logging
 import re
 from typing import Dict, Any, List, Optional, Tuple
+from google import genai
+from google.genai import types
+from google.genai.errors import APIError
 from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 class LLMClient:
     """
-    Client for cloud-based LLM inference using OpenAI API (ChatGPT).
+    Client for cloud-based LLM inference using Google Gemini API.
     """
 
     @classmethod
     def is_available(cls) -> bool:
-        """Check if OpenAI API key is configured."""
-        api_key = getattr(settings, "OPENAI_API_KEY", "")
+        """Check if Gemini API key is configured."""
+        api_key = getattr(settings, "GEMINI_API_KEY", "")
         return bool(api_key and api_key.strip() and not api_key.startswith("YOUR_"))
 
     @classmethod
@@ -29,10 +31,9 @@ class LLMClient:
             "Respond with ONLY the intent name in uppercase, and nothing else."
         )
         
-        reply = cls._send_openai_chat([
-            {"role": "system", "content": system_prompt},
+        reply = cls._send_gemini_chat([
             {"role": "user", "content": query}
-        ])
+        ], system_prompt=system_prompt)
         
         if reply:
             reply = reply.strip().upper()
@@ -53,15 +54,13 @@ class LLMClient:
         language: str = "en"
     ) -> Tuple[Optional[str], str, str]:
         """
-        Generate a multi-turn contextual response from ChatGPT.
+        Generate a multi-turn contextual response from Gemini.
         """
-        messages = [
-            {"role": "system", "content": system_prompt}
-        ]
-
+        messages = []
         recent_turns = history[-max_history_turns:] if len(history) > max_history_turns else history
+        
         for turn in recent_turns:
-            role = "user" if turn.get("sender_role") == "STUDENT" else "assistant"
+            role = "user" if turn.get("sender_role") == "STUDENT" else "model"
             content = turn.get("content", "")
             if len(content) > 800:
                 content = content[:800] + "..."
@@ -70,53 +69,63 @@ class LLMClient:
 
         messages.append({"role": "user", "content": user_prompt})
         
-        res = cls._send_openai_chat(messages)
+        res = cls._send_gemini_chat(messages, system_prompt=system_prompt)
         if res:
-            model_used = getattr(settings, "OPENAI_MODEL", "gpt-4o")
+            model_used = getattr(settings, "GEMINI_MODEL", "gemini-3.6-flash")
             return res, "cloud", model_used
             
         return None, "mock", "deterministic-fallback"
 
     @classmethod
-    def _send_openai_chat(
+    def _send_gemini_chat(
         cls,
         messages: List[Dict[str, str]],
-        timeout: float = 15.0
+        system_prompt: Optional[str] = None
     ) -> Optional[str]:
-        api_key = getattr(settings, "OPENAI_API_KEY", "").strip()
+        api_key = getattr(settings, "GEMINI_API_KEY", "").strip()
         if not api_key or api_key.startswith("YOUR_"):
             return None
             
-        url = "https://api.openai.com/v1/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
-        }
-        candidate_model = getattr(settings, "OPENAI_MODEL", "gpt-4o")
-        payload = {
-            "model": candidate_model,
-            "messages": messages,
-            "temperature": 0.4,
-            "max_tokens": 1500
-        }
+        candidate_model = getattr(settings, "GEMINI_MODEL", "gemini-3.6-flash")
+        client = genai.Client(api_key=api_key)
         
+        contents = []
+        for msg in messages:
+            role = "user" if msg["role"] == "user" else "model"
+            contents.append(
+                types.Content(
+                    role=role,
+                    parts=[types.Part.from_text(text=msg["content"])]
+                )
+            )
+            
+        config = types.GenerateContentConfig(
+            temperature=0.4,
+            max_output_tokens=1500,
+        )
+        if system_prompt:
+            config.system_instruction = system_prompt
+            
         import time
         for attempt in range(2):
             try:
-                resp = requests.post(url, headers=headers, json=payload, timeout=timeout)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    msg = data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
-                    if msg:
-                        return cls.clean_latex_formatting(msg)
-                elif resp.status_code == 429:
+                response = client.models.generate_content(
+                    model=candidate_model,
+                    contents=contents,
+                    config=config
+                )
+                if response and response.text:
+                    return cls.clean_latex_formatting(response.text)
+                return None
+            except APIError as e:
+                if e.code == 429:
                     time.sleep(1.0)
                     continue
                 else:
-                    logger.warning(f"OpenAI API returned {resp.status_code}: {resp.text[:200]}")
+                    logger.warning(f"Gemini API returned error: {e}")
                     break
             except Exception as e:
-                logger.warning(f"OpenAI API request failed: {e}")
+                logger.warning(f"Gemini API request failed: {e}")
                 break
         return None
 
