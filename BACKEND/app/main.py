@@ -127,14 +127,19 @@ async def health_check():
     def _usable_secret(secret: str) -> bool:
         return bool(secret and str(secret).strip() and not str(secret).startswith("YOUR_"))
 
+    gemini_key = getattr(settings, "GEMINI_API_KEY", "")
+    groq_key = getattr(settings, "GROQ_API_KEY", "")
+    cloud_key = getattr(settings, "CLOUD_API_KEY", "")
+    # The Groq key may be stored under GEMINI_API_KEY for compatibility
+    groq_active = _usable_secret(groq_key) or _usable_secret(cloud_key) or _usable_secret(gemini_key)
     return {
         "status": "healthy",
         "agent": "Agent 65 (Student Helpdesk Agent)",
         "version": settings.APP_VERSION,
-        "llm_provider": getattr(settings, "LLM_PROVIDER", "gemini"),
-        "gemini_configured": _usable_secret(getattr(settings, "GEMINI_API_KEY", "")),
+        "llm_provider": "groq",
+        "gemini_configured": _usable_secret(gemini_key),
         "gemini_model": settings.GEMINI_MODEL,
-        "groq_configured": _usable_secret(getattr(settings, "GROQ_API_KEY", "")) or _usable_secret(getattr(settings, "CLOUD_API_KEY", "")),
+        "groq_configured": groq_active,
         "rls_guardrail_enforced": True
     }
 

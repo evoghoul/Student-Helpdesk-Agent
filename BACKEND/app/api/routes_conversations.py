@@ -73,9 +73,30 @@ async def send_message(
             language=msg.language or "en",
             selected_model=msg.selected_model or "8B"
         )
-    except Exception:
+    except Exception as exc:
         logger.exception("Agent 65 message processing failed for conversation %s", conversation_id)
-        raise
+        # Return a graceful fallback response instead of a 500 crash
+        import uuid, datetime
+        fallback_response = {
+            "message_id": f"msg-err-{uuid.uuid4().hex[:8]}",
+            "conversation_id": conversation_id,
+            "sender_role": "AGENT_65",
+            "content": (
+                "I'm sorry, I ran into a temporary issue processing your request. "
+                "Please try again in a moment. If the problem persists, try refreshing the page."
+            ),
+            "category": "GENERAL",
+            "source_agent": "Agent 65 (Error Recovery)",
+            "citations": [],
+            "structured_card": None,
+            "is_distress": False,
+            "suggested_follow_ups": [],
+            "llm_provider": "fallback",
+            "model_used": "error-recovery",
+            "used_fallback": True,
+            "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        }
+        return MessageResponse(**fallback_response)
     return MessageResponse(**agent_response)
 
 @router.post("/{conversation_id}/messages/{message_id}/feedback", response_model=MessageFeedbackResponse)
