@@ -2,21 +2,19 @@ import json
 import logging
 import re
 from typing import Dict, Any, List, Optional, Tuple
-from google import genai
-from google.genai import types
-from google.genai.errors import APIError
+from groq import Groq, APIError
 from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 class LLMClient:
     """
-    Client for cloud-based LLM inference using Google Gemini API.
+    Client for cloud-based LLM inference using Groq API.
     """
 
     @classmethod
     def is_available(cls) -> bool:
-        """Check if Gemini API key is configured."""
+        """Check if Groq API key (stored in GEMINI_API_KEY for compatibility) is configured."""
         api_key = getattr(settings, "GEMINI_API_KEY", "")
         return bool(api_key and api_key.strip() and not api_key.startswith("YOUR_"))
 
@@ -31,7 +29,7 @@ class LLMClient:
             "Respond with ONLY the intent name in uppercase, and nothing else."
         )
         
-        reply = cls._send_gemini_chat([
+        reply = cls._send_groq_chat([
             {"role": "user", "content": query}
         ], system_prompt=system_prompt)
         
@@ -54,13 +52,13 @@ class LLMClient:
         language: str = "en"
     ) -> Tuple[Optional[str], str, str]:
         """
-        Generate a multi-turn contextual response from Gemini.
+        Generate a multi-turn contextual response from Groq.
         """
         messages = []
         recent_turns = history[-max_history_turns:] if len(history) > max_history_turns else history
         
         for turn in recent_turns:
-            role = "user" if turn.get("sender_role") == "STUDENT" else "model"
+            role = "user" if turn.get("sender_role") == "STUDENT" else "assistant"
             content = turn.get("content", "")
             if len(content) > 800:
                 content = content[:800] + "..."
@@ -69,15 +67,15 @@ class LLMClient:
 
         messages.append({"role": "user", "content": user_prompt})
         
-        res = cls._send_gemini_chat(messages, system_prompt=system_prompt)
+        res = cls._send_groq_chat(messages, system_prompt=system_prompt)
         if res:
-            model_used = getattr(settings, "GEMINI_MODEL", "gemini-3.6-flash")
+            model_used = getattr(settings, "GEMINI_MODEL", "llama3-8b-8192")
             return res, "cloud", model_used
             
         return None, "mock", "deterministic-fallback"
 
     @classmethod
-    def _send_gemini_chat(
+    def _send_groq_chat(
         cls,
         messages: List[Dict[str, str]],
         system_prompt: Optional[str] = None
@@ -86,46 +84,46 @@ class LLMClient:
         if not api_key or api_key.startswith("YOUR_"):
             return None
             
-        candidate_model = getattr(settings, "GEMINI_MODEL", "gemini-3.6-flash")
-        client = genai.Client(api_key=api_key)
-        
-        contents = []
-        for msg in messages:
-            role = "user" if msg["role"] == "user" else "model"
-            contents.append(
-                types.Content(
-                    role=role,
-                    parts=[types.Part.from_text(text=msg["content"])]
-                )
-            )
+        candidate_model = getattr(settings, "GEMINI_MODEL", "llama3-8b-8192")
+        if candidate_model.startswith("gemini"):
+            candidate_model = "llama3-8b-8192"
             
-        config = types.GenerateContentConfig(
-            temperature=0.4,
-            max_output_tokens=1500,
-        )
+        client = Groq(api_key=api_key)
+        
+        groq_messages = []
         if system_prompt:
-            config.system_instruction = system_prompt
+            groq_messages.append({"role": "system", "content": system_prompt})
+            
+        for msg in messages:
+            # Map 'model' to 'assistant' if it was passed that way
+            role = "assistant" if msg["role"] == "model" else msg["role"]
+            groq_messages.append({
+                "role": role,
+                "content": msg["content"]
+            })
             
         import time
         for attempt in range(2):
             try:
-                response = client.models.generate_content(
+                chat_completion = client.chat.completions.create(
+                    messages=groq_messages,
                     model=candidate_model,
-                    contents=contents,
-                    config=config
+                    temperature=0.4,
+                    max_tokens=1500,
                 )
-                if response and response.text:
-                    return cls.clean_latex_formatting(response.text)
+                if chat_completion.choices and chat_completion.choices[0].message.content:
+                    return cls.clean_latex_formatting(chat_completion.choices[0].message.content)
                 return None
             except APIError as e:
-                if e.code == 429:
+                # Catch groq.APIError
+                if "429" in str(e):
                     time.sleep(1.0)
                     continue
                 else:
-                    logger.warning(f"Gemini API returned error: {e}")
+                    logger.warning(f"Groq API returned error: {e}")
                     break
             except Exception as e:
-                logger.warning(f"Gemini API request failed: {e}")
+                logger.warning(f"Groq API request failed: {e}")
                 break
         return None
 
