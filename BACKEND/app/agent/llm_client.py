@@ -29,7 +29,7 @@ class LLMClient:
             "Respond with ONLY the intent name in uppercase, and nothing else."
         )
         
-        reply, _, _ = cls._send_openai_chat([
+        reply = cls._send_openai_chat([
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": query}
         ])
