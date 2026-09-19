@@ -178,11 +178,23 @@ class LLMClient:
                 config_kwargs["system_instruction"] = system_prompt
 
             client = genai.Client(api_key=api_key)
-            response = client.models.generate_content(
+            
+            if len(contents) > 1:
+                history = contents[:-1]
+                last_message = contents[-1].parts
+            elif len(contents) == 1:
+                history = None
+                last_message = contents[0].parts
+            else:
+                history = None
+                last_message = ""
+
+            chat = client.chats.create(
                 model=model_name,
-                contents=contents,
+                history=history,
                 config=genai.types.GenerateContentConfig(**config_kwargs),
             )
+            response = chat.send_message(last_message)
 
             raw_text = response.text if response and response.text else None
             if not raw_text:
