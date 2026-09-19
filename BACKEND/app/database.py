@@ -459,9 +459,28 @@ class DataRepository:
     @staticmethod
     def create_club_application(session: DatabaseSession, club_id: str, student_name: str) -> Dict[str, Any]:
         sid = DataRepository._resolve_student_id(session)
+        # Check if already applied to avoid duplicate entry
+        existing = DataRepository._execute_query(
+            "SELECT * FROM studentlife_club_application WHERE student_id = ? AND club_id = ? LIMIT 1",
+            (sid, club_id)
+        )
+        if existing:
+            return existing[0]
+        # Reset PostgreSQL sequence to avoid stale id gaps causing UniqueViolation
+        if is_postgres_configured():
+            try:
+                DataRepository._execute_query(
+                    "SELECT setval(COALESCE(pg_get_serial_sequence('studentlife_club_application', 'id'), 'studentlife_club_application_id_seq'), "
+                    "COALESCE((SELECT MAX(id) FROM studentlife_club_application), 0) + 1, false)"
+                )
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Failed to reset sequence: {e}")
         query = "INSERT INTO studentlife_club_application (club_id, student_name, status, student_id) VALUES (?, ?, ?, ?)"
         DataRepository._execute_insert(query, (club_id, student_name, "Pending", sid))
-        res = DataRepository._execute_query("SELECT * FROM studentlife_club_application WHERE student_id = ? ORDER BY id DESC LIMIT 1", (sid,))
+        res = DataRepository._execute_query(
+            "SELECT * FROM studentlife_club_application WHERE student_id = ? ORDER BY id DESC LIMIT 1", (sid,)
+        )
         return res[0] if res else None
 
 

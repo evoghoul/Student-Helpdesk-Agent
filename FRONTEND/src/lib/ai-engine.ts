@@ -41,6 +41,7 @@ export interface AiResponse {
   llm_provider?: string;
   model_used?: string;
   used_fallback?: boolean;
+  redirect_path?: string;
 }
 
 export interface ConversationTurn {

@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     
     # LLM Provider Configuration (Primary: Gemini)
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
     
     # LLM Fallback Provider (Groq)
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")

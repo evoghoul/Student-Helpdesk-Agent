@@ -726,6 +726,19 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                   className={isUser ? "text-white" : "text-foreground"}
                 />
 
+                {/* Redirect Button */}
+                {!isUser && turn.responseMeta?.redirect_path && (
+                  <div className="mt-3">
+                    <button
+                      onClick={() => onNavigateTab(turn.responseMeta!.redirect_path as any)}
+                      className="flex items-center gap-1.5 rounded-lg bg-blue-100 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-200 transition-colors shadow-xs cursor-pointer"
+                    >
+                      <ArrowUpRight className="h-3.5 w-3.5" />
+                      <span>Go to {turn.responseMeta.redirect_path}</span>
+                    </button>
+                  </div>
+                )}
+
                 {/* Structured Cards (Attendance, Exams, Fees, etc.) */}
                 {!isUser && turn.responseMeta?.structuredCard && (
                   renderStructuredCard(turn.responseMeta.structuredCard)

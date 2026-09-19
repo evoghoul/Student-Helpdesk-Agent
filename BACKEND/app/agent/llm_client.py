@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class LLMClient:
     """
     Client for cloud-based LLM inference.
-    Primary provider: Google Gemini (gemini-2.0-flash)
+    Primary provider: Google Gemini (gemini-3.6-flash)
     Fallback provider: Groq (qwen/qwen3.8-27b)
     Automatically rotates to Groq when Gemini hits rate limits or fails.
     """
@@ -122,7 +122,7 @@ class LLMClient:
         if gemini_key:
             result = cls._send_gemini_chat(messages, system_prompt, gemini_key)
             if result is not None:
-                model_used = getattr(settings, "GEMINI_MODEL", "gemini-2.0-flash")
+                model_used = getattr(settings, "GEMINI_MODEL", "gemini-3.6-flash")
                 logger.info(f"Response served by Gemini ({model_used})")
                 return result, "gemini", model_used
             logger.warning("Gemini failed or rate-limited — falling back to Groq")
@@ -152,7 +152,7 @@ class LLMClient:
             from google import genai
             from google.genai import types
 
-            model_name = getattr(settings, "GEMINI_MODEL", "gemini-2.0-flash")
+            model_name = getattr(settings, "GEMINI_MODEL", "gemini-3.6-flash")
 
             contents = []
             for msg in messages:

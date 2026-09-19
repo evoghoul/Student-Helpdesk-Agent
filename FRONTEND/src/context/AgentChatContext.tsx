@@ -188,32 +188,44 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       // 1. Try Live FastAPI Backend Call
       const backendResp = await apiClient.sendMessage(query, language, model);
       if (backendResp) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: backendResp.content,
-            messageId: backendResp.message_id,
-            conversationId: backendResp.conversation_id,
-            responseMeta: {
-              text: backendResp.content,
-              category: ((backendResp.category as string) || "PERSONAL_DATA") as QueryCategory,
-              sourceAgent: backendResp.source_agent || "Agent 65 (Live FastAPI Backend)",
-              authorizedFor: student.id,
-              isDistress: backendResp.is_distress,
-              structuredCard: backendResp.structured_card as StructuredCardData,
-              suggestedFollowUps: backendResp.suggested_follow_ups,
-              llm_provider: backendResp.llm_provider || "local",
-              model_used: normalizeModelName(backendResp.model_used, model),
-              used_fallback: backendResp.used_fallback ?? false,
-            },
-          },
-        ]);
-        setIsTyping(false);
+              const categoryStr = ((backendResp.category as string) || "PERSONAL_DATA") as QueryCategory;
+              let mappedRedirectPath: string | undefined = undefined;
+              
+              if (categoryStr === "ATTENDANCE") mappedRedirectPath = "attendance";
+              else if (categoryStr === "EXAMS") mappedRedirectPath = "exams";
+              else if (categoryStr === "FEES") mappedRedirectPath = "fees";
+              else if (categoryStr === "TIMETABLE") mappedRedirectPath = "timetable";
+              else if (categoryStr === "MARKS") mappedRedirectPath = "marks";
+              else if (categoryStr === "CURRICULUM") mappedRedirectPath = "curriculum";
+              else if (categoryStr === "FACULTY") mappedRedirectPath = "faculty";
 
-        if (backendResp.is_distress && distressCallbackRef.current) {
-          distressCallbackRef.current();
-        }
+              setMessages((prev) => [
+                ...prev,
+                {
+                  role: "assistant",
+                  content: backendResp.content,
+                  messageId: backendResp.message_id,
+                  conversationId: backendResp.conversation_id,
+                  responseMeta: {
+                    text: backendResp.content,
+                    category: categoryStr,
+                    sourceAgent: backendResp.source_agent || "Agent 65 (Live FastAPI Backend)",
+                    authorizedFor: student.id,
+                    isDistress: backendResp.is_distress,
+                    structuredCard: backendResp.structured_card as StructuredCardData,
+                    suggestedFollowUps: backendResp.suggested_follow_ups,
+                    llm_provider: backendResp.llm_provider || "local",
+                    model_used: normalizeModelName(backendResp.model_used, model),
+                    used_fallback: backendResp.used_fallback ?? false,
+                    redirect_path: mappedRedirectPath,
+                  },
+                },
+              ]);
+              setIsTyping(false);
+      
+              if (backendResp.is_distress && distressCallbackRef.current) {
+                distressCallbackRef.current();
+              }
         return;
       }
     } catch (err) {
@@ -251,11 +263,21 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         return;
       }
 
-      // If not in DB, fallback to hardcoded deterministic rules
       const response = processQuery(query, newHistory, activeContextSubject, studentData);
       if (response.contextSubject) {
         setActiveContextSubject(response.contextSubject);
       }
+
+      const localCategoryStr = response.category || "PERSONAL_DATA";
+      let localMappedRedirectPath: string | undefined = undefined;
+      
+      if (localCategoryStr === "ATTENDANCE") localMappedRedirectPath = "attendance";
+      else if (localCategoryStr === "EXAMS") localMappedRedirectPath = "exams";
+      else if (localCategoryStr === "FEES") localMappedRedirectPath = "fees";
+      else if (localCategoryStr === "TIMETABLE") localMappedRedirectPath = "timetable";
+      else if (localCategoryStr === "MARKS") localMappedRedirectPath = "marks";
+      else if (localCategoryStr === "CURRICULUM") localMappedRedirectPath = "curriculum";
+      else if (localCategoryStr === "FACULTY") localMappedRedirectPath = "faculty";
 
       setMessages((prev) => [
         ...prev,
@@ -268,6 +290,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             llm_provider: "local",
             model_used: "Rules Engine Only",
             used_fallback: true,
+            redirect_path: localMappedRedirectPath,
           },
         },
       ]);
