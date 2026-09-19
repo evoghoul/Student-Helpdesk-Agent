@@ -206,6 +206,30 @@ class NLUEngine:
             )
             action_note = f"[SYSTEM ACTION EXECUTED: Created club application for {target_club_name} (ID: {target_club_id})]"
 
+        # A3. Club Information Query (list clubs, process of joining, what clubs exist)
+        elif cls.has_any_word(q_lower, ["club", "clubs", "extracurricular", "society", "societies"]) and cls.has_any_word(q_lower, ["process", "how", "what", "list", "available", "which", "tell me", "details", "information", "info", "describe", "show", "know"]):
+            clubs = DataRepository.get_clubs()
+            profile = DataRepository.get_student_profile(session)
+            student_name = profile.get("full_name", "Student") if profile else "Student"
+            first_name = student_name.split()[0] if student_name else "Student"
+
+            club_lines = "\n".join(
+                f"• **{c['name']}** ({c['category']}) — {c['description']}"
+                for c in clubs
+            )
+            category = "INSTITUTIONAL_INFO"
+            topic = "Student Clubs & Extracurriculars"
+            source_agent = "Agent 65 (Club Directory)"
+            direct_response_text = (
+                f"Here are all the active student clubs at Vignan University, {first_name}:\n\n"
+                f"{club_lines}\n\n"
+                f"**How to Join:**\n"
+                f"1. Tell me which club you'd like to join (e.g. 'I want to join the AI Innovation Club')\n"
+                f"2. I'll instantly submit your application and track its status.\n"
+                f"3. The club leads will review it and contact you for orientation/auditions.\n\n"
+                f"You can also browse all clubs in the **Clubs** tab on the left sidebar."
+            )
+
         # B. Human Escalation (Step 8)
         elif cls.has_any_word(q_lower, ["talk to human", "escalate", "human officer", "dean", "hod", "exception", "discretion"]):
             esc_res = handle_human_handover(
