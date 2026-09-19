@@ -222,8 +222,12 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     // 2. Fallback to local institutional engine and Database Knowledge Base if backend offline
     setTimeout(async () => {
-      // First, check the Database Knowledge Base (seeded records)
-      const dbSearch = await askAiKnowledgeBase(query);
+      let dbSearch: any = null;
+      try {
+        dbSearch = await askAiKnowledgeBase(query);
+      } catch (e) {
+        console.warn("Error calling askAiKnowledgeBase Server Action:", e);
+      }
       
       if (dbSearch && dbSearch.success && dbSearch.answer) {
         setMessages((prev) => [

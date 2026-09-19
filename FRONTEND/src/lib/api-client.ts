@@ -111,10 +111,6 @@ class Agent65ApiClient {
       }
       return data;
     } catch (e: unknown) {
-      const errorMessage = e instanceof Error ? e.message : "";
-      if (errorMessage && !errorMessage.includes("fetch") && !errorMessage.includes("Failed to fetch") && !errorMessage.includes("NetworkError")) {
-        throw e;
-      }
       console.warn("Backend unavailable during login, falling back to local mode:", e);
       return null;
     }
