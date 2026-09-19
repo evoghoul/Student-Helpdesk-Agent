@@ -11,7 +11,7 @@ from app.tools.curriculum_tool import get_curriculum_summary
 from app.tools.knowledge_tool import search_policies_and_circulars
 from app.tools.services_tool import handle_service_request, handle_human_handover
 from app.tools.library_tool import get_library_summary
-from app.agent.local_llm import LocalLLMClient
+from app.agent.llm_client import LLMClient
 from app.config import settings
 
 class NLUEngine:
@@ -314,7 +314,7 @@ class NLUEngine:
 
         # D. Intent Classification (Dynamic LLM Routing)
         else:
-            intent = LocalLLMClient.classify_intent(query)
+            intent = LLMClient.classify_intent(query)
             
             if intent == "ATTENDANCE":
                 att_res = get_attendance_summary(session, active_subject)
@@ -534,7 +534,7 @@ class NLUEngine:
         effective_lang = cls.detect_language(query, client_language=language)
 
         # If LLM is available, generate response
-        if LocalLLMClient.is_available():
+        if LLMClient.is_available():
             grounded_context = cls.build_grounded_student_context(session, query, active_subject)
             if direct_response_text:
                 grounded_context += f"\n\n- Verified Database Information / System Answer to use:\n{direct_response_text}\n"
@@ -619,7 +619,7 @@ class NLUEngine:
                 "12. When asked for student identity, registration number, or roll number, ALWAYS state their verified Roll Number and Name from the Authenticated Student Verified Records.\n"
                 "13. CRITICAL: If 'Verified Database Information / System Answer to use' is provided in the context, you MUST explicitly state in your opening sentence that you retrieved this information from the official university records/database. Example: 'I checked the official university records and found that...'"
             )
-            llm_reply, provider_used, model_used = LocalLLMClient.chat_with_history(
+            llm_reply, provider_used, model_used = LLMClient.chat_with_history(
                 system_prompt=system_prompt,
                 history=conversation_history,
                 user_prompt=query,
@@ -639,7 +639,7 @@ class NLUEngine:
                             turn for turn in conversation_history
                             if not any(0x0900 <= ord(c) <= 0x0DFF for c in turn.get("content", ""))
                         ]
-                        retry_reply, r_prov, r_model = LocalLLMClient.chat_with_history(
+                        retry_reply, r_prov, r_model = LLMClient.chat_with_history(
                             system_prompt=system_prompt,
                             history=clean_history,
                             user_prompt=query,

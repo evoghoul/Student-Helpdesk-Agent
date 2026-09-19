@@ -2,7 +2,7 @@ from typing import Dict, Any, List, Optional
 from app.database import DataRepository, DatabaseSession
 from app.tools.distress_tool import detect_distress, silent_mock_alert_counselor
 from app.agent.nlu_engine import NLUEngine
-from app.agent.local_llm import LocalLLMClient
+from app.agent.llm_client import LLMClient
 
 class Agent65Orchestrator:
     """
@@ -121,7 +121,7 @@ class Agent65Orchestrator:
         )
 
         # ---------------- 6. PERSIST AGENT RESPONSE IN DB ----------------
-        clean_content = LocalLLMClient.clean_latex_formatting(nlu_result.get("content", ""))
+        clean_content = LLMClient.clean_latex_formatting(nlu_result.get("content", ""))
         agent_msg = DataRepository.add_message(session, conversation_id, {
             "sender_role": "AGENT_65",
             "content": clean_content,

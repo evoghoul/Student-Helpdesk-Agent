@@ -154,29 +154,29 @@ export function processQuery(
     query === "help"
   ) {
     return {
-      text: `I am **Agent 65**, your university's autonomous AI helpdesk. Powered by an offline, locally hosted **8B neural model**, I connect directly to campus institutional records with strict **Row-Level Security (RLS)**.\n\nHere is what I can do for you:\n\n• **Academic & Attendance Telemetry**: Real-time subject tracking, bunk thresholds, and detention alerts.\n• **Examination Schedules**: Exam dates, room seating, hall tickets, and reporting times.\n• **Financial Ledger**: Instant check on tuition/hostel fee dues, breakdown, and payment receipts.\n• **University Policies**: R22 regulations, academic rules, credits progress, and 24/7 distress support.\n\nExplore the key sections below to learn more:`,
+      text: `I am **Agent 65**, your university's autonomous AI helpdesk. Powered by an **ChatGPT**, I connect directly to campus institutional records with strict **Row-Level Security (RLS)**.\n\nHere is what I can do for you:\n\n• **Academic & Attendance Telemetry**: Real-time subject tracking, bunk thresholds, and detention alerts.\n• **Examination Schedules**: Exam dates, room seating, hall tickets, and reporting times.\n• **Financial Ledger**: Instant check on tuition/hostel fee dues, breakdown, and payment receipts.\n• **University Policies**: R22 regulations, academic rules, credits progress, and 24/7 distress support.\n\nExplore the key sections below to learn more:`,
       category: "PROCEDURAL_GUIDANCE",
       sourceAgent: "Agent 65 (Core Architecture)",
       authorizedFor: studentId,
       isDistress: false,
       suggestedFollowUps: [
-        "Tell me about the offline 8B AI model",
+        "Tell me about the ChatGPT integration",
         "How does Row-Level Security protect my data?",
         "What are the 12 specialized agents?",
       ],
     };
   }
 
-  // 1c. ARCHITECTURE: OFFLINE 8B AI MODEL
+  // 1c. ARCHITECTURE: ChatGPT integration
   if (
-    query.includes("offline 8b") ||
-    query.includes("local model") ||
-    query.includes("8b model") ||
-    query.includes("8b ai") ||
+    query.includes("chatgpt") ||
+    query.includes("chatgpt model") ||
+    query.includes("chatgpt model") ||
+    query.includes("chatgpt ai") ||
     query.includes("cloud leakage")
   ) {
     return {
-      text: `Agent 65 runs an **offline 8B quantized neural model** entirely within the institutional perimeter:\n\n• **100% On-Premise Inference**: No student queries, marks, or personal data are ever transmitted to external cloud APIs.\n• **Sub-100ms Telemetry**: Responses and institutional lookups resolve in milliseconds directly on campus hardware.\n• **Private Training Pipeline**: Curated thumbs-up ratings are logged to local dataset files for ongoing fine-tuning.\n• **Zero External Dependency**: Operates reliably even during internet outages.`,
+      text: `Agent 65 runs an **chatgpt quantized neural model** entirely within the institutional perimeter:\n\n• **100% On-Premise Inference**: No student queries, marks, or personal data are ever transmitted to external cloud APIs.\n• **Sub-100ms Telemetry**: Responses and institutional lookups resolve in milliseconds directly on campus hardware.\n• **Private Training Pipeline**: Curated thumbs-up ratings are logged to local dataset files for ongoing fine-tuning.\n• **Zero External Dependency**: Operates reliably even during internet outages.`,
       category: "INSTITUTIONAL_INFO",
       sourceAgent: "Agent 65 (Neural Architecture)",
       authorizedFor: studentId,
@@ -203,7 +203,7 @@ export function processQuery(
       authorizedFor: studentId,
       isDistress: false,
       suggestedFollowUps: [
-        "Tell me about the offline 8B AI model",
+        "Tell me about the ChatGPT integration",
         "What are the 12 specialized agents?",
         "What can you do?",
       ],
@@ -225,7 +225,7 @@ export function processQuery(
       isDistress: false,
       suggestedFollowUps: [
         "What can you do?",
-        "Tell me about the offline 8B AI model",
+        "Tell me about the ChatGPT integration",
         "How does Row-Level Security protect my data?",
       ],
     };

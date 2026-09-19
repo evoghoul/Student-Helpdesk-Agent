@@ -21,15 +21,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///database/student_helpdesk.db")
     USE_IN_MEMORY_DB: bool = os.getenv("USE_IN_MEMORY_DB", "false").lower() in ("true", "1", "yes")
     
-    # LLM Provider: 'local' (default, Ollama), 'mock' (deterministic templates), 'cloud' (OpenAI/Gemini)
-    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "local")
-    LOCAL_MODEL_URL: str = os.getenv("LOCAL_MODEL_URL", "http://localhost:11434")
-    LOCAL_MODEL_NAME: str = os.getenv("LOCAL_MODEL_NAME", "agent65-8b:latest")
-    LOCAL_FAST_MODEL_NAME: str = os.getenv("LOCAL_FAST_MODEL_NAME", "agent65:latest")
-    CLOUD_API_KEY: str = os.getenv("LLM_API_KEY", "")
-    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
-    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
+    # LLM Provider Configuration
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o")
     
