@@ -464,10 +464,88 @@ class DataRepository:
         res = DataRepository._execute_query("SELECT * FROM studentlife_club_application WHERE student_id = ? ORDER BY id DESC LIMIT 1", (sid,))
         return res[0] if res else None
 
+
     @staticmethod
     def get_clubs() -> List[Dict[str, Any]]:
         try:
             return DataRepository._execute_query("SELECT * FROM studentlife_club")
+        except Exception:
+            return []
+
+    @staticmethod
+    def get_all_faqs() -> List[Dict[str, Any]]:
+        try:
+            return DataRepository._execute_query("SELECT * FROM fresher_faqs")
+        except Exception:
+            return []
+
+    @staticmethod
+    def get_all_policies() -> List[Dict[str, Any]]:
+        try:
+            return DataRepository._execute_query("SELECT * FROM policies")
+        except Exception:
+            return []
+
+    @staticmethod
+    def get_all_circulars() -> List[Dict[str, Any]]:
+        try:
+            return DataRepository._execute_query("SELECT * FROM circulars ORDER BY issued_date DESC")
+        except Exception:
+            return []
+
+    @staticmethod
+    def get_facilities() -> List[Dict[str, Any]]:
+        try:
+            return DataRepository._execute_query("SELECT * FROM facilities")
+        except Exception:
+            return []
+
+    @staticmethod
+    def get_transport_routes() -> List[Dict[str, Any]]:
+        try:
+            return DataRepository._execute_query("SELECT * FROM transportation_routes")
+        except Exception:
+            return []
+
+    @staticmethod
+    def get_wellness_resources() -> List[Dict[str, Any]]:
+        try:
+            return DataRepository._execute_query("SELECT * FROM wellness_resources")
+        except Exception:
+            return []
+
+    @staticmethod
+    def get_library_resources() -> List[Dict[str, Any]]:
+        try:
+            return DataRepository._execute_query("SELECT * FROM library_resources LIMIT 20")
+        except Exception:
+            return []
+
+    @staticmethod
+    def get_campus_locations() -> List[Dict[str, Any]]:
+        try:
+            return DataRepository._execute_query("SELECT * FROM campus_locations")
+        except Exception:
+            return []
+
+    @staticmethod
+    def get_broadcast_alerts() -> List[Dict[str, Any]]:
+        try:
+            return DataRepository._execute_query("SELECT * FROM broadcast_alerts WHERE is_active = TRUE ORDER BY timestamp DESC LIMIT 5")
+        except Exception:
+            return []
+
+    @staticmethod
+    def get_lost_and_found() -> List[Dict[str, Any]]:
+        try:
+            return DataRepository._execute_query("SELECT * FROM lost_and_found ORDER BY date_reported DESC LIMIT 10")
+        except Exception:
+            return []
+
+    @staticmethod
+    def get_upcoming_events() -> List[Dict[str, Any]]:
+        try:
+            return DataRepository._execute_query("SELECT * FROM calendar_events ORDER BY start_time ASC LIMIT 10")
         except Exception:
             return []
 

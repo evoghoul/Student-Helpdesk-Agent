@@ -1359,6 +1359,105 @@ class NLUEngine:
                 fac_list = [f"{sf.get('course_title', '')}: {sf.get('faculty_name', '')} (Phone: {sf.get('phone', 'N/A')}, Email: {sf.get('email', 'N/A')}, Cabin: {sf.get('cabin_location', 'N/A')})" for sf in sub_fac]
                 context_lines.append(f"- Course Faculty: {'; '.join(fac_list)}")
 
+        # ── UNIVERSITY-WIDE KNOWLEDGE BASE (always injected so LLM never guesses) ──
+
+        # 8. Student Clubs & Extracurriculars
+        clubs = DataRepository.get_clubs()
+        if clubs:
+            club_lines = "; ".join(f"{c['name']} ({c['category']}): {c['description']}" for c in clubs)
+            context_lines.append(f"- Student Clubs at Vignan University: {club_lines}")
+            context_lines.append("- Club Joining Process: Tell the chatbot 'I want to join [Club Name]' and the application will be instantly submitted. Club leads review applications and contact you for orientation/auditions.")
+
+        # 9. Campus Facilities
+        facilities = DataRepository.get_facilities()
+        if facilities:
+            fac_lines = "; ".join(
+                f"{f.get('name', '')} ({f.get('category', '')}): {f.get('description', '')} — Location: {f.get('location', 'N/A')}, Hours: {f.get('operating_hours', 'N/A')}, Status: {f.get('status', 'N/A')}"
+                for f in facilities[:15]
+            )
+            context_lines.append(f"- Campus Facilities: {fac_lines}")
+
+        # 10. Transportation Routes
+        routes = DataRepository.get_transport_routes()
+        if routes:
+            route_lines = "; ".join(
+                f"Route {r.get('route_no', '')}: {r.get('route_name', '')} — Departure: {r.get('departure_time', 'N/A')}, Return: {r.get('return_time', 'N/A')}, Bus: {r.get('bus_number', 'N/A')}, Driver: {r.get('driver_name', 'N/A')} ({r.get('driver_phone', 'N/A')})"
+                for r in routes
+            )
+            context_lines.append(f"- Campus Transport Routes: {route_lines}")
+
+        # 11. Wellness & Support Resources
+        wellness = DataRepository.get_wellness_resources()
+        if wellness:
+            well_lines = "; ".join(
+                f"{w.get('title', '')} ({w.get('category', '')}): {w.get('description', '')}"
+                for w in wellness
+            )
+            context_lines.append(f"- Student Wellness & Support Resources: {well_lines}")
+
+        # 12. Library Resources
+        lib = DataRepository.get_library_resources()
+        if lib:
+            lib_lines = "; ".join(
+                f"{l.get('title', '')} by {l.get('author', 'N/A')} ({l.get('resource_type', '')}): {l.get('subject', 'N/A')} — {l.get('availability_status', 'N/A')}"
+                for l in lib[:10]
+            )
+            context_lines.append(f"- Library Resources (sample): {lib_lines}")
+
+        # 13. Campus Locations & Blocks
+        locations = DataRepository.get_campus_locations()
+        if locations:
+            loc_lines = "; ".join(
+                f"{l.get('room_number', '')} in {l.get('block', '')} ({l.get('floor', '')}): {l.get('description', '')}"
+                for l in locations[:20]
+            )
+            context_lines.append(f"- Campus Locations (U/A/H/N/P Blocks): {loc_lines}")
+
+        # 14. Fresher FAQs
+        faqs = DataRepository.get_all_faqs()
+        if faqs:
+            faq_lines = "; ".join(
+                f"Q: {f.get('question', '')} → A: {f.get('answer', '')}"
+                for f in faqs[:15]
+            )
+            context_lines.append(f"- Fresher FAQs: {faq_lines}")
+
+        # 15. University Policies
+        policies = DataRepository.get_all_policies()
+        if policies:
+            pol_lines = "; ".join(
+                f"{p.get('title', '')} (Clause {p.get('clause_no', 'N/A')}): {p.get('summary', '')}"
+                for p in policies
+            )
+            context_lines.append(f"- University Policies: {pol_lines}")
+
+        # 16. Circulars & Notices
+        circulars = DataRepository.get_all_circulars()
+        if circulars:
+            circ_lines = "; ".join(
+                f"{c.get('title', '')} ({c.get('issued_date', 'N/A')} by {c.get('issued_by', 'N/A')}): {c.get('summary', '')}"
+                for c in circulars[:5]
+            )
+            context_lines.append(f"- Recent Circulars & Notices: {circ_lines}")
+
+        # 17. Active Broadcast Alerts
+        alerts = DataRepository.get_broadcast_alerts()
+        if alerts:
+            alert_lines = "; ".join(
+                f"[{a.get('type', '').upper()}] {a.get('message', '')}"
+                for a in alerts
+            )
+            context_lines.append(f"- Active Campus Alerts: {alert_lines}")
+
+        # 18. Upcoming Campus Events
+        events = DataRepository.get_upcoming_events()
+        if events:
+            ev_lines = "; ".join(
+                f"{e.get('title', '')} on {e.get('start_time', 'N/A')} at {e.get('location', 'N/A')}: {e.get('description', '')}"
+                for e in events[:8]
+            )
+            context_lines.append(f"- Upcoming Events: {ev_lines}")
+
         return "\n".join(context_lines)
 
     @classmethod
