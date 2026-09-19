@@ -611,7 +611,8 @@ class NLUEngine:
                 "10. Be concise, clear, and articulate. Express all formatting using clean Markdown bullets and bold text. NEVER use LaTeX tags or raw HTML tags.\n"
                 f"{procedural_directive}\n"
                 "12. When asked for student identity, registration number, or roll number, ALWAYS state their verified Roll Number and Name from the Authenticated Student Verified Records.\n"
-                "13. CRITICAL: If 'Verified Database Information / System Answer to use' is provided in the context, you MUST explicitly state in your opening sentence that you retrieved this information from the official university records/database. Example: 'I checked the official university records and found that...'"
+                "13. CRITICAL: If 'Verified Database Information / System Answer to use' is provided in the context, you MUST explicitly state in your opening sentence that you retrieved this information from the official university records/database. Example: 'I checked the official university records and found that...'\n"
+                "14. Always provide highly detailed, step-by-step directions and explanations in your responses whenever applicable."
             )
             llm_reply, provider_used, model_used = LLMClient.chat_with_history(
                 system_prompt=system_prompt,
