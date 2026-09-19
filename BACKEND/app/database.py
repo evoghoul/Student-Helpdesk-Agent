@@ -307,13 +307,19 @@ class DataRepository:
 
     @staticmethod
     def get_campus_location(room_number: str) -> Optional[Dict[str, Any]]:
-        query = "SELECT * FROM campus_locations WHERE LOWER(room_number) = ?"
-        res = DataRepository._execute_query(query, (room_number.lower(),))
-        return res[0] if res else None
+        try:
+            query = "SELECT * FROM campus_locations WHERE LOWER(room_number) = ?"
+            res = DataRepository._execute_query(query, (room_number.lower(),))
+            return res[0] if res else None
+        except Exception:
+            return None
 
     @staticmethod
     def search_fresher_faqs(query_text: str) -> List[Dict[str, Any]]:
-        faqs = DataRepository._execute_query("SELECT * FROM fresher_faqs")
+        try:
+            faqs = DataRepository._execute_query("SELECT * FROM fresher_faqs")
+        except Exception:
+            return []
         import re
         words = set(re.findall(r'\b\w+\b', query_text.lower()))
         
@@ -338,21 +344,27 @@ class DataRepository:
 
     @staticmethod
     def search_policies(query_text: str) -> List[Dict[str, Any]]:
-        query = "SELECT * FROM policies WHERE LOWER(title) LIKE ? OR LOWER(summary) LIKE ?"
-        like_val = f"%{query_text.lower()}%"
-        matches = DataRepository._execute_query(query, (like_val, like_val))
-        if not matches:
-            return DataRepository._execute_query("SELECT * FROM policies LIMIT 2")
-        return matches
+        try:
+            query = "SELECT * FROM policies WHERE LOWER(title) LIKE ? OR LOWER(summary) LIKE ?"
+            like_val = f"%{query_text.lower()}%"
+            matches = DataRepository._execute_query(query, (like_val, like_val))
+            if not matches:
+                return DataRepository._execute_query("SELECT * FROM policies LIMIT 2")
+            return matches
+        except Exception:
+            return []
 
     @staticmethod
     def search_circulars(query_text: str) -> List[Dict[str, Any]]:
-        query = "SELECT * FROM circulars WHERE LOWER(title) LIKE ? OR LOWER(summary) LIKE ?"
-        like_val = f"%{query_text.lower()}%"
-        matches = DataRepository._execute_query(query, (like_val, like_val))
-        if not matches:
-            return DataRepository._execute_query("SELECT * FROM circulars LIMIT 2")
-        return matches
+        try:
+            query = "SELECT * FROM circulars WHERE LOWER(title) LIKE ? OR LOWER(summary) LIKE ?"
+            like_val = f"%{query_text.lower()}%"
+            matches = DataRepository._execute_query(query, (like_val, like_val))
+            if not matches:
+                return DataRepository._execute_query("SELECT * FROM circulars LIMIT 2")
+            return matches
+        except Exception:
+            return []
 
     @staticmethod
     def list_conversations(session: DatabaseSession) -> List[Dict[str, Any]]:
@@ -454,7 +466,10 @@ class DataRepository:
 
     @staticmethod
     def get_clubs() -> List[Dict[str, Any]]:
-        return DataRepository._execute_query("SELECT * FROM studentlife_club")
+        try:
+            return DataRepository._execute_query("SELECT * FROM studentlife_club")
+        except Exception:
+            return []
 
     @staticmethod
     def log_crisis_escalation(session: DatabaseSession, trigger_phrase: str, student_info: Dict[str, Any]) -> Dict[str, Any]:
