@@ -30,6 +30,16 @@ app = FastAPI(
     openapi_url="/api/v1/openapi.json"
 )
 
+@app.on_event("startup")
+async def on_startup():
+    try:
+        from app.db_init import init_postgres_schema
+        init_postgres_schema()
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"db_init startup error (non-fatal): {e}")
+
+
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
