@@ -785,8 +785,8 @@ def _seed_campus_locations(cur, conn):
         "U Block",
         "Ground Floor",
         "U Block Lecture Hall",
-        null,
-        null,
+        None,
+        None,
         null
     ],
     [
@@ -795,8 +795,8 @@ def _seed_campus_locations(cur, conn):
         "A Block",
         "Ground Floor",
         "A Block Lecture Hall",
-        null,
-        null,
+        None,
+        None,
         null
     ],
     [
@@ -805,8 +805,8 @@ def _seed_campus_locations(cur, conn):
         "H Block",
         "Ground Floor",
         "H Block Boys Hostel",
-        null,
-        null,
+        None,
+        None,
         null
     ],
     [
@@ -815,8 +815,8 @@ def _seed_campus_locations(cur, conn):
         "N Block",
         "Ground Floor",
         "N Block CSE Dept",
-        null,
-        null,
+        None,
+        None,
         null
     ],
     [
@@ -825,8 +825,8 @@ def _seed_campus_locations(cur, conn):
         "P Block",
         "Ground Floor",
         "P Block ECE Dept",
-        null,
-        null,
+        None,
+        None,
         null
     ]
 ]
@@ -1146,7 +1146,7 @@ def _seed_studentlife_club_application(cur, conn):
         "Agent 65",
         "Pending",
         "2026-09-17T16:20:00.052421",
-        null,
+        None,
         "251FA04E13"
     ],
     [
@@ -1155,7 +1155,7 @@ def _seed_studentlife_club_application(cur, conn):
         "Other Student",
         "Pending",
         "2026-09-16T16:20:00.052421",
-        null,
+        None,
         "OTHER_STU"
     ]
 ]
