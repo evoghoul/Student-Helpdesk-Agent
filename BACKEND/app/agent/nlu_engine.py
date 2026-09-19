@@ -421,6 +421,15 @@ class NLUEngine:
                     topic = "Faculty & Advisor Directory"
                     source_agent = "Agent 44 (Faculty & Identity System)"
                     
+            elif intent in [
+                "POLICIES", "CIRCULARS", "CALENDAR", "CLUBS", "LOST_AND_FOUND",
+                "BOOKINGS", "SERVICES", "MAP", "EVENTS", "HOSTEL", "MARKETPLACE",
+                "CAREER", "GAMIFICATION", "TRANSPORT", "ALUMNI", "WELLNESS", "POLLING"
+            ]:
+                category = intent
+                topic = intent.replace("_", " ").title()
+                source_agent = "Agent 65 (Navigation Assistant)"
+                
             else:
                 # Universal Knowledge Search for KNOWLEDGE_BASE or GENERAL
                 parts = []

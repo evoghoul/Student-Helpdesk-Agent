@@ -198,6 +198,23 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
               else if (categoryStr === "MARKS") mappedRedirectPath = "marks";
               else if (categoryStr === "CURRICULUM") mappedRedirectPath = "curriculum";
               else if (categoryStr === "FACULTY") mappedRedirectPath = "faculty";
+              else if (categoryStr === "POLICIES") mappedRedirectPath = "policies";
+              else if (categoryStr === "CIRCULARS") mappedRedirectPath = "circulars";
+              else if (categoryStr === "CALENDAR") mappedRedirectPath = "calendar";
+              else if (categoryStr === "CLUBS") mappedRedirectPath = "clubs";
+              else if (categoryStr === "LOST_AND_FOUND") mappedRedirectPath = "lost-and-found";
+              else if (categoryStr === "BOOKINGS") mappedRedirectPath = "bookings";
+              else if (categoryStr === "SERVICES") mappedRedirectPath = "services";
+              else if (categoryStr === "MAP") mappedRedirectPath = "map";
+              else if (categoryStr === "EVENTS") mappedRedirectPath = "events";
+              else if (categoryStr === "HOSTEL") mappedRedirectPath = "hostel";
+              else if (categoryStr === "MARKETPLACE") mappedRedirectPath = "marketplace";
+              else if (categoryStr === "CAREER") mappedRedirectPath = "career";
+              else if (categoryStr === "GAMIFICATION") mappedRedirectPath = "gamification";
+              else if (categoryStr === "TRANSPORT") mappedRedirectPath = "transport";
+              else if (categoryStr === "ALUMNI") mappedRedirectPath = "alumni";
+              else if (categoryStr === "WELLNESS") mappedRedirectPath = "wellness";
+              else if (categoryStr === "POLLING") mappedRedirectPath = "polling";
 
               setMessages((prev) => [
                 ...prev,

@@ -42,7 +42,9 @@ class LLMClient:
         """
         system_prompt = (
             "Classify the user's query into exactly ONE of the following intents: "
-            "ATTENDANCE, EXAMS, FEES, TIMETABLE, MARKS, CURRICULUM, LIBRARY, FACULTY, KNOWLEDGE_BASE, GENERAL. "
+            "ATTENDANCE, EXAMS, FEES, TIMETABLE, MARKS, CURRICULUM, LIBRARY, FACULTY, KNOWLEDGE_BASE, GENERAL, "
+            "POLICIES, CIRCULARS, CALENDAR, CLUBS, LOST_AND_FOUND, BOOKINGS, SERVICES, MAP, EVENTS, HOSTEL, MARKETPLACE, "
+            "CAREER, GAMIFICATION, TRANSPORT, ALUMNI, WELLNESS, POLLING. "
             "Respond with ONLY the intent name in uppercase, and nothing else."
         )
 
@@ -56,6 +58,9 @@ class LLMClient:
             valid_intents = [
                 "ATTENDANCE", "EXAMS", "FEES", "TIMETABLE", "MARKS",
                 "CURRICULUM", "LIBRARY", "FACULTY", "KNOWLEDGE_BASE", "GENERAL",
+                "POLICIES", "CIRCULARS", "CALENDAR", "CLUBS", "LOST_AND_FOUND",
+                "BOOKINGS", "SERVICES", "MAP", "EVENTS", "HOSTEL", "MARKETPLACE",
+                "CAREER", "GAMIFICATION", "TRANSPORT", "ALUMNI", "WELLNESS", "POLLING"
             ]
             for intent in valid_intents:
                 if intent in reply:
