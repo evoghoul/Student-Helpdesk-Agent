@@ -774,7 +774,7 @@ class NLUEngine:
             sr = DataRepository.create_service_request(session, {
                 "category": "BONAFIDE_CERTIFICATE" if "bonafide" in q_lower else "OTHER",
                 "title": "Bonafide Certificate Application",
-                "description": q
+                "description": query
             })
             sr_id = sr["request_no"] if sr else "SR-2026-0001"
             return (
