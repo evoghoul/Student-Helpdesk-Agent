@@ -156,7 +156,7 @@ def _seed_lost_and_found(cur, conn):
         "admin@vignan.ac.in",
         "claimed",
         "2026-09-08T16:20:00.052421",
-        null
+        None
     ],
     [
         17,
@@ -180,7 +180,7 @@ def _seed_lost_and_found(cur, conn):
         "251fa04e13@vignan.ac.in",
         "open",
         "2026-09-18T14:20:00.052421",
-        null
+        None
     ]
 ]
     for r in rows:
@@ -787,7 +787,7 @@ def _seed_campus_locations(cur, conn):
         "U Block Lecture Hall",
         None,
         None,
-        null
+        None
     ],
     [
         "loc-a1",
@@ -797,7 +797,7 @@ def _seed_campus_locations(cur, conn):
         "A Block Lecture Hall",
         None,
         None,
-        null
+        None
     ],
     [
         "loc-h1",
@@ -807,7 +807,7 @@ def _seed_campus_locations(cur, conn):
         "H Block Boys Hostel",
         None,
         None,
-        null
+        None
     ],
     [
         "loc-n1",
@@ -817,7 +817,7 @@ def _seed_campus_locations(cur, conn):
         "N Block CSE Dept",
         None,
         None,
-        null
+        None
     ],
     [
         "loc-p1",
@@ -827,7 +827,7 @@ def _seed_campus_locations(cur, conn):
         "P Block ECE Dept",
         None,
         None,
-        null
+        None
     ]
 ]
     for r in rows:
