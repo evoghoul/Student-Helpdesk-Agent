@@ -150,7 +150,6 @@ class LLMClient:
         """Call Google Gemini API. Returns cleaned text or None on error."""
         try:
             from google import genai
-            from google.genai import types
 
             model_name = getattr(settings, "GEMINI_MODEL", "gemini-3.6-flash")
 
@@ -158,9 +157,9 @@ class LLMClient:
             for msg in messages:
                 role = "user" if msg["role"] == "user" else "model"
                 contents.append(
-                    types.Content(
+                    genai.types.Content(
                         role=role,
-                        parts=[types.Part(text=msg["content"])],
+                        parts=[genai.types.Part(text=msg["content"])],
                     )
                 )
 
@@ -175,7 +174,7 @@ class LLMClient:
             response = client.models.generate_content(
                 model=model_name,
                 contents=contents,
-                config=types.GenerateContentConfig(**config_kwargs),
+                config=genai.types.GenerateContentConfig(**config_kwargs),
             )
 
             raw_text = response.text if response and response.text else None
