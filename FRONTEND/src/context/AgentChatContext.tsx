@@ -188,7 +188,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       // 1. Try Live FastAPI Backend Call
       const backendResp = await apiClient.sendMessage(query, language, model);
       if (backendResp) {
-              const categoryStr = ((backendResp.category as string) || "PERSONAL_DATA") as QueryCategory;
+              const categoryStr = (backendResp.category as string) || "PERSONAL_DATA";
               let mappedRedirectPath: string | undefined = undefined;
               
               if (categoryStr === "ATTENDANCE") mappedRedirectPath = "attendance";
@@ -225,7 +225,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                   conversationId: backendResp.conversation_id,
                   responseMeta: {
                     text: backendResp.content,
-                    category: categoryStr,
+                    category: categoryStr as QueryCategory,
                     sourceAgent: backendResp.source_agent || "Agent 65 (Live FastAPI Backend)",
                     authorizedFor: student.id,
                     isDistress: backendResp.is_distress,

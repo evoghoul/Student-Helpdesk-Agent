@@ -143,15 +143,28 @@ class Agent65ApiClient {
   }
 
   async getProfile(): Promise<ProfileResponse | null> {
-    const token = await this.ensureAuthenticated();
+    let token = await this.ensureAuthenticated();
     if (!token) return null;
     try {
-      const resp = await fetch(`${BACKEND_BASE_URL}/me`, {
+      let resp = await fetch(`${BACKEND_BASE_URL}/me`, {
         headers: { 
           Authorization: `Bearer ${token}`,
           "ngrok-skip-browser-warning": "true" 
         },
       });
+      if (resp.status === 401) {
+        this.token = null;
+        if (typeof window !== "undefined") localStorage.removeItem("agent65_token");
+        token = await this.ensureAuthenticated();
+        if (token) {
+          resp = await fetch(`${BACKEND_BASE_URL}/me`, {
+            headers: { 
+              Authorization: `Bearer ${token}`,
+              "ngrok-skip-browser-warning": "true" 
+            },
+          });
+        }
+      }
       if (!resp.ok) return null;
       return await resp.json();
     } catch {
@@ -160,15 +173,28 @@ class Agent65ApiClient {
   }
 
   async getDashboard(): Promise<DashboardResponse | null> {
-    const token = await this.ensureAuthenticated();
+    let token = await this.ensureAuthenticated();
     if (!token) return null;
     try {
-      const resp = await fetch(`${BACKEND_BASE_URL}/student/dashboard`, {
+      let resp = await fetch(`${BACKEND_BASE_URL}/student/dashboard`, {
         headers: { 
           Authorization: `Bearer ${token}`,
           "ngrok-skip-browser-warning": "true" 
         },
       });
+      if (resp.status === 401) {
+        this.token = null;
+        if (typeof window !== "undefined") localStorage.removeItem("agent65_token");
+        token = await this.ensureAuthenticated();
+        if (token) {
+          resp = await fetch(`${BACKEND_BASE_URL}/student/dashboard`, {
+            headers: { 
+              Authorization: `Bearer ${token}`,
+              "ngrok-skip-browser-warning": "true" 
+            },
+          });
+        }
+      }
       if (!resp.ok) return null;
       return await resp.json();
     } catch {
@@ -279,10 +305,10 @@ class Agent65ApiClient {
   }
 
   async createServiceRequest(category: string, title: string, description: string): Promise<unknown | null> {
-    const token = await this.ensureAuthenticated();
+    let token = await this.ensureAuthenticated();
     if (!token) return null;
     try {
-      const resp = await fetch(`${BACKEND_BASE_URL}/service-requests`, {
+      let resp = await fetch(`${BACKEND_BASE_URL}/service-requests`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -291,6 +317,22 @@ class Agent65ApiClient {
         },
         body: JSON.stringify({ category, title, description }),
       });
+      if (resp.status === 401) {
+        this.token = null;
+        if (typeof window !== "undefined") localStorage.removeItem("agent65_token");
+        token = await this.ensureAuthenticated();
+        if (token) {
+          resp = await fetch(`${BACKEND_BASE_URL}/service-requests`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+              "ngrok-skip-browser-warning": "true"
+            },
+            body: JSON.stringify({ category, title, description }),
+          });
+        }
+      }
       if (resp.ok) return await resp.json();
     } catch (e) {
       console.warn("Could not post service request to backend:", e);
