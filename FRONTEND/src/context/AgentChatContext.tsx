@@ -285,7 +285,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setActiveContextSubject(response.contextSubject);
       }
 
-      const localCategoryStr = response.category || "PERSONAL_DATA";
+      const localCategoryStr = (response.category as string) || "PERSONAL_DATA";
       let localMappedRedirectPath: string | undefined = undefined;
       
       if (localCategoryStr === "ATTENDANCE") localMappedRedirectPath = "attendance";
