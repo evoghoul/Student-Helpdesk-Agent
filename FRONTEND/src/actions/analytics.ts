@@ -3,9 +3,6 @@
 import { getDb } from "../lib/db-provider";
 
 
-const getDb = () => {
-    return getDb();
-};
 
 import { mockAnalyticsData } from '../data/adminMockData';
 
