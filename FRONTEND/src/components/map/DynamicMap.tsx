@@ -82,15 +82,15 @@ const getCategoryIcon = (type: string) => {
             ${iconSvg}
            </div>`,
     iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32]
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16]
   });
 };
 
 export default function DynamicMap({ 
   locations, 
   selectedLocation, 
-  userCharacter = "🔵", 
+  userCharacter = "dot", 
   userLocation,
   routeTo,
   onLocationSelect 
@@ -107,14 +107,24 @@ export default function DynamicMap({
     : userLocation ? userLocation : defaultCenter;
 
   const getUserMarkerHtml = () => {
-    if (userCharacter === "🔵") {
+    if (userCharacter === "dot") {
       return `<div class="relative flex h-5 w-5 items-center justify-center">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                 <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-600 border-2 border-white shadow-sm"></span>
                </div>`;
     }
-    return `<div class="relative flex h-8 w-8 items-center justify-center bg-white rounded-full border-2 border-blue-500 shadow-md text-lg leading-none pt-0.5 z-20">
-              ${userCharacter}
+    
+    let userSvg = "";
+    switch(userCharacter) {
+      case "student": userSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`; break;
+      case "walk": userSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 14 1 7"/><path d="M13.5 8.5 13 14h-3"/><path d="m4 10 5 1-4 6"/><path d="M16 16l-3-2V8"/><circle cx="12" cy="5" r="1"/></svg>`; break;
+      case "bike": userSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/></svg>`; break;
+      case "car": userSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>`; break;
+      default: userSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>`;
+    }
+
+    return `<div class="relative flex h-8 w-8 items-center justify-center bg-white text-blue-600 rounded-full border-2 border-blue-500 shadow-md text-lg z-20">
+              ${userSvg}
             </div>`;
   };
 
@@ -171,8 +181,8 @@ export default function DynamicMap({
         icon={L.divIcon({
           className: "bg-transparent",
           html: getUserMarkerHtml(),
-          iconSize: userCharacter === "🔵" ? [20, 20] : [32, 32],
-          iconAnchor: userCharacter === "🔵" ? [10, 10] : [16, 16],
+          iconSize: userCharacter === "dot" ? [20, 20] : [32, 32],
+          iconAnchor: userCharacter === "dot" ? [10, 10] : [16, 16],
           popupAnchor: [0, -10]
         })}
         zIndexOffset={1000}

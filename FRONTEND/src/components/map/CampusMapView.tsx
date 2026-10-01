@@ -19,7 +19,7 @@ export const CampusMapView = () => {
   const [locations, setLocations] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLocation, setSelectedLocation] = useState<any | null>(null);
-  const [userCharacter, setUserCharacter] = useState("🔵"); // Default dot
+  const [userCharacter, setUserCharacter] = useState("dot"); // Default dot
   
   // New Map States
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
@@ -27,7 +27,14 @@ export const CampusMapView = () => {
   const [routeTo, setRouteTo] = useState<any | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>("All");
 
-  const characters = ["🔵", "🧑‍🎓", "🚶", "🚴", "🚗"];
+  const characterOptions = [
+    { id: "dot", label: "Dot", svg: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>` },
+    { id: "student", label: "Student", svg: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>` },
+    { id: "walk", label: "Walk", svg: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 14 1 7"/><path d="M13.5 8.5 13 14h-3"/><path d="m4 10 5 1-4 6"/><path d="M16 16l-3-2V8"/><circle cx="12" cy="5" r="1"/></svg>` },
+    { id: "bike", label: "Bike", svg: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/></svg>` },
+    { id: "car", label: "Car", svg: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>` }
+  ];
+  
   const categories = ["All", "Academic", "Administrative", "Facility", "Hostel", "Food"];
 
   useEffect(() => {
@@ -160,14 +167,14 @@ export const CampusMapView = () => {
             <div className="flex items-center gap-2">
               <div className="flex items-center bg-white border border-border rounded-lg px-2 py-1 gap-1 hidden sm:flex">
                 <span className="text-xs text-muted-foreground mr-1">You:</span>
-                {characters.map(char => (
+                {characterOptions.map(char => (
                   <button
-                    key={char}
-                    onClick={() => setUserCharacter(char)}
-                    className={`h-6 w-6 rounded flex items-center justify-center text-sm ${userCharacter === char ? 'bg-blue-100 ring-1 ring-blue-400' : 'hover:bg-slate-100'}`}
-                  >
-                    {char}
-                  </button>
+                    key={char.id}
+                    onClick={() => setUserCharacter(char.id)}
+                    className={`h-6 w-6 rounded flex items-center justify-center ${userCharacter === char.id ? 'bg-blue-100 ring-1 ring-blue-400 text-blue-700' : 'hover:bg-slate-100 text-slate-600'}`}
+                    dangerouslySetInnerHTML={{ __html: char.svg }}
+                    title={char.label}
+                  />
                 ))}
               </div>
               {selectedLocation && (
