@@ -1,13 +1,12 @@
 "use server";
 
-import Database from 'better-sqlite3';
-import path from 'path';
+import { getDb } from "../lib/db-provider";
 
-const dbPath = path.resolve(process.cwd(), '../database/student_helpdesk.db');
+
 
 export async function submitAncComplaint(complaintText: string, studentId: string) {
   try {
-    const db = new Database(dbPath);
+    const db = getDb();
     const trackingId = `ANC-${Math.floor(1000 + Math.random() * 9000)}`;
     
     const stmt = db.prepare(`
@@ -27,7 +26,7 @@ export async function submitAncComplaint(complaintText: string, studentId: strin
 
 export async function trackComplaint(trackingId: string, studentId: string) {
   try {
-    const db = new Database(dbPath);
+    const db = getDb();
     const stmt = db.prepare(`SELECT * FROM studentlife_grievance WHERE tracking_id = ? AND student_id = ?`);
     const result = stmt.get(trackingId, studentId);
     db.close();
@@ -44,7 +43,7 @@ export async function trackComplaint(trackingId: string, studentId: string) {
 
 export async function submitClubApplication(clubId: string, studentName: string, studentId: string) {
   try {
-    const db = new Database(dbPath);
+    const db = getDb();
     
     const stmt = db.prepare(`
       INSERT INTO studentlife_club_application (club_id, student_name, status, student_id) 
@@ -67,7 +66,7 @@ export async function submitClubApplication(clubId: string, studentName: string,
 
 export async function withdrawTicket(ticketId: string, type: 'club' | 'grievance', reason: string, studentId: string) {
   try {
-    const db = new Database(dbPath);
+    const db = getDb();
     let stmt;
     
     if (type === 'grievance') {
@@ -103,7 +102,7 @@ export async function withdrawTicket(ticketId: string, type: 'club' | 'grievance
 
 export async function fetchStudentDbActivity(studentId: string) {
   try {
-    const db = new Database(dbPath);
+    const db = getDb();
     const complaints = db.prepare(`SELECT tracking_id as id, description, status, timestamp, withdrawal_reason FROM studentlife_grievance WHERE student_id = ? ORDER BY timestamp DESC`).all(studentId);
     const clubApps = db.prepare(`SELECT id, club_id, status, timestamp, withdrawal_reason FROM studentlife_club_application WHERE student_id = ? ORDER BY timestamp DESC`).all(studentId);
     db.close();

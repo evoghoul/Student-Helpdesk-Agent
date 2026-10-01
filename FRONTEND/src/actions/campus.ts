@@ -1,13 +1,12 @@
 "use server";
 
-import Database from "better-sqlite3";
-import path from "path";
+import { getDb } from "../lib/db-provider";
 
-const dbPath = path.resolve(process.cwd(), "../database/student_helpdesk.db");
+
 
 export async function getCampusLocations() {
   try {
-    const db = new Database(dbPath);
+    const db = getDb();
     const records = db.prepare("SELECT location_id as id, room_number as name, block as building, floor, type, description, latitude, longitude, features FROM campus_locations ORDER BY room_number ASC").all();
     db.close();
     

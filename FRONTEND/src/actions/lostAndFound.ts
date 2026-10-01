@@ -1,13 +1,12 @@
 "use server";
 
-import Database from 'better-sqlite3';
-import path from 'path';
+import { getDb } from "../lib/db-provider";
 
-const dbPath = path.resolve(process.cwd(), '../database/student_helpdesk.db');
+
 
 export async function fetchLostAndFoundItems(filterType: 'all' | 'lost' | 'found' = 'all') {
   try {
-    const db = new Database(dbPath);
+    const db = getDb();
     let query = `SELECT * FROM lost_and_found WHERE status = 'open'`;
     const params = [];
     
@@ -38,7 +37,7 @@ export async function reportLostAndFoundItem(
   imageUrl?: string
 ) {
   try {
-    const db = new Database(dbPath);
+    const db = getDb();
     const datePosted = new Date().toISOString();
     const result = db.prepare(`
       INSERT INTO lost_and_found (student_id, type, title, description, tags, contact_info, status, date_posted, image_url)
@@ -55,7 +54,7 @@ export async function reportLostAndFoundItem(
 
 export async function claimLostAndFoundItem(itemId: number, studentId: string) {
   try {
-    const db = new Database(dbPath);
+    const db = getDb();
     
     const item: any = db.prepare(`SELECT * FROM lost_and_found WHERE id = ?`).get(itemId);
     

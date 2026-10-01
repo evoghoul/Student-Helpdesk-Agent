@@ -1,13 +1,12 @@
 "use server";
 
-import Database from "better-sqlite3";
-import path from "path";
+import { getDb } from "../lib/db-provider";
 
-const dbPath = path.resolve(process.cwd(), "../database/student_helpdesk.db");
+
 
 export async function getResumeData(studentId: string) {
   try {
-    const db = new Database(dbPath);
+    const db = getDb();
     const record = db.prepare("SELECT * FROM resumes WHERE student_id = ? ORDER BY created_at DESC LIMIT 1").get(studentId);
     db.close();
     return { success: true, data: record || null };
@@ -19,7 +18,7 @@ export async function getResumeData(studentId: string) {
 
 export async function saveResumeData(studentId: string, skills: string, projects: string) {
   try {
-    const db = new Database(dbPath);
+    const db = getDb();
     
     // Check if exists
     const existing = db.prepare("SELECT id FROM resumes WHERE student_id = ?").get(studentId);

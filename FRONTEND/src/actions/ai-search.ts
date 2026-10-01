@@ -1,11 +1,10 @@
 "use server";
 
-import Database from 'better-sqlite3';
-import path from 'path';
+import { getDb } from "../lib/db-provider";
+
 
 const getDb = () => {
-  const dbPath = path.resolve(process.cwd(), '../database/student_helpdesk.db');
-  return new Database(dbPath);
+    return getDb();
 };
 
 export async function askAiKnowledgeBase(query: string) {

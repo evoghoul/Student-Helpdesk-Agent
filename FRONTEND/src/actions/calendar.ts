@@ -1,13 +1,12 @@
 "use server";
 
-import Database from 'better-sqlite3';
-import path from 'path';
+import { getDb } from "../lib/db-provider";
 
-const dbPath = path.resolve(process.cwd(), '../database/student_helpdesk.db');
+
 
 export async function fetchStudentSchedule(studentId: string) {
   try {
-    const db = new Database(dbPath);
+    const db = getDb();
     
     // Fetch events ordered by start time
     const events = db.prepare(`

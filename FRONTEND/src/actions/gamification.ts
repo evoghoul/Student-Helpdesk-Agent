@@ -1,13 +1,12 @@
 "use server";
 
-import Database from 'better-sqlite3';
-import path from 'path';
+import { getDb } from "../lib/db-provider";
 
-const dbPath = path.resolve(process.cwd(), '../database/student_helpdesk.db');
+
 
 export async function getGamificationData(studentId: string) {
   try {
-    const db = new Database(dbPath);
+    const db = getDb();
     const row = db.prepare("SELECT * FROM gamification WHERE student_id = ?").get(studentId) as any;
     db.close();
     if (row) {

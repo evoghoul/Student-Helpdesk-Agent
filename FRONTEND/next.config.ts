@@ -4,6 +4,10 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  serverExternalPackages: ["better-sqlite3"],
+  outputFileTracingIncludes: {
+    "/**": ["./student_helpdesk.db"]
+  },
   async rewrites() {
     return [
       {

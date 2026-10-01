@@ -1,9 +1,10 @@
 "use server";
 
-import Database from "better-sqlite3";
+import { getDb } from "../lib/db-provider";
+
 import { revalidatePath } from "next/cache";
 
-const db = new Database("../database/student_helpdesk.db");
+const db = getDb();
 
 export interface Facility {
   id: number;

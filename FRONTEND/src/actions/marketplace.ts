@@ -1,13 +1,12 @@
 "use server";
 
-import Database from "better-sqlite3";
-import path from "path";
+import { getDb } from "../lib/db-provider";
 
-const dbPath = path.resolve(process.cwd(), "../database/student_helpdesk.db");
+
 
 export async function getMarketplaceListings() {
   try {
-    const db = new Database(dbPath);
+    const db = getDb();
     const records = db.prepare("SELECT * FROM marketplace_listings ORDER BY created_at DESC").all();
     db.close();
     return { success: true, data: records };
@@ -19,7 +18,7 @@ export async function getMarketplaceListings() {
 
 export async function createMarketplaceListing(studentId: string, title: string, category: string, price: number) {
   try {
-    const db = new Database(dbPath);
+    const db = getDb();
     const info = db.prepare("INSERT INTO marketplace_listings (student_id, title, category, price) VALUES (?, ?, ?, ?)")
                    .run(studentId, title, category, price);
     db.close();

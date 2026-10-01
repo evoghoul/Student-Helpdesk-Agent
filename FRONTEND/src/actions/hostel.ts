@@ -1,13 +1,12 @@
 "use server";
 
-import Database from "better-sqlite3";
-import path from "path";
+import { getDb } from "../lib/db-provider";
 
-const dbPath = path.resolve(process.cwd(), "../database/student_helpdesk.db");
+
 
 export async function getHostelRequests(studentId: string) {
   try {
-    const db = new Database(dbPath);
+    const db = getDb();
     const records = db.prepare("SELECT * FROM hostel_requests WHERE student_id = ? ORDER BY created_at DESC").all(studentId);
     db.close();
     return { success: true, data: records };
@@ -19,7 +18,7 @@ export async function getHostelRequests(studentId: string) {
 
 export async function createHostelRequest(studentId: string, type: string, details: string) {
   try {
-    const db = new Database(dbPath);
+    const db = getDb();
     const info = db.prepare("INSERT INTO hostel_requests (student_id, type, details) VALUES (?, ?, ?)")
                    .run(studentId, type, details);
     db.close();

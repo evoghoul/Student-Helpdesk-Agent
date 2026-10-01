@@ -1,13 +1,12 @@
 "use server";
 
-import Database from "better-sqlite3";
-import path from "path";
+import { getDb } from "../lib/db-provider";
 
-const dbPath = path.resolve(process.cwd(), "../database/student_helpdesk.db");
+
 
 export async function getEventRegistrations(studentId: string) {
   try {
-    const db = new Database(dbPath);
+    const db = getDb();
     const records = db.prepare("SELECT * FROM event_registrations WHERE student_id = ?").all(studentId);
     db.close();
     return { success: true, data: records };
@@ -19,7 +18,7 @@ export async function getEventRegistrations(studentId: string) {
 
 export async function registerForEvent(studentId: string, eventName: string) {
   try {
-    const db = new Database(dbPath);
+    const db = getDb();
     // Simple mock QR code generation
     const qrCode = `QR_${studentId}_${Date.now()}`;
     const info = db.prepare("INSERT INTO event_registrations (student_id, event_name, qr_code) VALUES (?, ?, ?)")

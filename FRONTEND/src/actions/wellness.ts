@@ -1,13 +1,12 @@
 "use server";
 
-import Database from 'better-sqlite3';
-import path from 'path';
+import { getDb } from "../lib/db-provider";
 
-const dbPath = path.resolve(process.cwd(), '../database/student_helpdesk.db');
+
 
 export async function getWellnessResources() {
   try {
-    const db = new Database(dbPath);
+    const db = getDb();
     const rows = db.prepare("SELECT * FROM wellness_resources").all();
     db.close();
     return rows;
