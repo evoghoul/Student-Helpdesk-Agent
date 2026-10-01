@@ -60,6 +60,7 @@ export const CampusMapView = () => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           setUserLocation([position.coords.latitude, position.coords.longitude]);
+          setSelectedLocation(null); // Clear selected location so map flies to user
           setIsLocating(false);
         },
         (error) => {
@@ -67,7 +68,7 @@ export const CampusMapView = () => {
           alert("Could not get your location. Please ensure location permissions are granted.");
           setIsLocating(false);
         },
-        { enableHighAccuracy: true }
+        { enableHighAccuracy: true, maximumAge: 0 }
       );
     } else {
       alert("Geolocation is not supported by your browser");
