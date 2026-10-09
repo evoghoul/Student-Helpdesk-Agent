@@ -93,8 +93,8 @@ export default function DynamicMap({
     switch(userCharacter) {
       case "student": emoji = "👨‍🎓"; break;
       case "walk": emoji = "🚶"; break;
-      case "bike": emoji = "🚲"; break;
-      case "car": emoji = "🚗"; break;
+      case "happy": emoji = "😁"; break;
+      case "teacher": emoji = "🧑‍🏫"; break;
       case "dot": emoji = "📍"; break;
     }
 

@@ -32,8 +32,8 @@ export const CampusMapView = () => {
     { id: "dot", label: "Dot", emoji: "📍" },
     { id: "student", label: "Student", emoji: "👨‍🎓" },
     { id: "walk", label: "Walk", emoji: "🚶" },
-    { id: "bike", label: "Bike", emoji: "🚲" },
-    { id: "car", label: "Car", emoji: "🚗" }
+    { id: "happy", label: "Happy", emoji: "😁" },
+    { id: "teacher", label: "Teacher", emoji: "🧑‍🏫" }
   ];
   
   const categories = ["All", "Academic", "Administrative", "Facility", "Hostel", "Food"];
