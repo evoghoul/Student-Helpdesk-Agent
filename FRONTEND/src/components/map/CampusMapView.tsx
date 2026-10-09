@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { MapPin, Search, Compass, Navigation, LocateFixed, Layers } from "lucide-react";
+import { MapPin, Search, Compass, Navigation, LocateFixed, Layers, Maximize, Minimize } from "lucide-react";
 import { getCampusLocations } from "@/actions/campus";
 import dynamic from "next/dynamic";
 
@@ -26,13 +26,15 @@ export const CampusMapView = () => {
   const [isLocating, setIsLocating] = useState(false);
   const [routeTo, setRouteTo] = useState<any | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>("All");
+  const [isFullScreen, setIsFullScreen] = useState(false);
 
   const characterOptions = [
     { id: "dot", label: "Dot", svg: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>` },
     { id: "student", label: "Student", svg: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>` },
     { id: "walk", label: "Walk", svg: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 14 1 7"/><path d="M13.5 8.5 13 14h-3"/><path d="m4 10 5 1-4 6"/><path d="M16 16l-3-2V8"/><circle cx="12" cy="5" r="1"/></svg>` },
     { id: "bike", label: "Bike", svg: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/></svg>` },
-    { id: "car", label: "Car", svg: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>` }
+    { id: "car", label: "Car", svg: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>` },
+    { id: "emoji", label: "Emoji", svg: `<span style="font-size: 14px; line-height: 1;">😀</span>` }
   ];
   
   const categories = ["All", "Academic", "Administrative", "Facility", "Hostel", "Food"];
@@ -110,45 +112,53 @@ export const CampusMapView = () => {
     return matchesSearch && matchesCategory;
   });
 
+  const wrapperClass = isFullScreen 
+    ? "fixed inset-0 z-[9999] bg-card p-4 flex flex-col" 
+    : "space-y-6 animate-in fade-in zoom-in-95 duration-300 flex flex-col h-[calc(100vh-12rem)] min-h-[500px]";
+
   return (
-    <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300 flex flex-col h-[calc(100vh-12rem)] min-h-[500px]">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Campus Directory & Map</h2>
-          <p className="text-sm text-muted-foreground">Find cabins, labs, and facilities across the campus.</p>
-        </div>
-        <div className="relative max-w-sm w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search 'HOD', 'Library'..."
-            className="w-full pl-9 pr-4 py-2 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
+    <div className={wrapperClass}>
+      {!isFullScreen && (
+        <>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">Campus Directory & Map</h2>
+              <p className="text-sm text-muted-foreground">Find cabins, labs, and facilities across the campus.</p>
+            </div>
+            <div className="relative max-w-sm w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search 'HOD', 'Library'..."
+                className="w-full pl-9 pr-4 py-2 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
 
-      {/* Category Filter Chips */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide shrink-0">
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-              activeCategory === cat 
-                ? 'bg-blue-600 text-white shadow-sm' 
-                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
+          {/* Category Filter Chips */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide shrink-0">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                  activeCategory === cat 
+                    ? 'bg-blue-600 text-white shadow-sm' 
+                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
+      <div className={`grid grid-cols-1 ${isFullScreen ? 'lg:grid-cols-1' : 'lg:grid-cols-3'} gap-6 flex-1 min-h-0`}>
         {/* Interactive Map */}
-        <div className="lg:col-span-2 rounded-xl border border-border bg-card overflow-hidden shadow-sm flex flex-col h-full relative">
+        <div className={`${isFullScreen ? 'col-span-1' : 'lg:col-span-2'} rounded-xl border border-border bg-card overflow-hidden shadow-sm flex flex-col h-full relative`}>
           <div className="bg-muted/30 border-b border-border p-4 flex flex-wrap items-center justify-between gap-2 shrink-0">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
@@ -162,6 +172,14 @@ export const CampusMapView = () => {
               >
                 <LocateFixed className={`h-4 w-4 text-blue-600 ${isLocating ? 'animate-spin' : ''}`} />
                 {isLocating ? 'Locating...' : 'Locate Me'}
+              </button>
+              <button 
+                onClick={() => setIsFullScreen(!isFullScreen)}
+                className="flex items-center gap-1.5 text-xs font-medium bg-white border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50 text-slate-700 transition-colors"
+                title="Toggle Full Screen"
+              >
+                {isFullScreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+                <span className="hidden sm:inline">{isFullScreen ? 'Exit' : 'Full Screen'}</span>
               </button>
             </div>
             
@@ -201,7 +219,8 @@ export const CampusMapView = () => {
         </div>
 
         {/* Directory List / Details Panel */}
-        <div className="rounded-xl border border-border bg-card flex flex-col h-full shadow-sm overflow-hidden min-h-0">
+        {!isFullScreen && (
+          <div className="rounded-xl border border-border bg-card flex flex-col h-full shadow-sm overflow-hidden min-h-0">
           {selectedLocation ? (
             // Location Details Panel
             <div className="flex flex-col h-full animate-in slide-in-from-right-4 duration-300">
@@ -306,8 +325,9 @@ export const CampusMapView = () => {
                 )}
               </div>
             </>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
