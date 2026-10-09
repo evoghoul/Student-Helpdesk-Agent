@@ -105,7 +105,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
             <div className="h-8 w-px bg-slate-200 hidden sm:block" />
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-sm tracking-tight text-foreground">
+                <span className="font-bold text-sm tracking-tight text-foreground whitespace-nowrap">
                   {t.appName || "Student Helpdesk"}
                 </span>
                 <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 border border-blue-200">
