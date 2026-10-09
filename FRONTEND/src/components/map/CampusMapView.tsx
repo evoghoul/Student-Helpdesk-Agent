@@ -29,15 +29,16 @@ export const CampusMapView = () => {
   const [isFullScreen, setIsFullScreen] = useState(false);
 
   const characterOptions = [
-    { id: "dot", label: "Dot", svg: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>` },
-    { id: "student", label: "Student", svg: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>` },
-    { id: "walk", label: "Walk", svg: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 14 1 7"/><path d="M13.5 8.5 13 14h-3"/><path d="m4 10 5 1-4 6"/><path d="M16 16l-3-2V8"/><circle cx="12" cy="5" r="1"/></svg>` },
-    { id: "bike", label: "Bike", svg: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/></svg>` },
-    { id: "car", label: "Car", svg: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>` },
-    { id: "emoji", label: "Emoji", svg: `<span style="font-size: 14px; line-height: 1;">😀</span>` }
+    { id: "dot", label: "Dot", emoji: "📍" },
+    { id: "student", label: "Student", emoji: "👨‍🎓" },
+    { id: "walk", label: "Walk", emoji: "🚶" },
+    { id: "bike", label: "Bike", emoji: "🚲" },
+    { id: "car", label: "Car", emoji: "🚗" }
   ];
   
   const categories = ["All", "Academic", "Administrative", "Facility", "Hostel", "Food"];
+
+  const mapContainerRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -49,12 +50,31 @@ export const CampusMapView = () => {
     fetchLocations();
   }, []);
 
+  // Listen for native fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullScreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
   // Reset route when selecting a new location
   useEffect(() => {
     if (selectedLocation?.id !== routeTo?.id) {
       setRouteTo(null);
     }
   }, [selectedLocation, routeTo]);
+
+  const toggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+      mapContainerRef.current?.requestFullscreen().catch(err => {
+        console.error("Error attempting to enable fullscreen:", err);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
 
   const handleLocateMe = () => {
     setIsLocating(true);
@@ -117,7 +137,7 @@ export const CampusMapView = () => {
     : "space-y-6 animate-in fade-in zoom-in-95 duration-300 flex flex-col h-[calc(100vh-12rem)] min-h-[500px]";
 
   return (
-    <div className={wrapperClass}>
+    <div ref={mapContainerRef} className={wrapperClass}>
       {!isFullScreen && (
         <>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
@@ -174,7 +194,7 @@ export const CampusMapView = () => {
                 {isLocating ? 'Locating...' : 'Locate Me'}
               </button>
               <button 
-                onClick={() => setIsFullScreen(!isFullScreen)}
+                onClick={toggleFullScreen}
                 className="flex items-center gap-1.5 text-xs font-medium bg-white border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50 text-slate-700 transition-colors"
                 title="Toggle Full Screen"
               >
@@ -190,10 +210,11 @@ export const CampusMapView = () => {
                   <button
                     key={char.id}
                     onClick={() => setUserCharacter(char.id)}
-                    className={`h-6 w-6 rounded flex items-center justify-center ${userCharacter === char.id ? 'bg-blue-100 ring-1 ring-blue-400 text-blue-700' : 'hover:bg-slate-100 text-slate-600'}`}
-                    dangerouslySetInnerHTML={{ __html: char.svg }}
+                    className={`h-6 w-6 rounded flex items-center justify-center text-sm ${userCharacter === char.id ? 'bg-blue-100 ring-1 ring-blue-400' : 'hover:bg-slate-100'}`}
                     title={char.label}
-                  />
+                  >
+                    {char.emoji}
+                  </button>
                 ))}
               </div>
               {selectedLocation && (

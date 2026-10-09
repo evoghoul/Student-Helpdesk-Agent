@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap, LayersControl, Polyline, LayerGroup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -89,25 +89,17 @@ export default function DynamicMap({
     : userLocation ? userLocation : defaultCenter;
 
   const getUserMarkerHtml = () => {
-    if (userCharacter === "dot") {
-      return `<div class="relative flex h-5 w-5 items-center justify-center">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-600 border-2 border-white shadow-sm"></span>
-               </div>`;
-    }
-    
-    let userSvg = "";
+    let emoji = "📍";
     switch(userCharacter) {
-      case "student": userSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`; break;
-      case "walk": userSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 14 1 7"/><path d="M13.5 8.5 13 14h-3"/><path d="m4 10 5 1-4 6"/><path d="M16 16l-3-2V8"/><circle cx="12" cy="5" r="1"/></svg>`; break;
-      case "bike": userSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/></svg>`; break;
-      case "car": userSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>`; break;
-      case "emoji": userSvg = `<span style="font-size: 16px; line-height: 1;">😀</span>`; break;
-      default: userSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>`;
+      case "student": emoji = "👨‍🎓"; break;
+      case "walk": emoji = "🚶"; break;
+      case "bike": emoji = "🚲"; break;
+      case "car": emoji = "🚗"; break;
+      case "dot": emoji = "📍"; break;
     }
 
-    return `<div class="relative flex h-8 w-8 items-center justify-center bg-white text-blue-600 rounded-full border-2 border-blue-500 shadow-md text-lg z-20">
-              ${userSvg}
+    return `<div class="relative flex h-8 w-8 items-center justify-center bg-white rounded-full border-2 border-blue-500 shadow-md text-lg z-20">
+              ${emoji}
             </div>`;
   };
 
@@ -145,11 +137,6 @@ export default function DynamicMap({
             <TileLayer
               attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-            />
-            {/* Transparent overlay for labels (places, streets, boundaries) using Esri Reference */}
-            <TileLayer
-              attribution='&copy; Esri'
-              url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
             />
           </LayerGroup>
         </LayersControl.BaseLayer>
@@ -207,9 +194,8 @@ export default function DynamicMap({
         // Hide the label/marker if this is the currently selected location since the popup is open
         if (selectedLocation?.id === loc.id) return null;
         
-        const labelHtml = isSatellite 
-          ? `<div class="text-xs font-bold text-white px-2 py-1 rounded shadow-sm whitespace-nowrap text-center cursor-pointer transition-all hover:scale-105 hover:bg-blue-600/80" style="background-color: rgba(0,0,0,0.6); backdrop-filter: blur(2px); transform: translate(-50%, -50%); border: 1px solid rgba(255,255,255,0.3); text-shadow: 0px 1px 2px rgba(0,0,0,0.9);">${loc.name}</div>`
-          : `<div class="w-10 h-10 cursor-pointer rounded-full" style="transform: translate(-50%, -50%);"></div>`;
+        // Always show our custom robust labels
+        const labelHtml = `<div class="text-[11px] font-bold text-slate-800 px-2 py-0.5 rounded shadow-sm whitespace-nowrap text-center cursor-pointer transition-all hover:scale-105 hover:bg-blue-50" style="background-color: rgba(255,255,255,0.9); backdrop-filter: blur(4px); transform: translate(-50%, -50%); border: 1px solid rgba(0,0,0,0.15); box-shadow: 0px 2px 4px rgba(0,0,0,0.3);">${loc.name}</div>`;
 
         return (
           <Marker 
@@ -218,8 +204,8 @@ export default function DynamicMap({
             icon={L.divIcon({
               className: "bg-transparent border-none",
               html: labelHtml,
-              iconSize: [0, 0],
-              iconAnchor: [0, 0],
+              iconSize: undefined,
+              iconAnchor: undefined,
               popupAnchor: [0, -10]
             })}
             eventHandlers={{
