@@ -152,10 +152,12 @@ export const ExaminationsView: React.FC<ExaminationsViewProps> = ({ onAskHelpdes
               <div key={exam.id} className="p-4 sm:p-5 hover:bg-muted/50/60 transition-colors">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-semibold text-muted-foreground">{exam.code}</span>
-                      <h5 className="font-bold text-foreground text-sm">{exam.subject}</h5>
-                      <span className="rounded-md bg-muted px-2 py-0.5 text-sm font-medium text-muted-foreground">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2">
+                      <div className="flex items-start gap-2">
+                        <span className="font-mono text-xs font-semibold text-muted-foreground mt-0.5 shrink-0">{exam.code}</span>
+                        <h5 className="font-bold text-foreground text-sm leading-tight">{exam.subject}</h5>
+                      </div>
+                      <span className="inline-block self-start sm:self-auto rounded-md bg-slate-100 px-2 py-1 sm:py-0.5 text-[11px] sm:text-xs font-medium text-slate-600 shrink-0">
                         {exam.examType}
                       </span>
                     </div>

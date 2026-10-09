@@ -125,11 +125,11 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex-1 min-w-0 max-w-lg mx-2 sm:mx-4">
           <button
             onClick={onOpenCommandBar}
-            className="flex w-full items-center justify-between rounded-xl border border-slate-200/90 bg-muted/50/90 px-4 py-2.5 text-sm text-muted-foreground hover:border-blue-400 hover:bg-card hover:text-foreground transition-all shadow-xs cursor-pointer group"
+            className="flex w-full items-center justify-center sm:justify-between rounded-xl border border-slate-200/90 bg-muted/50/90 p-2.5 sm:px-4 sm:py-2.5 text-sm text-muted-foreground hover:border-blue-400 hover:bg-card hover:text-foreground transition-all shadow-xs cursor-pointer group"
           >
             <div className="flex items-center gap-2.5 truncate">
               <Search className="h-4 w-4 text-slate-400 group-hover:text-blue-500 transition-colors shrink-0" />
-              <span className="truncate">{t.searchPlaceholder || "Ask Helpdesk anything (attendance, exams, fees)..."}</span>
+              <span className="hidden sm:block truncate">{t.searchPlaceholder || "Ask Helpdesk anything (attendance, exams, fees)..."}</span>
             </div>
             <kbd className="hidden sm:inline-block rounded-md border border-slate-200 bg-card px-1.5 py-0.5 text-sm font-mono text-slate-400 shadow-xs shrink-0">
               Ctrl K
@@ -152,12 +152,12 @@ export const Header: React.FC<HeaderProps> = ({
               aria-label="Select Indian Language"
               aria-expanded={isLangOpen}
             >
-              <Globe className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-              <span className="font-bold tracking-wide">{activeLangMeta.nativeName}</span>
-              <span className="text-xs font-mono text-slate-400 uppercase">({currentLang})</span>
+              <Globe className="h-4 w-4 text-blue-600 shrink-0" />
+              <span className="hidden sm:inline-block font-bold tracking-wide">{activeLangMeta.nativeName}</span>
+              <span className="hidden sm:inline text-xs font-mono text-slate-400 uppercase">({currentLang})</span>
               <ChevronDown
                 className={cn(
-                  "h-3 w-3 text-slate-400 transition-transform duration-200",
+                  "hidden sm:inline-block h-3 w-3 text-slate-400 transition-transform duration-200",
                   isLangOpen && "rotate-180 text-blue-600"
                 )}
               />

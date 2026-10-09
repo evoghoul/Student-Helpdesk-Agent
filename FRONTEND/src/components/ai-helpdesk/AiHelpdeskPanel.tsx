@@ -897,10 +897,10 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
           <button
             type="submit"
             disabled={!inputQuery.trim() || isTyping}
-            className="flex h-10 shrink-0 items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-white shadow-xs hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+            className="flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-blue-600 w-10 sm:w-auto sm:px-4 text-xs sm:text-sm font-semibold text-white shadow-xs hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
           >
-            <span>{tr.askButton}</span>
-            <Send className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{tr.askButton}</span>
+            <Send className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
           </button>
         </form>
 
