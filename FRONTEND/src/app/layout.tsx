@@ -18,6 +18,10 @@ export const metadata: Metadata = {
     "Single point of access for authenticated students to personal institutional records, attendance telemetry, examinations, fees, curriculum, and student services.",
 };
 
+export const viewport = {
+  themeColor: "#ffffff",
+};
+
 import { StudentProvider } from "@/context/StudentContext";
 
 export default function RootLayout({

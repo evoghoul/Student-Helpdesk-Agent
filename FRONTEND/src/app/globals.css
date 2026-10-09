@@ -50,6 +50,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-jakarta), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   overflow-x: hidden;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Custom subtle scrollbar */
@@ -112,10 +113,12 @@ body {
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.glass-card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.08), 0 8px 10px -6px rgba(37, 99, 235, 0.04);
-  border-color: rgba(191, 219, 254, 0.9);
+@media (hover: hover) and (pointer: fine) {
+  .glass-card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.08), 0 8px 10px -6px rgba(37, 99, 235, 0.04);
+    border-color: rgba(191, 219, 254, 0.9);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -207,6 +210,7 @@ body {
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    box-sizing: border-box;
   }
   body {
     @apply bg-background text-foreground;
@@ -214,6 +218,23 @@ body {
   html {
     @apply font-sans;
   }
+  
+  /* Prevent iOS Input Auto-Zoom */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+
+  /* Optimize Touch Targets */
+  @media (pointer: coarse) {
+    button, a, input, select {
+      min-height: 44px;
+    }
+  }
+
+  /* Fluid Typography for Headings */
+  h1 { font-size: clamp(2rem, 5vw, 4rem); }
+  h2 { font-size: clamp(1.5rem, 3vw, 2.5rem); }
+  h3 { font-size: clamp(1.125rem, 2vw, 1.75rem); }
 }
 
 /* Custom Leaflet Map Theme styling */

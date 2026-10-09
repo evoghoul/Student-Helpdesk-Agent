@@ -172,7 +172,7 @@ function StudentHelpdeskContent() {
 
   // 3. Once authenticated, display the unified Student Helpdesk Dashboard
   return (
-    <div className="min-h-screen flex bg-muted/50 text-foreground antialiased selection:bg-blue-600 selection:text-white">
+    <div className="min-h-dvh flex bg-muted/50 text-foreground antialiased selection:bg-blue-600 selection:text-white">
       {/* Primary Navigation: Left Sidebar (stabilizes layout on full screen) */}
       <Sidebar
         activeTab={activeTab}
@@ -546,7 +546,7 @@ function StudentHelpdeskContent() {
 
       {/* AI Helpdesk Side Panel: Used exclusively on internal pages (Attendance, Marks, Timetable, etc.) */}
       {activeTab !== "home" && isChatOpen && (
-        <div className="hidden lg:sticky lg:top-0 lg:flex lg:h-screen w-[390px] xl:w-[410px] shrink-0 flex-col border-l border-slate-200 bg-card shadow-sm">
+        <div className="hidden lg:sticky lg:top-0 lg:flex lg:h-dvh w-[390px] xl:w-[410px] shrink-0 flex-col border-l border-slate-200 bg-card shadow-sm">
           <AiHelpdeskPanel
             variant="side"
             fillHeight

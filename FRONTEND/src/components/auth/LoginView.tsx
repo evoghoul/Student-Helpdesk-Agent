@@ -76,7 +76,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col justify-between bg-muted/50 text-foreground relative overflow-hidden">
+    <div className="min-h-dvh w-full flex flex-col justify-between bg-muted/50 text-foreground relative overflow-hidden">
       {/* Ambient background decoration */}
       <div className="absolute inset-0 pointer-events-none">
         <div

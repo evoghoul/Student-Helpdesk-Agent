@@ -178,7 +178,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-card text-foreground selection:bg-blue-100 selection:text-blue-900">
+    <div className="min-h-dvh bg-card text-foreground selection:bg-blue-100 selection:text-blue-900">
       {/* Top Navbar */}
       <nav className="sticky top-0 z-40 border-b border-slate-200/80 bg-card/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 py-3.5">

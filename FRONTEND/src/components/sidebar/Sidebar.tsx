@@ -248,7 +248,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Sidebar Container */}
       <aside
         className={cn(
-          "fixed top-0 bottom-0 left-0 z-50 flex flex-col border-r border-border bg-card shadow-sm transition-[width,transform] duration-200 ease-in-out lg:sticky lg:translate-x-0 lg:h-screen lg:shrink-0",
+          "fixed top-0 bottom-0 left-0 z-50 flex flex-col border-r border-border bg-card shadow-sm transition-[width,transform] duration-200 ease-in-out lg:sticky lg:translate-x-0 lg:h-dvh lg:shrink-0",
           isOpenMobile ? "translate-x-0" : "-translate-x-full",
           isCollapsed ? "w-[72px]" : "w-64"
         )}

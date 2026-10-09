@@ -232,7 +232,7 @@ export default function AdminDashboard() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
+    <div className="min-h-dvh bg-slate-50 flex flex-col font-sans text-slate-900">
       {/* Top Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
         <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
