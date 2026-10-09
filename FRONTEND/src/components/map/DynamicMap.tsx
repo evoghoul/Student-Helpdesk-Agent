@@ -21,6 +21,20 @@ const RecenterAutomatically = ({ lat, lng }: { lat: number; lng: number }) => {
   return null;
 };
 
+const BaseLayerTracker = ({ onLayerChange }: { onLayerChange: (name: string) => void }) => {
+  const map = useMap();
+  useEffect(() => {
+    const handleLayerChange = (e: any) => {
+      onLayerChange(e.name);
+    };
+    map.on('baselayerchange', handleLayerChange);
+    return () => {
+      map.off('baselayerchange', handleLayerChange);
+    };
+  }, [map, onLayerChange]);
+  return null;
+};
+
 interface LocationData {
   id: string;
   name: string;
@@ -61,6 +75,8 @@ export default function DynamicMap({
   routeTo,
   onLocationSelect 
 }: DynamicMapProps) {
+  const [activeBaseLayer, setActiveBaseLayer] = useState("OpenStreetMap");
+  
   // Center of Vignan University Campus
   const defaultCenter: [number, number] = [16.232820, 80.550347];
   const actualUserLocation = userLocation || defaultCenter;
@@ -116,6 +132,7 @@ export default function DynamicMap({
       scrollWheelZoom={true}
     >
       <LayersControl position="topright">
+        <BaseLayerTracker onLayerChange={setActiveBaseLayer} />
         <LayersControl.BaseLayer checked name="OpenStreetMap">
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -178,6 +195,44 @@ export default function DynamicMap({
         />
       )}
       
+      {/* Invisible clickable areas in Normal view, and Text labels in Satellite view */}
+      {locations.map((loc) => {
+        const latOffset = (hashString(loc.id) % 100) * 0.00002;
+        const lngOffset = (hashString(loc.id + "1") % 100) * 0.00002;
+        const lat = loc.latitude || (defaultCenter[0] + latOffset);
+        const lng = loc.longitude || (defaultCenter[1] + lngOffset);
+        
+        const isSatellite = activeBaseLayer === "Satellite Imagery";
+        
+        // Hide the label/marker if this is the currently selected location since the popup is open
+        if (selectedLocation?.id === loc.id) return null;
+        
+        const labelHtml = isSatellite 
+          ? `<div class="text-xs font-bold text-white px-2 py-1 rounded shadow-sm whitespace-nowrap text-center cursor-pointer transition-all hover:scale-105 hover:bg-blue-600/80" style="background-color: rgba(0,0,0,0.6); backdrop-filter: blur(2px); transform: translate(-50%, -50%); border: 1px solid rgba(255,255,255,0.3); text-shadow: 0px 1px 2px rgba(0,0,0,0.9);">${loc.name}</div>`
+          : `<div class="w-10 h-10 cursor-pointer rounded-full" style="transform: translate(-50%, -50%);"></div>`;
+
+        return (
+          <Marker 
+            key={loc.id} 
+            position={[lat, lng]}
+            icon={L.divIcon({
+              className: "bg-transparent border-none",
+              html: labelHtml,
+              iconSize: [0, 0],
+              iconAnchor: [0, 0],
+              popupAnchor: [0, -10]
+            })}
+            eventHandlers={{
+              click: () => {
+                if (onLocationSelect) {
+                  onLocationSelect(loc);
+                }
+              }
+            }}
+          />
+        );
+      })}
+
       {/* Render only the popup for the selected location without any markers */}
       {selectedLocation && (() => {
         const latOffset = (hashString(selectedLocation.id) % 100) * 0.00002;
@@ -186,7 +241,7 @@ export default function DynamicMap({
         const lng = selectedLocation.longitude || (defaultCenter[1] + lngOffset);
         
         return (
-          <Popup position={[lat, lng]}>
+          <Popup position={[lat, lng]} autoPan={true}>
             <div className="text-sm min-w-[150px]">
               <p className="font-bold">{selectedLocation.name}</p>
               <p className="text-xs text-slate-600">{selectedLocation.building}, Floor {selectedLocation.floor}</p>
