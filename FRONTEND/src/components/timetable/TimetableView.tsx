@@ -175,7 +175,7 @@ export const TimetableView: React.FC<TimetableViewProps> = () => {
       </div>
 
       {/* Section 7 Institutional Info Banner */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-3.5 flex items-center gap-3 min-h-[74px]">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-xs shadow-2xs">
             <MapPin className="h-4 w-4" />

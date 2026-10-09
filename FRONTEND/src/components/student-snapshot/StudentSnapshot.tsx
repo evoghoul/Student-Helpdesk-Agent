@@ -177,7 +177,7 @@ export const StudentSnapshot: React.FC<StudentSnapshotProps> = ({ onNavigateTab 
       </div>
 
       {/* 6 Responsive Grid Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5">
         <SnapshotCard
           label={t.navAttendance}
           icon={UserCheck}
