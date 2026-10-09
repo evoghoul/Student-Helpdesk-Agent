@@ -31,7 +31,6 @@ export const CampusMapView = () => {
   const characterOptions = [
     { id: "dot", label: "Dot", emoji: "📍" },
     { id: "student", label: "Student", emoji: "👨‍🎓" },
-    { id: "walk", label: "Walk", emoji: "🚶" },
     { id: "happy", label: "Happy", emoji: "😁" },
     { id: "teacher", label: "Teacher", emoji: "🧑‍🏫" }
   ];
