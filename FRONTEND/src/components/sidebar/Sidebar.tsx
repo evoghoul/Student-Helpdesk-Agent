@@ -41,6 +41,7 @@ import { Language, TRANSLATIONS } from "@/data/translations";
 import { useLanguage } from "@/context/LanguageContext";
 import { useStudent } from "@/context/StudentContext";
 import { cn } from "@/lib/utils";
+import { useDynamicSchedule } from "@/hooks/useDynamicSchedule";
 
 interface SidebarProps {
   activeTab: string;
@@ -71,6 +72,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { studentData } = useStudent();
   const student = studentData?.profile || CURRENT_STUDENT;
   const initials = studentData?.profile?.initials || (student.name ? student.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() : "AR");
+  const { formattedNextExamDate } = useDynamicSchedule();
 
   const navigationSections = [
     {
@@ -117,7 +119,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           id: "exams",
           label: t.navExams || "Examinations",
           icon: Calendar,
-          badge: "06 Oct",
+          badge: formattedNextExamDate,
           badgeColor: "bg-indigo-100 text-indigo-800",
         },
         {

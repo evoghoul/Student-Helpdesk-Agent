@@ -46,6 +46,7 @@ import { CURRENT_STUDENT } from "@/data/student";
 import { ATTENDANCE_DATA } from "@/data/attendance";
 import { AgentChatProvider, useAgentChat } from "@/context/AgentChatContext";
 import { useStudent } from "@/context/StudentContext";
+import { useDynamicSchedule } from "@/hooks/useDynamicSchedule";
 import {
   ShieldCheck,
   HeartHandshake,
@@ -94,6 +95,8 @@ function StudentHelpdeskContent() {
 
   // Shared Agent 65 Chat Context
   const { isMaximized, setIsMaximized, handleSend, handleResetChat } = useAgentChat();
+
+  const { nextClassSlot, formattedNextExamDate } = useDynamicSchedule();
 
   const handlePerformLogout = () => {
     logout();
@@ -258,7 +261,7 @@ function StudentHelpdeskContent() {
                         <Clock className="h-3.5 w-3.5" />
                         <span>{t.nextClass}</span>
                       </span>
-                      <span className="font-bold">09:00 AM</span>
+                      <span className="font-bold">{nextClassSlot ? nextClassSlot.time.split("–")[0].trim() : "12:30 PM"}</span>
                     </button>
 
                     <button
@@ -269,7 +272,7 @@ function StudentHelpdeskContent() {
                         <Calendar className="h-3.5 w-3.5" />
                         <span>{t.nextExam}</span>
                       </span>
-                      <span className="font-bold">06 Oct</span>
+                      <span className="font-bold">{formattedNextExamDate}</span>
                     </button>
                   </div>
                 </div>

@@ -19,6 +19,7 @@ import { EXAMINATIONS_DATA } from "@/data/examinations";
 import { useStudent } from "@/context/StudentContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { cn, formatCurrency } from "@/lib/utils";
+import { useDynamicSchedule } from "@/hooks/useDynamicSchedule";
 
 interface StudentSnapshotProps {
   onNavigateTab: (tab: string) => void;
@@ -157,8 +158,8 @@ export const StudentSnapshot: React.FC<StudentSnapshotProps> = ({ onNavigateTab 
     ? [...attendance.subjects].sort((a, b) => a.percentage - b.percentage)[0]
     : null;
 
-  const nextClassSlot = TODAY_TIMETABLE.slots.find(s => s.status === "Current" || s.status === "Next") || TODAY_TIMETABLE.slots[0];
   const nextExam = EXAMINATIONS_DATA.exams[0];
+  const { nextClassSlot, formattedNextExamDate } = useDynamicSchedule();
 
   return (
     <section className="space-y-3.5">
@@ -230,7 +231,7 @@ export const StudentSnapshot: React.FC<StudentSnapshotProps> = ({ onNavigateTab 
           label={t.nextExam}
           icon={Calendar}
           tone="indigo"
-          value={<span className="text-xl sm:text-2xl whitespace-nowrap">06 Oct</span>}
+          value={<span className="text-xl sm:text-2xl whitespace-nowrap">{formattedNextExamDate}</span>}
           meta={<span className="truncate">{nextExam ? nextExam.subject : "Digital Logic design"}</span>}
           subtext={nextExam ? `${nextExam.time.split("–")[0].trim()} • ${nextExam.venue.split(",")[0].trim()} (${nextExam.daysRemaining}d left)` : "10:00 AM • Hall A2"}
           footerLabel={t.viewExams}
