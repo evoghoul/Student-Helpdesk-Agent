@@ -24082,140 +24082,140 @@ export const ALL_STUDENTS_MAP: Record<string, StudentFullData> = {
       "sourceAgent": "Agent 44 (Student Profile)"
     },
     "attendance": {
-      "overallPercentage": 76.0,
-      "totalAttended": 184,
-      "totalConducted": 240,
+      "overallPercentage": 84,
+      "totalAttended": 351,
+      "totalConducted": 419,
       "status": "Healthy",
       "sourceAgent": "Agent 11 (Attendance Engine)",
       "subjects": [
-        {
-          "code": "DS-25CS201",
-          "name": "Data Structures (DS-25CS201)",
-          "faculty": "Dr. R. Prathap Kumar (7569888963)",
-          "attended": 24,
-          "total": 30,
-          "percentage": 80.0,
-          "status": "Healthy",
-          "minRequiredPct": 75,
-          "classesNeeded70": 0,
-          "classesNeeded75": 0,
-          "canBunkBefore70": 4,
-          "scheduleDays": [
-            "Mon 09:05",
-            "Wed 12:30",
-            "Fri 09:05"
-          ]
-        },
-        {
-          "code": "DMS-25MT202",
-          "name": "Discrete Mathematical Structures (DMS-25MT202)",
-          "faculty": "DR. N. SANTHOSHO",
-          "attended": 29,
-          "total": 40,
-          "percentage": 72.5,
-          "status": "Attention",
-          "minRequiredPct": 75,
-          "classesNeeded70": 0,
-          "classesNeeded75": 4,
-          "canBunkBefore70": 1,
-          "scheduleDays": [
-            "Mon 09:05",
-            "Wed 12:30",
-            "Fri 09:05"
-          ]
-        },
-        {
-          "code": "DBMS-25CS203",
-          "name": "Database Management System (DBMS-25CS203)",
-          "faculty": "Ms. Y. Sai Eswari (8074131669)",
-          "attended": 22,
-          "total": 30,
-          "percentage": 73.3,
-          "status": "Attention",
-          "minRequiredPct": 75,
-          "classesNeeded70": 0,
-          "classesNeeded75": 2,
-          "canBunkBefore70": 1,
-          "scheduleDays": [
-            "Mon 09:05",
-            "Wed 12:30",
-            "Fri 09:05"
-          ]
-        },
-        {
-          "code": "OOPS-25CS204",
-          "name": "Object Oriented Programming Through Java (OOPS-25CS204)",
-          "faculty": "Mr. T. Latesh Babu (Class Teacher)",
-          "attended": 25,
-          "total": 30,
-          "percentage": 83.3,
-          "status": "Healthy",
-          "minRequiredPct": 75,
-          "classesNeeded70": 0,
-          "classesNeeded75": 0,
-          "canBunkBefore70": 5,
-          "scheduleDays": [
-            "Mon 09:05",
-            "Wed 12:30",
-            "Fri 09:05"
-          ]
-        },
-        {
-          "code": "DLD-25CS205",
-          "name": "Digital Logic design (DLD-25CS205)",
-          "faculty": "Mrs Archana (8985716984)",
-          "attended": 31,
-          "total": 40,
-          "percentage": 77.5,
-          "status": "Healthy",
-          "minRequiredPct": 75,
-          "classesNeeded70": 0,
-          "classesNeeded75": 0,
-          "canBunkBefore70": 4,
-          "scheduleDays": [
-            "Mon 09:05",
-            "Wed 12:30",
-            "Fri 09:05"
-          ]
-        },
-        {
-          "code": "AI-24CS302",
-          "name": "Artificial Intelligence (AI-24CS302)",
-          "faculty": "Dr. M. Sunil Babu (8333001991)",
-          "attended": 30,
-          "total": 40,
-          "percentage": 75.0,
-          "status": "Healthy",
-          "minRequiredPct": 75,
-          "classesNeeded70": 0,
-          "classesNeeded75": 0,
-          "canBunkBefore70": 2,
-          "scheduleDays": [
-            "Mon 09:05",
-            "Wed 12:30",
-            "Fri 09:05"
-          ]
-        },
-        {
-          "code": "DW-25CS202",
-          "name": "Data Wrangling and Visualization (DW-25CS202)",
-          "faculty": "Dr. M. Raja Rao (8979803148)",
-          "attended": 23,
-          "total": 30,
-          "percentage": 76.7,
-          "status": "Healthy",
-          "minRequiredPct": 75,
-          "classesNeeded70": 0,
-          "classesNeeded75": 0,
-          "canBunkBefore70": 2,
-          "scheduleDays": [
-            "Mon 09:05",
-            "Wed 12:30",
-            "Fri 09:05"
-          ]
-        }
+            {
+                  "code": "DS-25CS201",
+                  "name": "Data Structures (DS-25CS201)",
+                  "faculty": "Dr. R. Prathap Kumar (7569888963)",
+                  "attended": 42,
+                  "total": 50,
+                  "percentage": 84,
+                  "status": "Healthy",
+                  "minRequiredPct": 75,
+                  "classesNeeded70": 0,
+                  "classesNeeded75": 0,
+                  "canBunkBefore70": 8,
+                  "scheduleDays": [
+                        "Mon 09:05",
+                        "Wed 12:30",
+                        "Fri 09:05"
+                  ]
+            },
+            {
+                  "code": "DMS-25MT202",
+                  "name": "Discrete Mathematical Structures (DMS-25MT202)",
+                  "faculty": "DR. N. SANTHOSHO",
+                  "attended": 41,
+                  "total": 44,
+                  "percentage": 93.2,
+                  "status": "Healthy",
+                  "minRequiredPct": 75,
+                  "classesNeeded70": 0,
+                  "classesNeeded75": 0,
+                  "canBunkBefore70": 9,
+                  "scheduleDays": [
+                        "Mon 09:05",
+                        "Wed 12:30",
+                        "Fri 09:05"
+                  ]
+            },
+            {
+                  "code": "DBMS-25CS203",
+                  "name": "Database Management System (DBMS-25CS203)",
+                  "faculty": "Ms. Y. Sai Eswari (8074131669)",
+                  "attended": 41,
+                  "total": 50,
+                  "percentage": 82,
+                  "status": "Healthy",
+                  "minRequiredPct": 75,
+                  "classesNeeded70": 0,
+                  "classesNeeded75": 0,
+                  "canBunkBefore70": 6,
+                  "scheduleDays": [
+                        "Mon 09:05",
+                        "Wed 12:30",
+                        "Fri 09:05"
+                  ]
+            },
+            {
+                  "code": "OOPS-25CS204",
+                  "name": "Object Oriented Programming Through Java (OOPS-25CS204)",
+                  "faculty": "Mr. T. Latesh Babu (Class Teacher)",
+                  "attended": 28,
+                  "total": 38,
+                  "percentage": 73.7,
+                  "status": "Attention",
+                  "minRequiredPct": 75,
+                  "classesNeeded70": 0,
+                  "classesNeeded75": 1,
+                  "canBunkBefore70": 1,
+                  "scheduleDays": [
+                        "Mon 09:05",
+                        "Wed 12:30",
+                        "Fri 09:05"
+                  ]
+            },
+            {
+                  "code": "DLD-25CS205",
+                  "name": "Digital Logic design (DLD-25CS205)",
+                  "faculty": "Mrs Archana (8985716984)",
+                  "attended": 46,
+                  "total": 54,
+                  "percentage": 85.2,
+                  "status": "Healthy",
+                  "minRequiredPct": 75,
+                  "classesNeeded70": 0,
+                  "classesNeeded75": 0,
+                  "canBunkBefore70": 7,
+                  "scheduleDays": [
+                        "Mon 09:05",
+                        "Wed 12:30",
+                        "Fri 09:05"
+                  ]
+            },
+            {
+                  "code": "AI-24CS302",
+                  "name": "Artificial Intelligence (AI-24CS302)",
+                  "faculty": "Dr. M. Sunil Babu (8333001991)",
+                  "attended": 43,
+                  "total": 47,
+                  "percentage": 91.5,
+                  "status": "Healthy",
+                  "minRequiredPct": 75,
+                  "classesNeeded70": 0,
+                  "classesNeeded75": 0,
+                  "canBunkBefore70": 10,
+                  "scheduleDays": [
+                        "Mon 09:05",
+                        "Wed 12:30",
+                        "Fri 09:05"
+                  ]
+            },
+            {
+                  "code": "DW-25CS202",
+                  "name": "Data Wrangling and Visualization (DW-25CS202)",
+                  "faculty": "Dr. M. Raja Rao (8979803148)",
+                  "attended": 32,
+                  "total": 41,
+                  "percentage": 78,
+                  "status": "Healthy",
+                  "minRequiredPct": 75,
+                  "classesNeeded70": 0,
+                  "classesNeeded75": 0,
+                  "canBunkBefore70": 1,
+                  "scheduleDays": [
+                        "Mon 09:05",
+                        "Wed 12:30",
+                        "Fri 09:05"
+                  ]
+            }
       ]
-    },
+},
     "marks": {
       "overallPercentage": 80.9,
       "cgpa": 8.09,
