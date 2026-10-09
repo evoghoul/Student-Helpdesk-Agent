@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Calendar,
   Clock,
@@ -22,12 +22,41 @@ export const ExaminationsView: React.FC<ExaminationsViewProps> = ({ onAskHelpdes
   const student = studentData?.profile;
 
   const [downloadSuccess, setDownloadSuccess] = useState(false);
-  const nearest = EXAMINATIONS_DATA.exams[0];
+  const [currentDate, setCurrentDate] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setCurrentDate(new Date());
+    const interval = setInterval(() => setCurrentDate(new Date()), 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleDownloadHallTicket = () => {
     setDownloadSuccess(true);
     setTimeout(() => setDownloadSuccess(false), 3000);
   };
+
+  const getDaysRemaining = (rawDate: string) => {
+    if (!currentDate) {
+      // Fallback to static for hydration
+      const exam = EXAMINATIONS_DATA.exams.find(e => e.rawDate === rawDate);
+      return exam?.daysRemaining ?? 0;
+    }
+    const examDate = new Date(rawDate);
+    const timeDiff = examDate.getTime() - currentDate.getTime();
+    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    return daysDiff;
+  };
+
+  const getNearestExam = () => {
+    if (!currentDate) return EXAMINATIONS_DATA.exams[0];
+    const upcoming = EXAMINATIONS_DATA.exams.filter(
+      exam => new Date(exam.rawDate).getTime() > currentDate.getTime()
+    );
+    return upcoming.length > 0 ? upcoming[0] : EXAMINATIONS_DATA.exams[EXAMINATIONS_DATA.exams.length - 1];
+  };
+
+  const nearest = getNearestExam();
+  const nearestDaysRemaining = getDaysRemaining(nearest.rawDate);
 
   return (
     <div className="space-y-6">
@@ -97,7 +126,9 @@ export const ExaminationsView: React.FC<ExaminationsViewProps> = ({ onAskHelpdes
             <div className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
               {t.examCountdown}
             </div>
-            <div className="text-3xl font-black text-blue-700 mt-1">7 {t.daysRemaining}</div>
+            <div className="text-3xl font-black text-blue-700 mt-1">
+              {nearestDaysRemaining > 0 ? nearestDaysRemaining : 0} {t.daysRemaining}
+            </div>
             <div className="text-sm text-muted-foreground mt-1">
               {t.reportingTime}: <strong className="text-foreground">{nearest.reportingTime}</strong>
             </div>
@@ -115,47 +146,50 @@ export const ExaminationsView: React.FC<ExaminationsViewProps> = ({ onAskHelpdes
         </div>
 
         <div className="divide-y divide-slate-100">
-          {EXAMINATIONS_DATA.exams.map((exam) => (
-            <div key={exam.id} className="p-4 sm:p-5 hover:bg-muted/50/60 transition-colors">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-semibold text-muted-foreground">{exam.code}</span>
-                    <h5 className="font-bold text-foreground text-sm">{exam.subject}</h5>
-                    <span className="rounded-md bg-muted px-2 py-0.5 text-sm font-medium text-muted-foreground">
-                      {exam.examType}
-                    </span>
+          {EXAMINATIONS_DATA.exams.map((exam) => {
+            const daysLeft = getDaysRemaining(exam.rawDate);
+            return (
+              <div key={exam.id} className="p-4 sm:p-5 hover:bg-muted/50/60 transition-colors">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-semibold text-muted-foreground">{exam.code}</span>
+                      <h5 className="font-bold text-foreground text-sm">{exam.subject}</h5>
+                      <span className="rounded-md bg-muted px-2 py-0.5 text-sm font-medium text-muted-foreground">
+                        {exam.examType}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1.5">
+                      <span className="flex items-center gap-1 font-semibold text-foreground">
+                        <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                        {exam.date} ({exam.time})
+                      </span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1 font-semibold text-blue-700">
+                        <MapPin className="h-3.5 w-3.5 text-blue-500" />
+                        {exam.venue}
+                      </span>
+                      <span>•</span>
+                      <span>{exam.seatRange}</span>
+                    </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1.5">
-                    <span className="flex items-center gap-1 font-semibold text-foreground">
-                      <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                      {exam.date} ({exam.time})
+                  <div className="flex items-center sm:flex-col sm:items-end gap-2 shrink-0">
+                    <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-blue-800 border border-blue-100">
+                      {daysLeft > 0 ? `${daysLeft} days left` : daysLeft === 0 ? "Today" : "Completed"}
                     </span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1 font-semibold text-blue-700">
-                      <MapPin className="h-3.5 w-3.5 text-blue-500" />
-                      {exam.venue}
-                    </span>
-                    <span>•</span>
-                    <span>{exam.seatRange}</span>
+                    <button
+                      onClick={() => onAskHelpdesk(`When is my ${exam.subject} exam?`)}
+                      className="text-sm font-semibold text-blue-600 hover:underline cursor-pointer"
+                    >
+                      Ask Helpdesk
+                    </button>
                   </div>
-                </div>
-
-                <div className="flex items-center sm:flex-col sm:items-end gap-2 shrink-0">
-                  <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-blue-800 border border-blue-100">
-                    {exam.daysRemaining} days left
-                  </span>
-                  <button
-                    onClick={() => onAskHelpdesk(`When is my ${exam.subject} exam?`)}
-                    className="text-sm font-semibold text-blue-600 hover:underline cursor-pointer"
-                  >
-                    Ask Helpdesk
-                  </button>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
