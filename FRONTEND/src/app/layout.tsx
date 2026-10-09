@@ -30,8 +30,12 @@ export const metadata: Metadata = {
   },
 };
 
-export const viewport = {
+export const viewport: import('next').Viewport = {
   themeColor: "#ffffff",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 import { StudentProvider } from "@/context/StudentContext";
