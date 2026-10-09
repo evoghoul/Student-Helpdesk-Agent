@@ -181,42 +181,7 @@ export default function DynamicMap({
         />
       )}
       
-      {/* Invisible clickable areas in Normal view, and Text labels in Satellite view */}
-      {locations.map((loc) => {
-        const latOffset = (hashString(loc.id) % 100) * 0.00002;
-        const lngOffset = (hashString(loc.id + "1") % 100) * 0.00002;
-        const lat = loc.latitude || (defaultCenter[0] + latOffset);
-        const lng = loc.longitude || (defaultCenter[1] + lngOffset);
-        
-        const isSatellite = activeBaseLayer === "Satellite Imagery";
-        
-        // Hide the label/marker if this is the currently selected location since the popup is open
-        if (selectedLocation?.id === loc.id) return null;
-        
-        // Always show our custom robust labels
-        const labelHtml = `<div class="text-[11px] font-bold text-slate-800 px-2 py-0.5 rounded shadow-sm whitespace-nowrap text-center cursor-pointer transition-all hover:scale-105 hover:bg-blue-50" style="background-color: rgba(255,255,255,0.9); backdrop-filter: blur(4px); transform: translate(-50%, -50%); border: 1px solid rgba(0,0,0,0.15); box-shadow: 0px 2px 4px rgba(0,0,0,0.3);">${loc.name}</div>`;
-
-        return (
-          <Marker 
-            key={loc.id} 
-            position={[lat, lng]}
-            icon={L.divIcon({
-              className: "bg-transparent border-none",
-              html: labelHtml,
-              iconSize: undefined,
-              iconAnchor: undefined,
-              popupAnchor: [0, -10]
-            })}
-            eventHandlers={{
-              click: () => {
-                if (onLocationSelect) {
-                  onLocationSelect(loc);
-                }
-              }
-            }}
-          />
-        );
-      })}
+      {/* No location labels rendered on the map per user request */}
 
       {/* Render only the popup for the selected location without any markers */}
       {selectedLocation && (() => {
