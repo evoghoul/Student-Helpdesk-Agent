@@ -133,7 +133,7 @@ export const CampusMapView = () => {
 
   const wrapperClass = isFullScreen 
     ? "fixed inset-0 z-[9999] bg-card p-4 flex flex-col" 
-    : "space-y-6 animate-in fade-in zoom-in-95 duration-300 flex flex-col h-[calc(100vh-12rem)] min-h-[500px]";
+    : "space-y-6 animate-in fade-in zoom-in-95 duration-300 flex flex-col h-auto lg:h-[calc(100vh-12rem)] lg:min-h-[500px]";
 
   return (
     <div ref={mapContainerRef} className={wrapperClass}>
@@ -175,9 +175,9 @@ export const CampusMapView = () => {
         </>
       )}
 
-      <div className={`grid grid-cols-1 ${isFullScreen ? 'lg:grid-cols-1' : 'lg:grid-cols-3'} gap-6 flex-1 min-h-0`}>
+      <div className={`grid grid-cols-1 ${isFullScreen ? 'lg:grid-cols-1' : 'lg:grid-cols-3'} gap-6 lg:flex-1 lg:min-h-0`}>
         {/* Interactive Map */}
-        <div className={`${isFullScreen ? 'col-span-1' : 'lg:col-span-2'} rounded-xl border border-border bg-card overflow-hidden shadow-sm flex flex-col h-full relative min-h-[400px] lg:min-h-0`}>
+        <div className={`${isFullScreen ? 'col-span-1' : 'lg:col-span-2'} rounded-xl border border-border bg-card overflow-hidden shadow-sm flex flex-col relative h-[400px] lg:h-full lg:min-h-0`}>
           <div className="bg-muted/30 border-b border-border p-4 flex flex-wrap items-center justify-between gap-2 shrink-0">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
