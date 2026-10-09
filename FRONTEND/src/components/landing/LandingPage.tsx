@@ -192,11 +192,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               className="h-9 sm:h-11 w-auto object-contain"
             />
             <div className="h-7 w-px bg-slate-200 hidden sm:block" />
-            <div>
+            <div className="hidden sm:block">
               <span className="text-sm sm:text-base font-bold tracking-tight text-foreground leading-tight block">
                 {t.appName || "Student Helpdesk"} <span className="text-blue-600">65</span>
               </span>
-              <p className="text-sm text-muted-foreground leading-none">
+              <p className="text-sm text-muted-foreground leading-none mt-1">
                 {t.autonomousSystem || "Autonomous University System"}
               </p>
             </div>
@@ -258,7 +258,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               </Badge>
             </div>
 
-            <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
               {t.landingTagline || "The AI helpdesk that actually knows"}{" "}
               <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                 {t.landingRecord || "your record"}

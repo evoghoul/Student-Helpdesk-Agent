@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   },
 };
 
-export const viewport: import('next').Viewport = {
+export const viewport = {
   themeColor: "#ffffff",
   width: "device-width",
   initialScale: 1,
