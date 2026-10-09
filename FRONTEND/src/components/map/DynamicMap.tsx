@@ -51,9 +51,7 @@ const hashString = (str: string) => {
   return hash;
 };
 
-const getCategoryIcon = (type: string) => {
-  return new L.Icon.Default();
-};
+
 
 export default function DynamicMap({ 
   locations, 
@@ -179,36 +177,23 @@ export default function DynamicMap({
         />
       )}
       
-      {locations.map((loc) => {
-        const latOffset = (hashString(loc.id) % 100) * 0.00002;
-        const lngOffset = (hashString(loc.id + "1") % 100) * 0.00002;
-        
-        const lat = loc.latitude || (defaultCenter[0] + latOffset);
-        const lng = loc.longitude || (defaultCenter[1] + lngOffset);
+      {/* Render only the popup for the selected location without any markers */}
+      {selectedLocation && (() => {
+        const latOffset = (hashString(selectedLocation.id) % 100) * 0.00002;
+        const lngOffset = (hashString(selectedLocation.id + "1") % 100) * 0.00002;
+        const lat = selectedLocation.latitude || (defaultCenter[0] + latOffset);
+        const lng = selectedLocation.longitude || (defaultCenter[1] + lngOffset);
         
         return (
-          <Marker 
-            key={loc.id} 
-            position={[lat, lng]}
-            icon={getCategoryIcon(loc.type || "")}
-            eventHandlers={{
-              click: () => {
-                if (onLocationSelect) {
-                  onLocationSelect(loc);
-                }
-              }
-            }}
-          >
-            <Popup>
-              <div className="text-sm min-w-[150px]">
-                <p className="font-bold">{loc.name}</p>
-                <p className="text-xs text-slate-600">{loc.building}, Floor {loc.floor}</p>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 px-1.5 py-0.5 bg-slate-100 rounded inline-block">{loc.type}</p>
-              </div>
-            </Popup>
-          </Marker>
+          <Popup position={[lat, lng]}>
+            <div className="text-sm min-w-[150px]">
+              <p className="font-bold">{selectedLocation.name}</p>
+              <p className="text-xs text-slate-600">{selectedLocation.building}, Floor {selectedLocation.floor}</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 px-1.5 py-0.5 bg-slate-100 rounded inline-block">{selectedLocation.type}</p>
+            </div>
+          </Popup>
         );
-      })}
+      })()}
     </MapContainer>
   );
 }
